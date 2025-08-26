@@ -65,6 +65,7 @@ Each tool in `src/tools/` follows this pattern:
 3. Use YNAB OpenAPI spec at `https://api.ynab.com/papi/open_api_spec.yaml` for API reference
 4. Follow existing pattern: initialize YNAB API client in constructor
 5. Framework auto-discovers new tools - no manual registration needed
+6. Add a test coverage file to `src/tools`
 
 ### Tool Development Pattern
 ```typescript
@@ -113,7 +114,7 @@ export default NewTool;
 - Tests run with Vitest
 - Test files follow pattern: `**/*.{test,spec}.{ts,js}`
 - Coverage reports available via `npm run test:coverage`
-- Tests should be put into the `tests` folder
+- Tests should be put into the `src/tests` folder
 
 ### TypeScript Configuration
 - Target: ESNext with Node module resolution
