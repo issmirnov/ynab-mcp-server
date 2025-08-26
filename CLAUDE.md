@@ -113,6 +113,7 @@ export default NewTool;
 - Tests run with Vitest
 - Test files follow pattern: `**/*.{test,spec}.{ts,js}`
 - Coverage reports available via `npm run test:coverage`
+- Tests should be put into the `tests` folder
 
 ### TypeScript Configuration
 - Target: ESNext with Node module resolution
