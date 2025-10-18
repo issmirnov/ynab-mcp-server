@@ -58,9 +58,15 @@ class BudgetSummaryTool {
                 category.name !== "Uncategorized" &&
                 category.name !== "Deferred Income SubCategory");
             const result = this.summaryPrompt(monthBudget.data.month, accounts, categories);
+            // Add category summary for better context
+            const categorySummary = this.createCategorySummary(categories);
+            const enhancedResult = {
+                ...result,
+                categorySummary: categorySummary
+            };
             // Optimize for context efficiency
-            return withContextOptimization(result, {
-                maxTokens: 3000,
+            return withContextOptimization(enhancedResult, {
+                maxTokens: 4000,
                 summarizeCategories: true,
                 summarizeAccounts: true
             });
@@ -129,10 +135,40 @@ class BudgetSummaryTool {
                 to_be_budgeted: monthBudget.to_be_budgeted,
                 age_of_money: monthBudget.age_of_money,
                 deleted: monthBudget.deleted,
-                categories: optimizeCategories(categories, { maxItems: 15 })
+                categories: optimizeCategories(categories, {
+                    prioritizeByActivity: true
+                })
             },
-            accounts: optimizeAccounts(accounts, { maxItems: 8 }),
-            note: "All amounts are in dollars. Showing top categories and accounts. Use specific queries for detailed data.",
+            accounts: optimizeAccounts(accounts),
+            note: "All amounts in dollars. Compressed format: bal=balance, bud=budgeted, act=activity. All categories shown, sorted by activity.",
+        };
+    }
+    createCategorySummary(categories) {
+        const totalCategories = categories.length;
+        const categoriesWithActivity = categories.filter(cat => cat.activity !== 0);
+        const categoriesWithBudget = categories.filter(cat => cat.budgeted !== 0);
+        const overspentCategories = categories.filter(cat => cat.balance < 0);
+        const underfundedCategories = categories.filter(cat => cat.budgeted > 0 && cat.balance < cat.budgeted);
+        // Calculate totals
+        const totalActivity = categories.reduce((sum, cat) => sum + cat.activity, 0);
+        const totalBudgeted = categories.reduce((sum, cat) => sum + cat.budgeted, 0);
+        const totalOverspent = overspentCategories.reduce((sum, cat) => sum + Math.abs(cat.balance), 0);
+        return {
+            total_categories: totalCategories,
+            categories_with_activity: categoriesWithActivity.length,
+            categories_with_budget: categoriesWithBudget.length,
+            overspent_categories: overspentCategories.length,
+            underfunded_categories: underfundedCategories.length,
+            total_activity_dollars: Math.round((totalActivity / 1000) * 100) / 100,
+            total_budgeted_dollars: Math.round((totalBudgeted / 1000) * 100) / 100,
+            total_overspent_dollars: Math.round((totalOverspent / 1000) * 100) / 100,
+            top_activity_categories: categoriesWithActivity
+                .sort((a, b) => Math.abs(b.activity) - Math.abs(a.activity))
+                .slice(0, 5)
+                .map(cat => ({
+                name: cat.name,
+                activity_dollars: Math.round((cat.activity / 1000) * 100) / 100
+            }))
         };
     }
 }

@@ -162,7 +162,7 @@ class BulkApproveTransactionsTool {
         transactions: optimizeTransactions(unapprovedTransactions.map(t => ({
           ...t,
           account_name: accounts.find(a => a.id === t.account_id)?.name || "Unknown"
-        })), { maxItems: 25 }),
+        })), { includeDetails: true }),
         approvedTransactions: approvedTransactions,
         dryRun: input.dryRun || false
       };

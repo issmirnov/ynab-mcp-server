@@ -12,98 +12,107 @@ export interface ContextOptimizationOptions {
   summarizeCategories?: boolean;
   summarizeAccounts?: boolean;
   summarizeTransactions?: boolean;
+  prioritizeByActivity?: boolean;
 }
 
 export interface OptimizedCategory {
   id: string;
   name: string;
-  balance_dollars: number;
-  budgeted_dollars: number;
-  activity_dollars: number;
-  category_group?: string;
+  bal: number;        // balance_dollars -> bal
+  bud: number;        // budgeted_dollars -> bud
+  act: number;        // activity_dollars -> act
+  grp?: string;       // category_group -> grp
 }
 
 export interface OptimizedAccount {
   id: string;
   name: string;
   type: string;
-  balance_dollars: number;
+  bal: number;        // balance_dollars -> bal
   on_budget: boolean;
 }
 
 export interface OptimizedTransaction {
   id: string;
   date: string;
-  amount_dollars: number;
-  payee_name: string;
-  category_name?: string;
-  account_name?: string;
+  amt: number;        // amount_dollars -> amt
+  payee: string;      // payee_name -> payee
+  cat?: string;       // category_name -> cat
+  acc?: string;       // account_name -> acc
   memo?: string;
 }
 
 /**
- * Optimize category data for context efficiency
+ * Optimize category data for context efficiency - COMPRESS rather than LIMIT
  */
 export function optimizeCategories(
   categories: any[],
   options: ContextOptimizationOptions = {}
 ): OptimizedCategory[] {
-  const { maxItems = 20, includeDetails = false } = options;
+  const { includeDetails = false, prioritizeByActivity = false } = options;
   
-  return categories
-    .slice(0, maxItems)
-    .map(cat => ({
-      id: cat.id,
-      name: cat.name,
-      balance_dollars: Math.round((cat.balance / 1000) * 100) / 100,
-      budgeted_dollars: Math.round((cat.budgeted / 1000) * 100) / 100,
-      activity_dollars: Math.round((cat.activity / 1000) * 100) / 100,
-      ...(includeDetails && { category_group: cat.category_group_name })
-    }));
+  let sortedCategories = categories;
+  
+  // If prioritizing by activity, sort by absolute activity value (most active first)
+  if (prioritizeByActivity) {
+    sortedCategories = [...categories].sort((a, b) => {
+      const aActivity = Math.abs(a.activity || 0);
+      const bActivity = Math.abs(b.activity || 0);
+      return bActivity - aActivity; // Descending order
+    });
+  }
+  
+  // Return ALL categories but in compressed format
+  return sortedCategories.map(cat => ({
+    id: cat.id,
+    name: cat.name,
+    bal: Math.round((cat.balance / 1000) * 100) / 100,        // "balance" -> "bal"
+    bud: Math.round((cat.budgeted / 1000) * 100) / 100,      // "budgeted" -> "bud"
+    act: Math.round((cat.activity / 1000) * 100) / 100,      // "activity" -> "act"
+    ...(includeDetails && { grp: cat.category_group_name })   // "category_group" -> "grp"
+  }));
 }
 
 /**
- * Optimize account data for context efficiency
+ * Optimize account data for context efficiency - COMPRESS rather than LIMIT
  */
 export function optimizeAccounts(
   accounts: any[],
   options: ContextOptimizationOptions = {}
 ): OptimizedAccount[] {
-  const { maxItems = 10, includeDetails = false } = options;
+  const { includeDetails = false } = options;
   
-  return accounts
-    .slice(0, maxItems)
-    .map(acc => ({
-      id: acc.id,
-      name: acc.name,
-      type: acc.type,
-      balance_dollars: Math.round((acc.balance / 1000) * 100) / 100,
-      on_budget: acc.on_budget
-    }));
+  // Return ALL accounts but in compressed format
+  return accounts.map(acc => ({
+    id: acc.id,
+    name: acc.name,
+    type: acc.type,
+    bal: Math.round((acc.balance / 1000) * 100) / 100,        // "balance_dollars" -> "bal"
+    on_budget: acc.on_budget
+  }));
 }
 
 /**
- * Optimize transaction data for context efficiency
+ * Optimize transaction data for context efficiency - COMPRESS rather than LIMIT
  */
 export function optimizeTransactions(
   transactions: any[],
   options: ContextOptimizationOptions = {}
 ): OptimizedTransaction[] {
-  const { maxItems = 50, includeDetails = false } = options;
+  const { includeDetails = false } = options;
   
-  return transactions
-    .slice(0, maxItems)
-    .map(txn => ({
-      id: txn.id,
-      date: txn.date,
-      amount_dollars: Math.round((txn.amount / 1000) * 100) / 100,
-      payee_name: txn.payee_name || 'Unknown',
-      ...(includeDetails && {
-        category_name: txn.category_name,
-        account_name: txn.account_name,
-        memo: txn.memo
-      })
-    }));
+  // Return ALL transactions but in compressed format
+  return transactions.map(txn => ({
+    id: txn.id,
+    date: txn.date,
+    amt: Math.round((txn.amount / 1000) * 100) / 100,          // "amount_dollars" -> "amt"
+    payee: txn.payee_name || 'Unknown',                        // "payee_name" -> "payee"
+    ...(includeDetails && {
+      cat: txn.category_name,                                  // "category_name" -> "cat"
+      acc: txn.account_name,                                   // "account_name" -> "acc"
+      memo: txn.memo
+    })
+  }));
 }
 
 /**

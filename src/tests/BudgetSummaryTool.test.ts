@@ -155,7 +155,7 @@ describe('BudgetSummaryTool', () => {
       const resultText = result.content[0].text;
       expect(resultText).toContain('monthBudget');
       expect(resultText).toContain('accounts');
-      expect(resultText).toContain('All amounts are in dollars. Showing top categories and accounts. Use specific queries for detailed data.');
+      expect(resultText).toContain('All amounts in dollars. Compressed format: bal=balance, bud=budgeted, act=activity. All categories shown, sorted by activity.');
       
       // Parse the JSON result to verify structure
       const parsedResult = JSON.parse(resultText);
@@ -189,7 +189,7 @@ describe('BudgetSummaryTool', () => {
       const resultText = result.content[0].text;
       expect(resultText).toContain('monthBudget');
       expect(resultText).toContain('accounts');
-      expect(resultText).toContain('All amounts are in dollars. Showing top categories and accounts. Use specific queries for detailed data.');
+      expect(resultText).toContain('All amounts in dollars. Compressed format: bal=balance, bud=budgeted, act=activity. All categories shown, sorted by activity.');
     });
 
     it('should filter out deleted and closed accounts', async () => {
