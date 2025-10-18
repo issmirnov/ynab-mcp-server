@@ -103,7 +103,7 @@
 - ✅ Test suite migration to new SDK format (69 tests passing)
 
 ### In Progress
-- 🔄 Documentation updates for new SDK usage
+- 🔄 Production testing with real YNAB API credentials (pending user credentials)
 
 ### Planned
 - 📋 Enhanced tool capabilities
