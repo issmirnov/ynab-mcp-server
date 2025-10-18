@@ -34,6 +34,13 @@ jobs:
         name: node-modules
         path: node_modules/
         retention-days: 1
+    
+    - name: Debug node_modules structure
+      run: |
+        echo "=== node_modules structure ==="
+        ls -la node_modules/ | head -20
+        echo "=== .bin directory ==="
+        ls -la node_modules/.bin/ | head -10 || echo "No .bin directory found"
 
   # Lint and Type Check
   lint:
@@ -56,10 +63,19 @@ jobs:
         name: node-modules
         path: node_modules/
     
+    - name: Debug downloaded node_modules
+      run: |
+        echo "=== Downloaded node_modules structure ==="
+        ls -la node_modules/ | head -20
+        echo "=== .bin directory ==="
+        ls -la node_modules/.bin/ | head -10 || echo "No .bin directory found"
+    
     - name: Fix node_modules permissions
       run: |
-        chmod -R +x node_modules/.bin/
-        export PATH="$PWD/node_modules/.bin:$PATH"
+        if [ -d "node_modules/.bin" ]; then
+          chmod -R +x node_modules/.bin/
+          export PATH="$PWD/node_modules/.bin:$PATH"
+        fi
     
     - name: Run TypeScript type check
       run: npx tsc --noEmit
@@ -89,10 +105,19 @@ jobs:
         name: node-modules
         path: node_modules/
     
+    - name: Debug downloaded node_modules
+      run: |
+        echo "=== Downloaded node_modules structure ==="
+        ls -la node_modules/ | head -20
+        echo "=== .bin directory ==="
+        ls -la node_modules/.bin/ | head -10 || echo "No .bin directory found"
+    
     - name: Fix node_modules permissions
       run: |
-        chmod -R +x node_modules/.bin/
-        export PATH="$PWD/node_modules/.bin:$PATH"
+        if [ -d "node_modules/.bin" ]; then
+          chmod -R +x node_modules/.bin/
+          export PATH="$PWD/node_modules/.bin:$PATH"
+        fi
     
     - name: Run tests
       run: npm test
@@ -128,10 +153,19 @@ jobs:
         name: node-modules
         path: node_modules/
     
+    - name: Debug downloaded node_modules
+      run: |
+        echo "=== Downloaded node_modules structure ==="
+        ls -la node_modules/ | head -20
+        echo "=== .bin directory ==="
+        ls -la node_modules/.bin/ | head -10 || echo "No .bin directory found"
+    
     - name: Fix node_modules permissions
       run: |
-        chmod -R +x node_modules/.bin/
-        export PATH="$PWD/node_modules/.bin:$PATH"
+        if [ -d "node_modules/.bin" ]; then
+          chmod -R +x node_modules/.bin/
+          export PATH="$PWD/node_modules/.bin:$PATH"
+        fi
     
     - name: Build project
       run: npm run build
