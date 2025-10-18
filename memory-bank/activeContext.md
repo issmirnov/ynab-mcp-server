@@ -1,7 +1,7 @@
 # Active Context
 
 ## Current Work Focus
-**Tier 2 Implementation Complete** - Successfully implemented and tested 4 new analytics and insights tools for the YNAB MCP Server, expanding from 10 to 14 total tools.
+**Tier 3 Implementation In Progress** - Successfully implemented SetCategoryGoalsTool, the first of 3 Enhanced Category Management tools. Now at 15/17+ tools (88% complete).
 
 ## Recent Changes
 - **Latest Version**: 0.1.2 (2024-03-26) - Now using official MCP SDK
@@ -41,8 +41,11 @@
 12. **CashFlowForecastTool**: Generate cash flow projections based on historical patterns
 13. **CategoryPerformanceReviewTool**: Review category budget performance with ratings and recommendations
 
+**Tier 3 Enhanced Category Management Tools (1):**
+14. **SetCategoryGoalsTool**: Create or update category goals with natural language support
+
 **Additional Tools (1):**
-14. **NetWorthAnalysisTool**: Analyze current net worth across all accounts
+15. **NetWorthAnalysisTool**: Analyze current net worth across all accounts
 
 ## Next Steps
 ### Immediate Priorities
@@ -53,7 +56,7 @@
 5. **Explore Additional Features**: Leverage new SDK capabilities for enhanced functionality
 
 ### Future Enhancements
-- **Tier 3 Tools**: Enhanced Category Management (SetCategoryGoals, BudgetFromHistory)
+- **Tier 3 Tools**: Enhanced Category Management (BudgetFromHistory, ReconcileAccount) - 1/3 complete
 - **Tier 4 Tools**: Transaction Intelligence (FindDuplicateTransactions, SmartTransactionSearch, CategorizePendingTransactions)
 - **Tier 5 Tools**: Specialized Tools (MonthEndCloseout, PayeeSpendingReport, ExportBudgetData)
 - **Enhanced Error Handling**: Leverage new SDK error handling patterns

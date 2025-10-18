@@ -9,7 +9,7 @@
 - **Environment Configuration**: YNAB_API_TOKEN and YNAB_BUDGET_ID handling
 - **Error Handling**: Consistent MCP content array format across all tools
 
-### Implemented Tools (14/17+ Planned Tools)
+### Implemented Tools (15/17+ Planned Tools)
 **Core Workflows (5/5):**
 1. **ListBudgetsTool**: ✅ Lists all available YNAB budgets
 2. **BudgetSummaryTool**: ✅ Provides budget month summaries with categories and accounts
@@ -29,8 +29,11 @@
 12. **CashFlowForecastTool**: ✅ Generate cash flow projections based on historical patterns
 13. **CategoryPerformanceReviewTool**: ✅ Review category budget performance with ratings and recommendations
 
+**Tier 3 - Enhanced Category Management (1/3):**
+14. **SetCategoryGoalsTool**: ✅ Create or update category goals with natural language support
+
 **Additional Tools (1/1):**
-14. **NetWorthAnalysisTool**: ✅ Analyze current net worth across all accounts
+15. **NetWorthAnalysisTool**: ✅ Analyze current net worth across all accounts
 
 ### Development Workflow
 - **Testing**: Vitest setup with coverage reporting (needs migration for new SDK)
@@ -70,7 +73,7 @@
 - **Budget Management**: ✅ Complete
 - **Transaction Management**: ✅ Complete
 - **Account Management**: ✅ Complete
-- **Category Management**: 🔄 Partial (viewing only, no updates)
+- **Category Management**: 🔄 Partial (viewing + goal updates, 1/3 Tier 3 tools)
 - **Analytics & Insights**: ✅ Complete (Tier 2)
 - **Net Worth Analysis**: ✅ Complete
 

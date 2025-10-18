@@ -20,6 +20,7 @@ import GoalProgressReportTool from "./tools/GoalProgressReportTool.js";
 import CashFlowForecastTool from "./tools/CashFlowForecastTool.js";
 import CategoryPerformanceReviewTool from "./tools/CategoryPerformanceReviewTool.js";
 import SetCategoryGoalsTool from "./tools/SetCategoryGoalsTool.js";
+import BudgetFromHistoryTool from "./tools/BudgetFromHistoryTool.js";
 
 const server = new Server(
   {
@@ -49,6 +50,7 @@ const goalProgressReportTool = new GoalProgressReportTool();
 const cashFlowForecastTool = new CashFlowForecastTool();
 const categoryPerformanceReviewTool = new CategoryPerformanceReviewTool();
 const setCategoryGoalsTool = new SetCategoryGoalsTool();
+const budgetFromHistoryTool = new BudgetFromHistoryTool();
 
 // List tools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -69,6 +71,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       cashFlowForecastTool.getToolDefinition(),
       categoryPerformanceReviewTool.getToolDefinition(),
       setCategoryGoalsTool.getToolDefinition(),
+      budgetFromHistoryTool.getToolDefinition(),
     ],
   };
 });
@@ -109,6 +112,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await categoryPerformanceReviewTool.execute(args as any);
       case "set_category_goals":
         return await setCategoryGoalsTool.execute(args as any);
+      case "budget_from_history":
+        return await budgetFromHistoryTool.execute(args as any);
       default:
         throw new Error(`Unknown tool: ${name}`);
     }

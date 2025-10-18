@@ -17,6 +17,7 @@ import GoalProgressReportTool from "./tools/GoalProgressReportTool.js";
 import CashFlowForecastTool from "./tools/CashFlowForecastTool.js";
 import CategoryPerformanceReviewTool from "./tools/CategoryPerformanceReviewTool.js";
 import SetCategoryGoalsTool from "./tools/SetCategoryGoalsTool.js";
+import BudgetFromHistoryTool from "./tools/BudgetFromHistoryTool.js";
 const server = new Server({
     name: "ynab-mcp-server",
     version: "0.1.2",
@@ -41,6 +42,7 @@ const goalProgressReportTool = new GoalProgressReportTool();
 const cashFlowForecastTool = new CashFlowForecastTool();
 const categoryPerformanceReviewTool = new CategoryPerformanceReviewTool();
 const setCategoryGoalsTool = new SetCategoryGoalsTool();
+const budgetFromHistoryTool = new BudgetFromHistoryTool();
 // List tools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
@@ -60,6 +62,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             cashFlowForecastTool.getToolDefinition(),
             categoryPerformanceReviewTool.getToolDefinition(),
             setCategoryGoalsTool.getToolDefinition(),
+            budgetFromHistoryTool.getToolDefinition(),
         ],
     };
 });
@@ -98,6 +101,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 return await categoryPerformanceReviewTool.execute(args);
             case "set_category_goals":
                 return await setCategoryGoalsTool.execute(args);
+            case "budget_from_history":
+                return await budgetFromHistoryTool.execute(args);
             default:
                 throw new Error(`Unknown tool: ${name}`);
         }
