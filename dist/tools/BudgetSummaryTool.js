@@ -43,10 +43,19 @@ class BudgetSummaryTool {
         try {
             console.error(`Getting accounts and categories for budget ${budgetId} and month ${input.month}`);
             const accountsResponse = await this.api.accounts.getAccounts(budgetId);
-            const accounts = accountsResponse.data.accounts.filter((account) => account.deleted === false && account.closed === false);
+            // Filter accounts: only include open, non-deleted accounts that are on-budget
+            const accounts = accountsResponse.data.accounts.filter((account) => account.deleted === false &&
+                account.closed === false &&
+                account.on_budget === true);
             const monthBudget = await this.api.months.getBudgetMonth(budgetId, input.month);
+            // Filter categories: only include active, non-hidden categories
+            // Also exclude internal categories like "Inflow: Ready to Assign" and "Uncategorized"
             const categories = monthBudget.data.month.categories
-                .filter((category) => category.deleted === false && category.hidden === false);
+                .filter((category) => category.deleted === false &&
+                category.hidden === false &&
+                !category.name.includes("Inflow:") &&
+                category.name !== "Uncategorized" &&
+                category.name !== "Deferred Income SubCategory");
             const result = this.summaryPrompt(monthBudget.data.month, accounts, categories);
             return {
                 content: [
@@ -112,9 +121,19 @@ class BudgetSummaryTool {
         // `;
         // return prompt;
         return {
-            monthBudget: monthBudget,
+            monthBudget: {
+                month: monthBudget.month,
+                note: monthBudget.note,
+                income: monthBudget.income,
+                budgeted: monthBudget.budgeted,
+                activity: monthBudget.activity,
+                to_be_budgeted: monthBudget.to_be_budgeted,
+                age_of_money: monthBudget.age_of_money,
+                deleted: monthBudget.deleted,
+                categories: categories
+            },
             accounts: accounts,
-            note: "Divide all numbers by 1000 to get the balance in dollars.",
+            note: "Divide all numbers by 1000 to get the balance in dollars. Only showing active (non-deleted, non-hidden) categories and open (non-deleted, non-closed) accounts.",
         };
     }
 }

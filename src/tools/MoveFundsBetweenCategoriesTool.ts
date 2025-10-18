@@ -67,7 +67,7 @@ class MoveFundsBetweenCategoriesTool {
                 },
                 amount: {
                   type: "number",
-                  description: "The amount to move in dollars (e.g., 50.00)",
+                  description: "The amount to move in dollars (e.g., 50.00). Use negative values to dip into previously saved funds (e.g., -100.00 to move $100 from accumulated savings).",
                 },
               },
               required: ["fromCategoryId", "toCategoryId", "amount"],
@@ -163,12 +163,24 @@ class MoveFundsBetweenCategoriesTool {
           continue;
         }
 
-        const amountMilliunits = Math.round(move.amount * 1000);
+        const amountMilliunits = Math.round(Math.abs(move.amount) * 1000);
         const fromBalanceBefore = fromCategory.budgeted;
         const toBalanceBefore = toCategory.budgeted;
         
-        const fromBalanceAfter = fromBalanceBefore - amountMilliunits;
-        const toBalanceAfter = toBalanceBefore + amountMilliunits;
+        // For negative amounts, we're moving from accumulated savings (balance) to budgeted
+        // For positive amounts, we're moving from budgeted to budgeted
+        let fromBalanceAfter: number;
+        let toBalanceAfter: number;
+        
+        if (move.amount < 0) {
+          // Moving from accumulated savings: reduce budgeted amount (make it more negative)
+          fromBalanceAfter = fromBalanceBefore - amountMilliunits;
+          toBalanceAfter = toBalanceBefore + amountMilliunits;
+        } else {
+          // Moving from budgeted to budgeted
+          fromBalanceAfter = fromBalanceBefore - amountMilliunits;
+          toBalanceAfter = toBalanceBefore + amountMilliunits;
+        }
 
         if (input.dryRun) {
           moveResults.push({
@@ -218,8 +230,8 @@ class MoveFundsBetweenCategoriesTool {
         }
       }
 
-      // Calculate totals
-      const totalAmount = input.moves.reduce((sum, move) => sum + move.amount, 0);
+      // Calculate totals (use absolute values for total amount moved)
+      const totalAmount = input.moves.reduce((sum, move) => sum + Math.abs(move.amount), 0);
       const successfulMoves = moveResults.filter(r => r.status === "success" || r.status === "simulated").length;
       const failedMoves = moveResults.filter(r => r.status === "failed").length;
 
@@ -233,7 +245,7 @@ class MoveFundsBetweenCategoriesTool {
         moves: moveResults.map(move => ({
           fromCategory: move.fromCategoryName,
           toCategory: move.toCategoryName,
-          amount: move.amount,
+          amount: Math.abs(move.amount),
           fromBalanceBefore: move.fromCategoryBalanceBefore,
           fromBalanceAfter: move.fromCategoryBalanceAfter,
           toBalanceBefore: move.toCategoryBalanceBefore,
@@ -291,14 +303,16 @@ class MoveFundsBetweenCategoriesTool {
         continue;
       }
 
-      if (move.amount <= 0) {
-        invalidMoves.push(`Amount must be positive: ${move.amount}`);
+      if (move.amount === 0) {
+        invalidMoves.push(`Amount must be non-zero: ${move.amount}`);
         continue;
       }
 
-      const amountMilliunits = Math.round(move.amount * 1000);
-      if (fromCategory.budgeted < amountMilliunits) {
-        invalidMoves.push(`Insufficient funds in ${fromCategory.name}: $${(fromCategory.budgeted / 1000).toFixed(2)} available, $${move.amount.toFixed(2)} requested`);
+      const amountMilliunits = Math.round(Math.abs(move.amount) * 1000);
+      const totalAvailable = fromCategory.budgeted + fromCategory.balance;
+      
+      if (totalAvailable < amountMilliunits) {
+        invalidMoves.push(`Insufficient funds in ${fromCategory.name}: $${(totalAvailable / 1000).toFixed(2)} available (budgeted: $${(fromCategory.budgeted / 1000).toFixed(2)}, balance: $${(fromCategory.balance / 1000).toFixed(2)}), $${Math.abs(move.amount).toFixed(2)} requested`);
         continue;
       }
 
