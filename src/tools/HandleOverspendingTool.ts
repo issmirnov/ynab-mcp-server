@@ -242,41 +242,46 @@ class HandleOverspendingTool {
 
     for (const suggestion of suggestions) {
       try {
-        // Create a transaction to move money between categories
-        // This is done by creating a split transaction with equal and opposite amounts
-        const moveTransaction = {
-          transaction: {
-            account_id: "", // We'll need to find an appropriate account
-            date: month,
-            amount: 0, // Split transaction
-            payee_name: "Internal Transfer",
-            memo: `Move $${(suggestion.amount / 1000).toFixed(2)} from ${suggestion.fromCategoryName} to ${suggestion.toCategoryName}`,
-            cleared: ynab.TransactionClearedStatus.Cleared,
-            approved: true,
-            subtransactions: [
-              {
-                amount: suggestion.amount,
-                category_id: suggestion.toCategoryId,
-                memo: `Transfer to ${suggestion.toCategoryName}`
-              },
-              {
-                amount: -suggestion.amount,
-                category_id: suggestion.fromCategoryId,
-                memo: `Transfer from ${suggestion.fromCategoryName}`
-              }
-            ]
+        console.log(`Executing move: ${suggestion.fromCategoryName} -> ${suggestion.toCategoryName} ($${(suggestion.amount / 1000).toFixed(2)})`);
+        
+        // Get current month data to get current budgeted amounts
+        const monthResponse = await this.api.months.getBudgetMonth(budgetId, month);
+        const monthData = monthResponse.data.month;
+        
+        const fromCategory = monthData.categories.find(cat => cat.id === suggestion.fromCategoryId);
+        const toCategory = monthData.categories.find(cat => cat.id === suggestion.toCategoryId);
+        
+        if (!fromCategory || !toCategory) {
+          throw new Error(`Category not found: ${!fromCategory ? suggestion.fromCategoryId : suggestion.toCategoryId}`);
+        }
+        
+        // Calculate new budgeted amounts
+        const fromNewBudgeted = fromCategory.budgeted - suggestion.amount;
+        const toNewBudgeted = toCategory.budgeted + suggestion.amount;
+        
+        // Update the from category
+        const fromUpdateData: ynab.PatchMonthCategoryWrapper = {
+          category: {
+            budgeted: fromNewBudgeted
           }
         };
-
-        // For now, we'll just log what would be done
-        // In a real implementation, we'd need to find an appropriate account and create the transaction
-        console.log(`Would execute move: ${suggestion.fromCategoryName} -> ${suggestion.toCategoryName} ($${(suggestion.amount / 1000).toFixed(2)})`);
+        
+        await this.api.categories.updateMonthCategory(budgetId, month, suggestion.fromCategoryId, fromUpdateData);
+        
+        // Update the to category
+        const toUpdateData: ynab.PatchMonthCategoryWrapper = {
+          category: {
+            budgeted: toNewBudgeted
+          }
+        };
+        
+        await this.api.categories.updateMonthCategory(budgetId, month, suggestion.toCategoryId, toUpdateData);
         
         executedMoves.push({
           fromCategory: suggestion.fromCategoryName,
           toCategory: suggestion.toCategoryName,
           amount: suggestion.amount / 1000,
-          status: "simulated" // Would be "executed" in real implementation
+          status: "success"
         });
 
       } catch (error) {

@@ -263,16 +263,33 @@ class MoveFundsBetweenCategoriesTool {
         return { validMoves, invalidMoves };
     }
     async executeMove(budgetId, month, fromCategoryId, toCategoryId, amountMilliunits) {
-        // For now, we'll just log what would be done
-        // In a real implementation, we'd call the API to update both categories
-        console.log(`Would move $${(amountMilliunits / 1000).toFixed(2)} from category ${fromCategoryId} to ${toCategoryId} in month ${month}`);
-        // This would involve:
-        // 1. Getting current budgeted amounts for both categories
-        // 2. Updating the from category: budgeted -= amount
-        // 3. Updating the to category: budgeted += amount
-        // 4. Calling the API to update both categories
-        // For simulation purposes, we'll just return success
-        return Promise.resolve();
+        console.log(`Moving $${(amountMilliunits / 1000).toFixed(2)} from category ${fromCategoryId} to ${toCategoryId} in month ${month}`);
+        // Get current month data to get current budgeted amounts
+        const monthResponse = await this.api.months.getBudgetMonth(budgetId, month);
+        const monthData = monthResponse.data.month;
+        const fromCategory = monthData.categories.find(cat => cat.id === fromCategoryId);
+        const toCategory = monthData.categories.find(cat => cat.id === toCategoryId);
+        if (!fromCategory || !toCategory) {
+            throw new Error(`Category not found: ${!fromCategory ? fromCategoryId : toCategoryId}`);
+        }
+        // Calculate new budgeted amounts
+        const fromNewBudgeted = fromCategory.budgeted - amountMilliunits;
+        const toNewBudgeted = toCategory.budgeted + amountMilliunits;
+        // Update the from category
+        const fromUpdateData = {
+            category: {
+                budgeted: fromNewBudgeted
+            }
+        };
+        await this.api.categories.updateMonthCategory(budgetId, month, fromCategoryId, fromUpdateData);
+        // Update the to category
+        const toUpdateData = {
+            category: {
+                budgeted: toNewBudgeted
+            }
+        };
+        await this.api.categories.updateMonthCategory(budgetId, month, toCategoryId, toUpdateData);
+        console.log(`Successfully moved $${(amountMilliunits / 1000).toFixed(2)} from ${fromCategory.name} to ${toCategory.name}`);
     }
 }
 export default MoveFundsBetweenCategoriesTool;
