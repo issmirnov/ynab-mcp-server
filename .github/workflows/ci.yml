@@ -56,11 +56,16 @@ jobs:
         name: node-modules
         path: node_modules/
     
+    - name: Fix node_modules permissions
+      run: |
+        chmod -R +x node_modules/.bin/
+        export PATH="$PWD/node_modules/.bin:$PATH"
+    
     - name: Run TypeScript type check
       run: npx tsc --noEmit
     
     - name: Run ESLint (if configured)
-      run: npx eslint src/ --ext .ts,.js || echo "ESLint not configured, skipping"
+      run: npx --yes eslint src/ --ext .ts,.js || echo "ESLint not configured, skipping"
       continue-on-error: true
 
   # Test Suite
@@ -83,6 +88,11 @@ jobs:
       with:
         name: node-modules
         path: node_modules/
+    
+    - name: Fix node_modules permissions
+      run: |
+        chmod -R +x node_modules/.bin/
+        export PATH="$PWD/node_modules/.bin:$PATH"
     
     - name: Run tests
       run: npm test
@@ -117,6 +127,11 @@ jobs:
       with:
         name: node-modules
         path: node_modules/
+    
+    - name: Fix node_modules permissions
+      run: |
+        chmod -R +x node_modules/.bin/
+        export PATH="$PWD/node_modules/.bin:$PATH"
     
     - name: Build project
       run: npm run build
