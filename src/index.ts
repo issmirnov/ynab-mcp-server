@@ -21,6 +21,7 @@ import CashFlowForecastTool from "./tools/CashFlowForecastTool.js";
 import CategoryPerformanceReviewTool from "./tools/CategoryPerformanceReviewTool.js";
 import SetCategoryGoalsTool from "./tools/SetCategoryGoalsTool.js";
 import BudgetFromHistoryTool from "./tools/BudgetFromHistoryTool.js";
+import ReconcileAccountTool from "./tools/ReconcileAccountTool.js";
 
 const server = new Server(
   {
@@ -51,6 +52,7 @@ const cashFlowForecastTool = new CashFlowForecastTool();
 const categoryPerformanceReviewTool = new CategoryPerformanceReviewTool();
 const setCategoryGoalsTool = new SetCategoryGoalsTool();
 const budgetFromHistoryTool = new BudgetFromHistoryTool();
+const reconcileAccountTool = new ReconcileAccountTool();
 
 // List tools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -72,6 +74,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       categoryPerformanceReviewTool.getToolDefinition(),
       setCategoryGoalsTool.getToolDefinition(),
       budgetFromHistoryTool.getToolDefinition(),
+      reconcileAccountTool.getToolDefinition(),
     ],
   };
 });
@@ -114,6 +117,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await setCategoryGoalsTool.execute(args as any);
       case "budget_from_history":
         return await budgetFromHistoryTool.execute(args as any);
+      case "reconcile_account":
+        return await reconcileAccountTool.execute(args as any);
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
