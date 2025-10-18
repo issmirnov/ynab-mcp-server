@@ -9,7 +9,7 @@ class HandleOverspendingTool {
     getToolDefinition() {
         return {
             name: "handle_overspending",
-            description: "Automatically resolve overspent categories by moving funds from available sources. Supports both automatic execution and suggestion mode.",
+            description: "Automatically resolve overspent categories by moving funds from available sources. Credit card payment categories are excluded as funding sources since they are needed to pay CC bills. Supports both automatic execution and suggestion mode.",
             inputSchema: {
                 type: "object",
                 properties: {
@@ -82,15 +82,20 @@ class HandleOverspendingTool {
                 };
             }
             // Find categories with positive balances that can contribute funds
+            // Exclude credit card payment categories as they are needed to pay CC bills
+            // Credit card payment categories typically have names starting with "💳" or containing "CC" or "Card"
             const availableCategories = categories.filter(cat => cat.balance > 0 &&
                 (!input.sourceCategories || input.sourceCategories.includes(cat.id)) &&
-                cat.category_group_name !== "Internal Master Category");
+                cat.category_group_name !== "Internal Master Category" &&
+                !cat.name.includes("💳") &&
+                !cat.name.includes("CC") &&
+                !cat.name.includes("Card"));
             if (availableCategories.length === 0) {
                 return {
                     content: [
                         {
                             type: "text",
-                            text: "No categories with available funds found to cover overspending. Consider adding money to 'Ready to Assign' or adjusting your budget.",
+                            text: "No categories with available funds found to cover overspending. Credit card payment categories are excluded as they are needed to pay CC bills. Consider adding money to 'Ready to Assign' or adjusting your budget.",
                         },
                     ],
                 };
@@ -191,39 +196,38 @@ class HandleOverspendingTool {
         const executedMoves = [];
         for (const suggestion of suggestions) {
             try {
-                // Create a transaction to move money between categories
-                // This is done by creating a split transaction with equal and opposite amounts
-                const moveTransaction = {
-                    transaction: {
-                        account_id: "", // We'll need to find an appropriate account
-                        date: month,
-                        amount: 0, // Split transaction
-                        payee_name: "Internal Transfer",
-                        memo: `Move $${(suggestion.amount / 1000).toFixed(2)} from ${suggestion.fromCategoryName} to ${suggestion.toCategoryName}`,
-                        cleared: ynab.TransactionClearedStatus.Cleared,
-                        approved: true,
-                        subtransactions: [
-                            {
-                                amount: suggestion.amount,
-                                category_id: suggestion.toCategoryId,
-                                memo: `Transfer to ${suggestion.toCategoryName}`
-                            },
-                            {
-                                amount: -suggestion.amount,
-                                category_id: suggestion.fromCategoryId,
-                                memo: `Transfer from ${suggestion.fromCategoryName}`
-                            }
-                        ]
+                console.log(`Executing move: ${suggestion.fromCategoryName} -> ${suggestion.toCategoryName} ($${(suggestion.amount / 1000).toFixed(2)})`);
+                // Get current month data to get current budgeted amounts
+                const monthResponse = await this.api.months.getBudgetMonth(budgetId, month);
+                const monthData = monthResponse.data.month;
+                const fromCategory = monthData.categories.find(cat => cat.id === suggestion.fromCategoryId);
+                const toCategory = monthData.categories.find(cat => cat.id === suggestion.toCategoryId);
+                if (!fromCategory || !toCategory) {
+                    throw new Error(`Category not found: ${!fromCategory ? suggestion.fromCategoryId : suggestion.toCategoryId}`);
+                }
+                // Calculate new budgeted amounts
+                const fromNewBudgeted = fromCategory.budgeted - suggestion.amount;
+                const toNewBudgeted = toCategory.budgeted + suggestion.amount;
+                // Update the to category first (credit) to ensure atomicity
+                // If this fails, no money is lost since source hasn't been debited yet
+                const toUpdateData = {
+                    category: {
+                        budgeted: toNewBudgeted
                     }
                 };
-                // For now, we'll just log what would be done
-                // In a real implementation, we'd need to find an appropriate account and create the transaction
-                console.log(`Would execute move: ${suggestion.fromCategoryName} -> ${suggestion.toCategoryName} ($${(suggestion.amount / 1000).toFixed(2)})`);
+                await this.api.categories.updateMonthCategory(budgetId, month, suggestion.toCategoryId, toUpdateData);
+                // Update the from category (debit) after successful credit
+                const fromUpdateData = {
+                    category: {
+                        budgeted: fromNewBudgeted
+                    }
+                };
+                await this.api.categories.updateMonthCategory(budgetId, month, suggestion.fromCategoryId, fromUpdateData);
                 executedMoves.push({
                     fromCategory: suggestion.fromCategoryName,
                     toCategory: suggestion.toCategoryName,
                     amount: suggestion.amount / 1000,
-                    status: "simulated" // Would be "executed" in real implementation
+                    status: "success"
                 });
             }
             catch (error) {

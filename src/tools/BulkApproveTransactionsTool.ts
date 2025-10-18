@@ -265,24 +265,33 @@ class BulkApproveTransactionsTool {
 
     for (const transaction of transactions) {
       try {
+        console.log(`Approving transaction: ${transaction.payee_name} - $${(transaction.amount / 1000).toFixed(2)} on ${transaction.date}`);
+        
         // Update transaction to approved
-        const updateData = {
+        const updateData: ynab.PutTransactionWrapper = {
           transaction: {
-            id: transaction.id,
-            approved: true
+            account_id: transaction.account_id,
+            date: transaction.date,
+            amount: transaction.amount,
+            payee_id: transaction.payee_id,
+            payee_name: transaction.payee_name,
+            category_id: transaction.category_id,
+            memo: transaction.memo,
+            cleared: transaction.cleared,
+            approved: true,
+            flag_color: transaction.flag_color,
+            subtransactions: transaction.subtransactions
           }
         };
 
-        // For now, we'll just log what would be done
-        // In a real implementation, we'd call the API to update the transaction
-        console.log(`Would approve transaction: ${transaction.payee_name} - $${(transaction.amount / 1000).toFixed(2)} on ${transaction.date}`);
+        await this.api.transactions.updateTransaction(budgetId, transaction.id, updateData);
         
         approvedTransactions.push({
           id: transaction.id,
           payeeName: transaction.payee_name,
           amount: transaction.amount / 1000,
           date: transaction.date,
-          status: "simulated" // Would be "approved" in real implementation
+          status: "success"
         });
 
       } catch (error) {
