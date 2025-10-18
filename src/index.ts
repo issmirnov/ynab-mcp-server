@@ -10,6 +10,10 @@ import BudgetSummaryTool from "./tools/BudgetSummaryTool.js";
 import CreateTransactionTool from "./tools/CreateTransactionTool.js";
 import GetUnapprovedTransactionsTool from "./tools/GetUnapprovedTransactionsTool.js";
 import ApproveTransactionTool from "./tools/ApproveTransactionTool.js";
+import HandleOverspendingTool from "./tools/HandleOverspendingTool.js";
+import AutoDistributeFundsTool from "./tools/AutoDistributeFundsTool.js";
+import BulkApproveTransactionsTool from "./tools/BulkApproveTransactionsTool.js";
+import MoveFundsBetweenCategoriesTool from "./tools/MoveFundsBetweenCategoriesTool.js";
 
 const server = new Server(
   {
@@ -29,6 +33,10 @@ const budgetSummaryTool = new BudgetSummaryTool();
 const createTransactionTool = new CreateTransactionTool();
 const getUnapprovedTransactionsTool = new GetUnapprovedTransactionsTool();
 const approveTransactionTool = new ApproveTransactionTool();
+const handleOverspendingTool = new HandleOverspendingTool();
+const autoDistributeFundsTool = new AutoDistributeFundsTool();
+const bulkApproveTransactionsTool = new BulkApproveTransactionsTool();
+const moveFundsBetweenCategoriesTool = new MoveFundsBetweenCategoriesTool();
 
 // List tools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -39,6 +47,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       createTransactionTool.getToolDefinition(),
       getUnapprovedTransactionsTool.getToolDefinition(),
       approveTransactionTool.getToolDefinition(),
+      handleOverspendingTool.getToolDefinition(),
+      autoDistributeFundsTool.getToolDefinition(),
+      bulkApproveTransactionsTool.getToolDefinition(),
+      moveFundsBetweenCategoriesTool.getToolDefinition(),
     ],
   };
 });
@@ -59,6 +71,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await getUnapprovedTransactionsTool.execute(args as any);
       case "approve_transaction":
         return await approveTransactionTool.execute(args as any);
+      case "handle_overspending":
+        return await handleOverspendingTool.execute(args as any);
+      case "auto_distribute_funds":
+        return await autoDistributeFundsTool.execute(args as any);
+      case "bulk_approve_transactions":
+        return await bulkApproveTransactionsTool.execute(args as any);
+      case "move_funds_between_categories":
+        return await moveFundsBetweenCategoriesTool.execute(args as any);
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
