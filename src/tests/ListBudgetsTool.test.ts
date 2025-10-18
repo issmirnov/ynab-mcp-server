@@ -4,15 +4,7 @@ import ListBudgetsTool from '../tools/ListBudgetsTool';
 
 vi.mock('ynab');
 
-vi.mock('mcp-framework', () => ({
-  MCPTool: class {
-    constructor() {}
-  },
-  logger: {
-    error: vi.fn(),
-    info: vi.fn(),
-  },
-}));
+// No need to mock mcp-framework anymore
 
 describe('ListBudgetsTool', () => {
   let tool: ListBudgetsTool;
@@ -107,23 +99,30 @@ describe('ListBudgetsTool', () => {
         data: { budgets: mockBudgetsData },
       });
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
       expect(mockApi.budgets.getBudgets).toHaveBeenCalledWith();
-      expect(result).toEqual([
-        {
-          id: 'budget-1',
-          name: 'My Personal Budget',
-        },
-        {
-          id: 'budget-2',
-          name: 'Family Budget',
-        },
-        {
-          id: 'budget-3',
-          name: 'Business Budget',
-        },
-      ]);
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify([
+              {
+                id: 'budget-1',
+                name: 'My Personal Budget',
+              },
+              {
+                id: 'budget-2',
+                name: 'Family Budget',
+              },
+              {
+                id: 'budget-3',
+                name: 'Business Budget',
+              },
+            ], null, 2),
+          },
+        ],
+      });
     });
 
     it('should handle empty budget list', async () => {
@@ -131,10 +130,17 @@ describe('ListBudgetsTool', () => {
         data: { budgets: [] },
       });
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
       expect(mockApi.budgets.getBudgets).toHaveBeenCalledWith();
-      expect(result).toEqual([]);
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify([], null, 2),
+          },
+        ],
+      });
     });
 
     it('should handle single budget', async () => {
@@ -144,23 +150,37 @@ describe('ListBudgetsTool', () => {
         data: { budgets: singleBudget },
       });
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
-      expect(result).toEqual([
-        {
-          id: 'budget-1',
-          name: 'My Personal Budget',
-        },
-      ]);
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify([
+              {
+                id: 'budget-1',
+                name: 'My Personal Budget',
+              },
+            ], null, 2),
+          },
+        ],
+      });
     });
 
     it('should return error message when YNAB API token is not set', async () => {
       delete process.env.YNAB_API_TOKEN;
       tool = new ListBudgetsTool();
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
-      expect(result).toBe('YNAB API Token is not set');
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: "YNAB API Token is not set",
+          },
+        ],
+      });
       expect(mockApi.budgets.getBudgets).not.toHaveBeenCalled();
     });
 
@@ -168,9 +188,16 @@ describe('ListBudgetsTool', () => {
       process.env.YNAB_API_TOKEN = '';
       tool = new ListBudgetsTool();
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
-      expect(result).toBe('YNAB API Token is not set');
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: "YNAB API Token is not set",
+          },
+        ],
+      });
       expect(mockApi.budgets.getBudgets).not.toHaveBeenCalled();
     });
 
@@ -178,9 +205,16 @@ describe('ListBudgetsTool', () => {
       const apiError = new Error('API Error: Unauthorized');
       mockApi.budgets.getBudgets.mockRejectedValue(apiError);
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
-      expect(result).toBe('Error listing budgets: {}');
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: "Error listing budgets: {}",
+          },
+        ],
+      });
     });
 
     it('should handle API error with error object', async () => {
@@ -191,11 +225,16 @@ describe('ListBudgetsTool', () => {
       };
       mockApi.budgets.getBudgets.mockRejectedValue(apiError);
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
-      expect(result).toBe(
-        'Error listing budgets: {"message":"Network Error","code":"NETWORK_ERROR","status":500}'
-      );
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: 'Error listing budgets: {"message":"Network Error","code":"NETWORK_ERROR","status":500}',
+          },
+        ],
+      });
     });
 
     it('should handle axios error', async () => {
@@ -209,10 +248,10 @@ describe('ListBudgetsTool', () => {
       };
       mockApi.budgets.getBudgets.mockRejectedValue(axiosError);
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
-      expect(result).toContain('Error listing budgets:');
-      expect(result).toContain('isAxiosError');
+      expect(result.content[0].text).toContain('Error listing budgets:');
+      expect(result.content[0].text).toContain('isAxiosError');
     });
 
     it('should handle budgets with special characters in names', async () => {
@@ -259,18 +298,25 @@ describe('ListBudgetsTool', () => {
         data: { budgets: specialBudgets },
       });
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
-      expect(result).toEqual([
-        {
-          id: 'budget-special-1',
-          name: 'Budget with "Quotes" & Symbols!',
-        },
-        {
-          id: 'budget-special-2',
-          name: 'émojis 🎯 & ünîcødé',
-        },
-      ]);
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify([
+              {
+                id: 'budget-special-1',
+                name: 'Budget with "Quotes" & Symbols!',
+              },
+              {
+                id: 'budget-special-2',
+                name: 'émojis 🎯 & ünîcødé',
+              },
+            ], null, 2),
+          },
+        ],
+      });
     });
 
     it('should handle budgets with empty names', async () => {
@@ -317,18 +363,25 @@ describe('ListBudgetsTool', () => {
         data: { budgets: budgetsWithEmptyNames },
       });
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
-      expect(result).toEqual([
-        {
-          id: 'budget-empty-1',
-          name: '',
-        },
-        {
-          id: 'budget-null-name',
-          name: null,
-        },
-      ]);
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify([
+              {
+                id: 'budget-empty-1',
+                name: '',
+              },
+              {
+                id: 'budget-null-name',
+                name: null,
+              },
+            ], null, 2),
+          },
+        ],
+      });
     });
 
     it('should handle very long budget names', async () => {
@@ -358,25 +411,38 @@ describe('ListBudgetsTool', () => {
         data: { budgets: budgetWithLongName },
       });
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
-      expect(result).toEqual([
-        {
-          id: 'budget-long-name',
-          name: longName,
-        },
-      ]);
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify([
+              {
+                id: 'budget-long-name',
+                name: longName,
+              },
+            ], null, 2),
+          },
+        ],
+      });
     });
   });
 
   describe('tool configuration', () => {
     it('should have correct name and description', () => {
-      expect(tool.name).toBe('list_budgets');
-      expect(tool.description).toBe('Lists all available budgets from YNAB API');
+      const toolDef = tool.getToolDefinition();
+      expect(toolDef.name).toBe('list_budgets');
+      expect(toolDef.description).toBe('Lists all available budgets from YNAB API');
     });
 
-    it('should have empty schema', () => {
-      expect(tool.schema).toEqual({});
+    it('should have correct input schema', () => {
+      const toolDef = tool.getToolDefinition();
+      expect(toolDef.inputSchema).toEqual({
+        type: "object",
+        properties: {},
+        additionalProperties: false,
+      });
     });
   });
 });

@@ -1,41 +1,68 @@
-import { MCPTool, logger } from "mcp-framework";
 import * as ynab from "ynab";
-import { z } from "zod";
-class GetUnapprovedTransactionsTool extends MCPTool {
-    name = "get_unapproved_transactions";
-    description = "Gets unapproved transactions from a budget. First time pulls last 3 days, subsequent pulls use server knowledge to get only changes.";
-    schema = {
-        budgetId: {
-            type: z.string().optional(),
-            description: "The ID of the budget to fetch transactions for (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)",
-        },
-    };
+class GetUnapprovedTransactionsTool {
     api;
     budgetId;
     constructor() {
-        super();
         this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
         this.budgetId = process.env.YNAB_BUDGET_ID || "";
+    }
+    getToolDefinition() {
+        return {
+            name: "get_unapproved_transactions",
+            description: "Gets unapproved transactions from a budget. First time pulls last 3 days, subsequent pulls use server knowledge to get only changes.",
+            inputSchema: {
+                type: "object",
+                properties: {
+                    budgetId: {
+                        type: "string",
+                        description: "The ID of the budget to fetch transactions for (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)",
+                    },
+                },
+                additionalProperties: false,
+            },
+        };
     }
     async execute(input) {
         const budgetId = input.budgetId || this.budgetId;
         if (!budgetId) {
-            return "No budget ID provided. Please provide a budget ID or set the YNAB_BUDGET_ID environment variable. Use the ListBudgets tool to get a list of available budgets.";
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: "No budget ID provided. Please provide a budget ID or set the YNAB_BUDGET_ID environment variable. Use the ListBudgets tool to get a list of available budgets.",
+                    },
+                ],
+            };
         }
         try {
-            logger.info(`Getting unapproved transactions for budget ${budgetId}`);
+            console.error(`Getting unapproved transactions for budget ${budgetId}`);
             const response = await this.api.transactions.getTransactions(budgetId, undefined, ynab.GetTransactionsTypeEnum.Unapproved);
             // Transform the transactions to a more readable format
             const transactions = this.transformTransactions(response.data.transactions);
-            return {
+            const result = {
                 transactions,
                 transaction_count: transactions.length,
             };
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: JSON.stringify(result, null, 2),
+                    },
+                ],
+            };
         }
         catch (error) {
-            logger.error(`Error getting unapproved transactions for budget ${budgetId}:`);
-            logger.error(JSON.stringify(error, null, 2));
-            return `Error getting unapproved transactions: ${error instanceof Error ? error.message : JSON.stringify(error)}`;
+            console.error(`Error getting unapproved transactions for budget ${budgetId}:`);
+            console.error(JSON.stringify(error, null, 2));
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error getting unapproved transactions: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
+                    },
+                ],
+            };
         }
     }
     transformTransactions(transactions) {

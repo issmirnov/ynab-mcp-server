@@ -1,65 +1,108 @@
-import { MCPTool, logger } from "mcp-framework";
 import * as ynab from "ynab";
-import { z } from "zod";
+import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { optimizeCategories, optimizeAccounts, withContextOptimization } from "../utils/contextOptimizer.js";
 
 interface BudgetSummaryInput {
   budgetId?: string;
   month: string;
 }
 
-class BudgetSummaryTool extends MCPTool<BudgetSummaryInput> {
-  name = "budget_summary";
-  description =
-    "Get a summary of the budget for a specific month highlighting overspent categories that need attention and categories with a positive balance that are doing well.";
-
-  schema = {
-    budgetId: {
-      type: z.string().optional(),
-      description:
-        "The ID of the budget to get a summary for (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)",
-    },
-    month: {
-      type: z.string().regex(/^(current|\d{4}-\d{2}-\d{2})$/),
-      default: "current",
-      description:
-        "The budget month in ISO format (e.g. 2016-12-01). The string 'current' can also be used to specify the current calendar month (UTC)",
-    },
-  };
-
+class BudgetSummaryTool {
   private api: ynab.API;
   private budgetId: string;
 
   constructor() {
-    super();
     this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
     this.budgetId = process.env.YNAB_BUDGET_ID || "";
+  }
+
+  getToolDefinition(): Tool {
+    return {
+      name: "budget_summary",
+      description: "Get a summary of the budget for a specific month highlighting overspent categories that need attention and categories with a positive balance that are doing well.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          budgetId: {
+            type: "string",
+            description: "The ID of the budget to get a summary for (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)",
+          },
+          month: {
+            type: "string",
+            pattern: "^(current|\\d{4}-\\d{2}-\\d{2})$",
+            default: "current",
+            description: "The budget month in ISO format (e.g. 2016-12-01). The string 'current' can also be used to specify the current calendar month (UTC)",
+          },
+        },
+        additionalProperties: false,
+      },
+    };
   }
 
   async execute(input: BudgetSummaryInput) {
     const budgetId = input.budgetId || this.budgetId;
     if (!budgetId) {
-      return "No budget ID provided. Please provide a budget ID or set the YNAB_BUDGET_ID environment variable. Use the ListBudgets tool to get a list of available budgets.";
+      return {
+        content: [
+          {
+            type: "text",
+            text: "No budget ID provided. Please provide a budget ID or set the YNAB_BUDGET_ID environment variable. Use the ListBudgets tool to get a list of available budgets.",
+          },
+        ],
+      };
     }
 
     try {
-      logger.info(`Getting accounts and categories for budget ${budgetId} and month ${input.month}`);
+      console.error(`Getting accounts and categories for budget ${budgetId} and month ${input.month}`);
       const accountsResponse = await this.api.accounts.getAccounts(budgetId);
+      // Filter accounts: only include open, non-deleted accounts that are on-budget
       const accounts = accountsResponse.data.accounts.filter(
-        (account) => account.deleted === false && account.closed === false
+        (account) => 
+          account.deleted === false && 
+          account.closed === false &&
+          account.on_budget === true
       );
 
       const monthBudget = await this.api.months.getBudgetMonth(budgetId, input.month);
 
+      // Filter categories: only include active, non-hidden categories
+      // Also exclude internal categories like "Inflow: Ready to Assign" and "Uncategorized"
       const categories = monthBudget.data.month.categories
         .filter(
-          (category) => category.deleted === false && category.hidden === false
+          (category) => 
+            category.deleted === false && 
+            category.hidden === false &&
+            !category.name.includes("Inflow:") &&
+            category.name !== "Uncategorized" &&
+            category.name !== "Deferred Income SubCategory"
         );
 
-      return this.summaryPrompt(monthBudget.data.month, accounts, categories);
+      const result = this.summaryPrompt(monthBudget.data.month, accounts, categories);
+
+      // Add category summary for better context
+      const categorySummary = this.createCategorySummary(categories);
+      const enhancedResult = {
+        ...result,
+        categorySummary: categorySummary
+      };
+
+      // Optimize for context efficiency
+      return withContextOptimization(enhancedResult, {
+        maxTokens: 4000,
+        summarizeCategories: true,
+        summarizeAccounts: true
+      });
     } catch (error: unknown) {
-      logger.error(`Error getting budget ${budgetId}:`);
-      logger.error(JSON.stringify(error, null, 2));
-      return `Error getting budget ${budgetId}: ${JSON.stringify(error)}`;
+      console.error(`Error getting budget ${budgetId}:`);
+      console.error(JSON.stringify(error, null, 2));
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error getting budget ${budgetId}: ${JSON.stringify(error)}`,
+          },
+        ],
+      };
     }
   }
 
@@ -117,10 +160,53 @@ class BudgetSummaryTool extends MCPTool<BudgetSummaryInput> {
     // return prompt;
 
     return {
-      monthBudget: monthBudget,
-      accounts: accounts,
-      note: "Divide all numbers by 1000 to get the balance in dollars.",
+      monthBudget: {
+        month: monthBudget.month,
+        note: monthBudget.note,
+        income: monthBudget.income,
+        budgeted: monthBudget.budgeted,
+        activity: monthBudget.activity,
+        to_be_budgeted: monthBudget.to_be_budgeted,
+        age_of_money: monthBudget.age_of_money,
+        deleted: monthBudget.deleted,
+        categories: optimizeCategories(categories, { 
+          prioritizeByActivity: true 
+        })
+      },
+      accounts: optimizeAccounts(accounts),
+      note: "All amounts in dollars. Compressed format: bal=balance, bud=budgeted, act=activity. All categories shown, sorted by activity.",
     }
+  }
+
+  private createCategorySummary(categories: any[]) {
+    const totalCategories = categories.length;
+    const categoriesWithActivity = categories.filter(cat => cat.activity !== 0);
+    const categoriesWithBudget = categories.filter(cat => cat.budgeted !== 0);
+    const overspentCategories = categories.filter(cat => cat.balance < 0);
+    const underfundedCategories = categories.filter(cat => cat.budgeted > 0 && cat.balance < cat.budgeted);
+
+    // Calculate totals
+    const totalActivity = categories.reduce((sum, cat) => sum + cat.activity, 0);
+    const totalBudgeted = categories.reduce((sum, cat) => sum + cat.budgeted, 0);
+    const totalOverspent = overspentCategories.reduce((sum, cat) => sum + Math.abs(cat.balance), 0);
+
+    return {
+      total_categories: totalCategories,
+      categories_with_activity: categoriesWithActivity.length,
+      categories_with_budget: categoriesWithBudget.length,
+      overspent_categories: overspentCategories.length,
+      underfunded_categories: underfundedCategories.length,
+      total_activity_dollars: Math.round((totalActivity / 1000) * 100) / 100,
+      total_budgeted_dollars: Math.round((totalBudgeted / 1000) * 100) / 100,
+      total_overspent_dollars: Math.round((totalOverspent / 1000) * 100) / 100,
+      top_activity_categories: categoriesWithActivity
+        .sort((a, b) => Math.abs(b.activity) - Math.abs(a.activity))
+        .slice(0, 5)
+        .map(cat => ({
+          name: cat.name,
+          activity_dollars: Math.round((cat.activity / 1000) * 100) / 100
+        }))
+    };
   }
 }
 
