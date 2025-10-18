@@ -1,21 +1,22 @@
 # Active Context
 
 ## Current Work Focus
-**Memory Bank Population** - Initial exploration and documentation of the YNAB MCP Server project to establish comprehensive understanding for future development work.
+**SDK Migration Complete** - Successfully migrated from mcp-framework to the official @modelcontextprotocol/typescript-sdk v1.20.1. The project now uses the modern, maintained SDK with improved functionality and better long-term support.
 
 ## Recent Changes
-- **Latest Version**: 0.1.2 (2024-03-26)
-- **Recent Additions**: ApproveTransaction tool with comprehensive transaction management
-- **Documentation**: Enhanced README and Cursor rules for YNAB API development
-- **Architecture**: Established consistent tool patterns and error handling
+- **Latest Version**: 0.1.2 (2024-03-26) - Now using official MCP SDK
+- **Major Migration**: Moved from mcp-framework to @modelcontextprotocol/typescript-sdk v1.20.1
+- **Architecture Update**: All 5 tools migrated to new SDK patterns with proper MCP protocol handling
+- **Build System**: Updated to use official SDK without mcp-build dependency
+- **Server Implementation**: Complete rewrite using official Server class and request handlers
 
 ## Current Status
 ### What's Working
 - ✅ **5 Core Tools Implemented**: All primary workflows supported
-- ✅ **MCP Framework Integration**: Auto-discovery and protocol handling
-- ✅ **Type Safety**: TypeScript with YNAB SDK types
-- ✅ **Testing Infrastructure**: Vitest setup with coverage
-- ✅ **Build System**: TypeScript compilation and MCP build
+- ✅ **Official MCP SDK Integration**: Using @modelcontextprotocol/typescript-sdk v1.20.1
+- ✅ **Type Safety**: TypeScript with YNAB SDK types and proper MCP types
+- ✅ **Build System**: TypeScript compilation with official SDK
+- ✅ **Server Functionality**: All tools working with new SDK implementation
 - ✅ **Documentation**: Comprehensive README and development guides
 
 ### Current Tool Set
@@ -27,22 +28,23 @@
 
 ## Next Steps
 ### Immediate Priorities
-1. **Complete Memory Bank**: Finish documenting current state
-2. **Review Test Coverage**: Ensure all tools have comprehensive tests
-3. **Validate Build Process**: Run build and lint commands per rules
-4. **Explore YNAB Types**: Understand available API endpoints for future tools
+1. **Update Test Suite**: Migrate tests to work with new SDK return format (content array structure)
+2. **Update Documentation**: Reflect new SDK usage in README and development guides
+3. **Validate Production Build**: Test with real YNAB API credentials
+4. **Explore Additional Features**: Leverage new SDK capabilities for enhanced functionality
 
-### Future Enhancements (from README)
+### Future Enhancements
 - **Bulk Transaction Approval**: Approve multiple transactions with one call
 - **UpdateCategory Tool**: More general transaction/category update capabilities
-- **Framework Migration**: Consider moving from mcp-framework to direct MCP SDK
+- **Enhanced Error Handling**: Leverage new SDK error handling patterns
+- **Additional MCP Features**: Explore prompts, resources, and other SDK capabilities
 
 ## Active Decisions and Considerations
 
 ### Architecture Decisions
-- **mcp-framework vs Direct MCP SDK**: Currently using framework for simplicity, may migrate for more control
-- **Tool Pattern Consistency**: All tools follow same pattern with YNAB API client initialization
-- **Error Handling**: Consistent try/catch with user-friendly messages
+- **Official MCP SDK**: Successfully migrated to @modelcontextprotocol/typescript-sdk for better maintenance and features
+- **Tool Pattern Consistency**: All tools follow new SDK pattern with getToolDefinition() and execute() methods
+- **Error Handling**: Consistent content array format with proper MCP response structure
 
 ### Development Considerations
 - **YNAB API Token Security**: Critical to never expose to LLM, handled via environment variables

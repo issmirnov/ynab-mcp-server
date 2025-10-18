@@ -1,33 +1,41 @@
 # System Patterns
 
 ## Architecture Overview
-**MCP Server Pattern**: Built using the Model Context Protocol framework with auto-discovery of tools.
+**MCP Server Pattern**: Built using the official Model Context Protocol TypeScript SDK with manual tool registration.
 
 ### Core Architecture
 ```
 src/index.ts (Entry Point)
-├── MCPServer instance
-├── Auto-discovery of tools in src/tools/
+├── Server instance from @modelcontextprotocol/sdk
+├── Manual tool registration and request handlers
+├── StdioServerTransport for communication
 └── YNAB API integration via environment variables
 ```
 
 ### Tool Architecture Pattern
 Each tool follows a consistent pattern:
 ```typescript
-class ToolName extends MCPTool<InputType> {
-  name = "tool_name";
-  description = "Tool description";
-  schema = { /* Zod validation */ };
-  
+class ToolName {
   private api: ynab.API;
   
   constructor() {
-    super();
     this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
   }
   
-  async execute(input: InputType) {
-    // Implementation
+  getToolDefinition(): Tool {
+    return {
+      name: "tool_name",
+      description: "Tool description",
+      inputSchema: {
+        type: "object",
+        properties: { /* JSON Schema */ },
+        additionalProperties: false,
+      },
+    };
+  }
+  
+  async execute(input: any) {
+    // Implementation returns { content: [{ type: "text", text: "..." }] }
   }
 }
 ```
@@ -35,9 +43,9 @@ class ToolName extends MCPTool<InputType> {
 ## Key Technical Decisions
 
 ### 1. Framework Choice
-- **mcp-framework**: Chosen for MCP protocol handling and auto-discovery
-- **Benefits**: Automatic tool registration, built-in logging, standardized patterns
-- **Trade-offs**: Less control over MCP protocol details
+- **@modelcontextprotocol/typescript-sdk**: Official MCP SDK for protocol handling
+- **Benefits**: Official support, better maintenance, full MCP protocol compliance, modern features
+- **Trade-offs**: Requires manual tool registration, more explicit setup
 
 ### 2. YNAB SDK Integration
 - **Official YNAB SDK**: Uses `ynab` npm package for type safety
@@ -46,8 +54,9 @@ class ToolName extends MCPTool<InputType> {
 
 ### 3. Type Safety
 - **TypeScript**: Strict mode enabled for type safety
-- **Zod Schemas**: Runtime validation for tool inputs
+- **JSON Schema**: Runtime validation for tool inputs via official SDK
 - **YNAB Types**: Leverages official YNAB SDK types
+- **MCP Types**: Uses official MCP SDK types for proper protocol compliance
 
 ### 4. Configuration Management
 - **Environment Variables**: `YNAB_API_TOKEN` (required), `YNAB_BUDGET_ID` (optional)
@@ -71,17 +80,17 @@ class ToolName extends MCPTool<InputType> {
 ## Design Patterns in Use
 
 ### 1. Factory Pattern
-- Tools are auto-discovered and instantiated by mcp-framework
+- Tools are manually instantiated and registered in the server
 - Each tool creates its own YNAB API client
 
 ### 2. Template Method Pattern
-- All tools extend MCPTool with consistent structure
-- Common patterns: constructor setup, error handling, logging
+- All tools follow consistent structure with getToolDefinition() and execute() methods
+- Common patterns: constructor setup, error handling, MCP response format
 
 ### 3. Error Handling Pattern
 - Consistent try/catch blocks
-- Descriptive error messages for users
-- Detailed logging for debugging
+- Descriptive error messages returned in MCP content array format
+- Console.error logging for debugging
 
 ### 4. Configuration Pattern
 - Environment-based configuration
@@ -91,9 +100,9 @@ class ToolName extends MCPTool<InputType> {
 ## Integration Patterns
 
 ### MCP Protocol
-- Tools auto-register via framework
-- Standardized input/output handling
-- Protocol-level error management
+- Tools manually registered via Server class
+- Standardized input/output handling with content arrays
+- Protocol-level error management via official SDK
 
 ### YNAB API Integration
 - RESTful API calls via official SDK

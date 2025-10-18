@@ -11,7 +11,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && mcp-build && chmod +x dist/index.js",
+    "build": "tsc && chmod +x dist/index.js",
     "prepare": "npm run build",
     "watch": "tsc --watch",
     "start": "node dist/index.js",
@@ -21,9 +21,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@types/axios": "^0.14.4",
-    "axios": "^1.8.4",
-    "mcp-framework": "^0.1.29",
+    "@modelcontextprotocol/sdk": "^1.20.1",
     "ynab": "^2.9.0"
   },
   "devDependencies": {

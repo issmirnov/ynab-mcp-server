@@ -4,15 +4,7 @@ import ListBudgetsTool from '../tools/ListBudgetsTool';
 
 vi.mock('ynab');
 
-vi.mock('mcp-framework', () => ({
-  MCPTool: class {
-    constructor() {}
-  },
-  logger: {
-    error: vi.fn(),
-    info: vi.fn(),
-  },
-}));
+// No need to mock mcp-framework anymore
 
 describe('ListBudgetsTool', () => {
   let tool: ListBudgetsTool;
@@ -107,23 +99,30 @@ describe('ListBudgetsTool', () => {
         data: { budgets: mockBudgetsData },
       });
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
       expect(mockApi.budgets.getBudgets).toHaveBeenCalledWith();
-      expect(result).toEqual([
-        {
-          id: 'budget-1',
-          name: 'My Personal Budget',
-        },
-        {
-          id: 'budget-2',
-          name: 'Family Budget',
-        },
-        {
-          id: 'budget-3',
-          name: 'Business Budget',
-        },
-      ]);
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify([
+              {
+                id: 'budget-1',
+                name: 'My Personal Budget',
+              },
+              {
+                id: 'budget-2',
+                name: 'Family Budget',
+              },
+              {
+                id: 'budget-3',
+                name: 'Business Budget',
+              },
+            ], null, 2),
+          },
+        ],
+      });
     });
 
     it('should handle empty budget list', async () => {
@@ -131,10 +130,17 @@ describe('ListBudgetsTool', () => {
         data: { budgets: [] },
       });
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
       expect(mockApi.budgets.getBudgets).toHaveBeenCalledWith();
-      expect(result).toEqual([]);
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify([], null, 2),
+          },
+        ],
+      });
     });
 
     it('should handle single budget', async () => {
@@ -158,9 +164,16 @@ describe('ListBudgetsTool', () => {
       delete process.env.YNAB_API_TOKEN;
       tool = new ListBudgetsTool();
 
-      const result = await tool.execute();
+      const result = await tool.execute({});
 
-      expect(result).toBe('YNAB API Token is not set');
+      expect(result).toEqual({
+        content: [
+          {
+            type: "text",
+            text: "YNAB API Token is not set",
+          },
+        ],
+      });
       expect(mockApi.budgets.getBudgets).not.toHaveBeenCalled();
     });
 
@@ -371,12 +384,18 @@ describe('ListBudgetsTool', () => {
 
   describe('tool configuration', () => {
     it('should have correct name and description', () => {
-      expect(tool.name).toBe('list_budgets');
-      expect(tool.description).toBe('Lists all available budgets from YNAB API');
+      const toolDef = tool.getToolDefinition();
+      expect(toolDef.name).toBe('list_budgets');
+      expect(toolDef.description).toBe('Lists all available budgets from YNAB API');
     });
 
-    it('should have empty schema', () => {
-      expect(tool.schema).toEqual({});
+    it('should have correct input schema', () => {
+      const toolDef = tool.getToolDefinition();
+      expect(toolDef.inputSchema).toEqual({
+        type: "object",
+        properties: {},
+        additionalProperties: false,
+      });
     });
   });
 });

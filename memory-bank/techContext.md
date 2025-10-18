@@ -5,12 +5,12 @@
 ### Core Technologies
 - **TypeScript**: Primary language with strict mode
 - **Server**: Node.js with ESNext target
-- **Framework**: mcp-framework (v0.1.29) for MCP protocol handling
+- **Framework**: @modelcontextprotocol/typescript-sdk (v1.20.1) for official MCP protocol handling
 - **YNAB Integration**: Official ynab SDK (v2.9.0)
-- **HTTP Client**: Axios (v1.8.4) via YNAB SDK
+- **HTTP Client**: Axios via YNAB SDK
 
 ### Development Tools
-- **Build System**: TypeScript compiler + mcp-build
+- **Build System**: TypeScript compiler (no mcp-build needed with official SDK)
 - **Testing**: Vitest (v3.2.4) with coverage reporting
 - **Linting**: TypeScript strict mode
 - **Debugging**: MCP Inspector (@modelcontextprotocol/inspector)
@@ -18,7 +18,7 @@
 ### Package Management
 - **Package Manager**: npm with package-lock.json
 - **Module System**: ESNext modules
-- **Type Definitions**: @types/node, @types/axios
+- **Type Definitions**: @types/node (no longer need @types/axios)
 
 ## Development Setup
 
@@ -34,7 +34,7 @@ npm run build
 ```
 
 ### Available Scripts
-- `build`: Compile TypeScript + mcp-build + chmod executable
+- `build`: Compile TypeScript + chmod executable (no mcp-build needed)
 - `watch`: TypeScript file watching
 - `start`: Run compiled server
 - `debug`: Run with MCP inspector
@@ -51,10 +51,10 @@ npm run build
 - **Budget Selection**: Must handle budget ID resolution
 
 ### MCP Protocol Requirements
-- **Tool Registration**: Auto-discovery via mcp-framework
-- **Input Validation**: Zod schemas for runtime validation
-- **Error Handling**: Consistent error response format
-- **Logging**: Structured logging via framework
+- **Tool Registration**: Manual registration via official SDK Server class
+- **Input Validation**: JSON Schema validation via official SDK
+- **Error Handling**: Consistent content array format with proper MCP response structure
+- **Logging**: Console.error for server-side logging
 
 ### Security Considerations
 - **Token Security**: Never expose YNAB_API_TOKEN to LLM
@@ -66,9 +66,7 @@ npm run build
 ### Production Dependencies
 ```json
 {
-  "@types/axios": "^0.14.4",
-  "axios": "^1.8.4", 
-  "mcp-framework": "^0.1.29",
+  "@modelcontextprotocol/sdk": "^1.20.1",
   "ynab": "^2.9.0"
 }
 ```
