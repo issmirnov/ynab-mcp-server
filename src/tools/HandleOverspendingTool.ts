@@ -31,7 +31,7 @@ class HandleOverspendingTool {
   getToolDefinition(): Tool {
     return {
       name: "handle_overspending",
-      description: "Automatically resolve overspent categories by moving funds from available sources. Supports both automatic execution and suggestion mode.",
+      description: "Automatically resolve overspent categories by moving funds from available sources. Credit card payment categories are excluded as funding sources since they are needed to pay CC bills. Supports both automatic execution and suggestion mode.",
       inputSchema: {
         type: "object",
         properties: {
@@ -113,10 +113,12 @@ class HandleOverspendingTool {
       }
 
       // Find categories with positive balances that can contribute funds
+      // Exclude credit card payment categories as they are needed to pay CC bills
       const availableCategories = categories.filter(cat => 
         cat.balance > 0 && 
         (!input.sourceCategories || input.sourceCategories.includes(cat.id)) &&
-        cat.category_group_name !== "Internal Master Category"
+        cat.category_group_name !== "Internal Master Category" &&
+        cat.category_group_name !== "Credit Card Payments"
       );
 
       if (availableCategories.length === 0) {
@@ -124,7 +126,7 @@ class HandleOverspendingTool {
           content: [
             {
               type: "text",
-              text: "No categories with available funds found to cover overspending. Consider adding money to 'Ready to Assign' or adjusting your budget.",
+              text: "No categories with available funds found to cover overspending. Credit card payment categories are excluded as they are needed to pay CC bills. Consider adding money to 'Ready to Assign' or adjusting your budget.",
             },
           ],
         };

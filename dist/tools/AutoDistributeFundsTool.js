@@ -261,20 +261,28 @@ class AutoDistributeFundsTool {
         const executedDistributions = [];
         for (const item of plan) {
             try {
-                // Update the category budget for the month
+                console.log(`Distributing $${(item.proposedAmount / 1000).toFixed(2)} to ${item.categoryName} (${item.reason})`);
+                // Get current month data to get current budgeted amounts
+                const monthResponse = await this.api.months.getBudgetMonth(budgetId, month);
+                const monthData = monthResponse.data.month;
+                const category = monthData.categories.find(cat => cat.id === item.categoryId);
+                if (!category) {
+                    throw new Error(`Category not found: ${item.categoryId}`);
+                }
+                // Calculate new budgeted amount
+                const newBudgeted = category.budgeted + item.proposedAmount;
+                // Update the category budget
                 const updateData = {
                     category: {
-                        budgeted: item.currentBudgeted + item.proposedAmount
+                        budgeted: newBudgeted
                     }
                 };
-                // For now, we'll just log what would be done
-                // In a real implementation, we'd call the API to update the category
-                console.log(`Would distribute $${(item.proposedAmount / 1000).toFixed(2)} to ${item.categoryName} (${item.reason})`);
+                await this.api.categories.updateMonthCategory(budgetId, month, item.categoryId, updateData);
                 executedDistributions.push({
                     category: item.categoryName,
                     amount: item.proposedAmount / 1000,
                     reason: item.reason,
-                    status: "simulated" // Would be "executed" in real implementation
+                    status: "success"
                 });
             }
             catch (error) {
