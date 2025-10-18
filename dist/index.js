@@ -12,6 +12,10 @@ import AutoDistributeFundsTool from "./tools/AutoDistributeFundsTool.js";
 import BulkApproveTransactionsTool from "./tools/BulkApproveTransactionsTool.js";
 import MoveFundsBetweenCategoriesTool from "./tools/MoveFundsBetweenCategoriesTool.js";
 import NetWorthAnalysisTool from "./tools/NetWorthAnalysisTool.js";
+import AnalyzeSpendingPatternsTool from "./tools/AnalyzeSpendingPatternsTool.js";
+import GoalProgressReportTool from "./tools/GoalProgressReportTool.js";
+import CashFlowForecastTool from "./tools/CashFlowForecastTool.js";
+import CategoryPerformanceReviewTool from "./tools/CategoryPerformanceReviewTool.js";
 const server = new Server({
     name: "ynab-mcp-server",
     version: "0.1.2",
@@ -31,6 +35,10 @@ const autoDistributeFundsTool = new AutoDistributeFundsTool();
 const bulkApproveTransactionsTool = new BulkApproveTransactionsTool();
 const moveFundsBetweenCategoriesTool = new MoveFundsBetweenCategoriesTool();
 const netWorthAnalysisTool = new NetWorthAnalysisTool();
+const analyzeSpendingPatternsTool = new AnalyzeSpendingPatternsTool();
+const goalProgressReportTool = new GoalProgressReportTool();
+const cashFlowForecastTool = new CashFlowForecastTool();
+const categoryPerformanceReviewTool = new CategoryPerformanceReviewTool();
 // List tools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
@@ -45,6 +53,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             bulkApproveTransactionsTool.getToolDefinition(),
             moveFundsBetweenCategoriesTool.getToolDefinition(),
             netWorthAnalysisTool.getToolDefinition(),
+            analyzeSpendingPatternsTool.getToolDefinition(),
+            goalProgressReportTool.getToolDefinition(),
+            cashFlowForecastTool.getToolDefinition(),
+            categoryPerformanceReviewTool.getToolDefinition(),
         ],
     };
 });
@@ -73,6 +85,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 return await moveFundsBetweenCategoriesTool.execute(args);
             case "net_worth_analysis":
                 return await netWorthAnalysisTool.execute(args);
+            case "analyze_spending_patterns":
+                return await analyzeSpendingPatternsTool.execute(args);
+            case "goal_progress_report":
+                return await goalProgressReportTool.execute(args);
+            case "cash_flow_forecast":
+                return await cashFlowForecastTool.execute(args);
+            case "category_performance_review":
+                return await categoryPerformanceReviewTool.execute(args);
             default:
                 throw new Error(`Unknown tool: ${name}`);
         }
