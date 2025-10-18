@@ -2,6 +2,8 @@
 
 A comprehensive Model Context Protocol (MCP) server built with the official @modelcontextprotocol/typescript-sdk. This MCP provides 14 powerful tools for interacting with your YNAB budgets setup at https://ynab.com
 
+> **Acknowledgments**: This project is based on the original work by [Caleb LeNoir](https://github.com/calebl/ynab-mcp-server) and has been significantly expanded with additional tools, analytics capabilities, and enhanced functionality. We thank Caleb for the foundational work that made this comprehensive version possible.
+
 [![GitHub](https://img.shields.io/badge/GitHub-issmirnov%2Fynab--mcp--server-blue)](https://github.com/issmirnov/ynab-mcp-server)
 [![npm version](https://img.shields.io/npm/v/ynab-mcp-server)](https://www.npmjs.com/package/ynab-mcp-server)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue)](https://www.typescriptlang.org/)
@@ -80,6 +82,26 @@ The goal of this project is to enable comprehensive AI-powered interaction with 
 - ✅ TypeScript build system working
 - ✅ Proper MCP protocol compliance
 - ✅ Production-ready with comprehensive error handling
+
+## Project Evolution
+
+This project started as a fork of [Caleb LeNoir's original ynab-mcp-server](https://github.com/calebl/ynab-mcp-server) and has been significantly expanded:
+
+### **Original Foundation (by Caleb LeNoir)**
+- 5 core tools for basic YNAB interaction
+- mcp-framework implementation
+- Basic transaction and budget management
+
+### **Enhanced Version (this repository)**
+- **Expanded to 14 comprehensive tools** across 4 categories
+- **Migrated to official MCP SDK** for better maintenance and features
+- **Added advanced analytics** including spending patterns, goal tracking, and performance reviews
+- **Implemented workflow automation** for overspending resolution and fund distribution
+- **Enhanced error handling** and production-ready reliability
+- **Comprehensive test coverage** with 69 passing tests
+- **Improved documentation** and user experience
+
+We maintain full compatibility with the original API while providing significantly more functionality for comprehensive budget management.
 
 
 ## Quick Start
