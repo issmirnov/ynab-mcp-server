@@ -11,6 +11,7 @@ import HandleOverspendingTool from "./tools/HandleOverspendingTool.js";
 import AutoDistributeFundsTool from "./tools/AutoDistributeFundsTool.js";
 import BulkApproveTransactionsTool from "./tools/BulkApproveTransactionsTool.js";
 import MoveFundsBetweenCategoriesTool from "./tools/MoveFundsBetweenCategoriesTool.js";
+import NetWorthAnalysisTool from "./tools/NetWorthAnalysisTool.js";
 const server = new Server({
     name: "ynab-mcp-server",
     version: "0.1.2",
@@ -29,6 +30,7 @@ const handleOverspendingTool = new HandleOverspendingTool();
 const autoDistributeFundsTool = new AutoDistributeFundsTool();
 const bulkApproveTransactionsTool = new BulkApproveTransactionsTool();
 const moveFundsBetweenCategoriesTool = new MoveFundsBetweenCategoriesTool();
+const netWorthAnalysisTool = new NetWorthAnalysisTool();
 // List tools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
@@ -42,6 +44,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             autoDistributeFundsTool.getToolDefinition(),
             bulkApproveTransactionsTool.getToolDefinition(),
             moveFundsBetweenCategoriesTool.getToolDefinition(),
+            netWorthAnalysisTool.getToolDefinition(),
         ],
     };
 });
@@ -68,6 +71,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 return await bulkApproveTransactionsTool.execute(args);
             case "move_funds_between_categories":
                 return await moveFundsBetweenCategoriesTool.execute(args);
+            case "net_worth_analysis":
+                return await netWorthAnalysisTool.execute(args);
             default:
                 throw new Error(`Unknown tool: ${name}`);
         }

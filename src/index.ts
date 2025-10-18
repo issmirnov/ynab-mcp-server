@@ -14,6 +14,7 @@ import HandleOverspendingTool from "./tools/HandleOverspendingTool.js";
 import AutoDistributeFundsTool from "./tools/AutoDistributeFundsTool.js";
 import BulkApproveTransactionsTool from "./tools/BulkApproveTransactionsTool.js";
 import MoveFundsBetweenCategoriesTool from "./tools/MoveFundsBetweenCategoriesTool.js";
+import NetWorthAnalysisTool from "./tools/NetWorthAnalysisTool.js";
 
 const server = new Server(
   {
@@ -37,6 +38,7 @@ const handleOverspendingTool = new HandleOverspendingTool();
 const autoDistributeFundsTool = new AutoDistributeFundsTool();
 const bulkApproveTransactionsTool = new BulkApproveTransactionsTool();
 const moveFundsBetweenCategoriesTool = new MoveFundsBetweenCategoriesTool();
+const netWorthAnalysisTool = new NetWorthAnalysisTool();
 
 // List tools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -51,6 +53,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       autoDistributeFundsTool.getToolDefinition(),
       bulkApproveTransactionsTool.getToolDefinition(),
       moveFundsBetweenCategoriesTool.getToolDefinition(),
+      netWorthAnalysisTool.getToolDefinition(),
     ],
   };
 });
@@ -79,6 +82,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await bulkApproveTransactionsTool.execute(args as any);
       case "move_funds_between_categories":
         return await moveFundsBetweenCategoriesTool.execute(args as any);
+      case "net_worth_analysis":
+        return await netWorthAnalysisTool.execute(args as any);
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
