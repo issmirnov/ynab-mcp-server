@@ -9,12 +9,28 @@
 - **Environment Configuration**: YNAB_API_TOKEN and YNAB_BUDGET_ID handling
 - **Error Handling**: Consistent MCP content array format across all tools
 
-### Implemented Tools (5/5 Core Workflows)
+### Implemented Tools (14/17+ Planned Tools)
+**Core Workflows (5/5):**
 1. **ListBudgetsTool**: ✅ Lists all available YNAB budgets
 2. **BudgetSummaryTool**: ✅ Provides budget month summaries with categories and accounts
 3. **GetUnapprovedTransactionsTool**: ✅ Retrieves pending transactions with readable format
 4. **CreateTransactionTool**: ✅ Creates transactions with natural language support
 5. **ApproveTransactionTool**: ✅ Approves existing transactions with proper data preservation
+
+**Phase 1 - Core Workflow Automation (4/4):**
+6. **HandleOverspendingTool**: ✅ Automatically resolve overspent categories by moving funds
+7. **AutoDistributeFundsTool**: ✅ Intelligently allocate "Ready to Assign" money based on goals
+8. **BulkApproveTransactionsTool**: ✅ Approve multiple transactions matching criteria
+9. **MoveFundsBetweenCategoriesTool**: ✅ Transfer budgeted amounts between categories
+
+**Tier 2 - Analytics & Insights (4/4):**
+10. **AnalyzeSpendingPatternsTool**: ✅ Analyze spending patterns to detect trends and anomalies
+11. **GoalProgressReportTool**: ✅ Generate comprehensive goal progress reports with ratings
+12. **CashFlowForecastTool**: ✅ Generate cash flow projections based on historical patterns
+13. **CategoryPerformanceReviewTool**: ✅ Review category budget performance with ratings and recommendations
+
+**Additional Tools (1/1):**
+14. **NetWorthAnalysisTool**: ✅ Analyze current net worth across all accounts
 
 ### Development Workflow
 - **Testing**: Vitest setup with coverage reporting (needs migration for new SDK)
@@ -55,6 +71,8 @@
 - **Transaction Management**: ✅ Complete
 - **Account Management**: ✅ Complete
 - **Category Management**: 🔄 Partial (viewing only, no updates)
+- **Analytics & Insights**: ✅ Complete (Tier 2)
+- **Net Worth Analysis**: ✅ Complete
 
 ### API Coverage
 - **Budgets API**: ✅ List budgets
@@ -96,6 +114,9 @@
 
 ### Completed
 - ✅ All 5 core workflows implemented
+- ✅ Phase 1 tools implemented (4/4)
+- ✅ Tier 2 analytics tools implemented (4/4)
+- ✅ Net worth analysis tool implemented
 - ✅ Official MCP SDK integration working
 - ✅ TypeScript build system functional with new SDK
 - ✅ Documentation comprehensive

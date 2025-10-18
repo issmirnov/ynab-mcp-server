@@ -1,16 +1,16 @@
 # Active Context
 
 ## Current Work Focus
-**Phase 1 Implementation Complete** - Successfully implemented and tested 4 new core workflow automation tools for the YNAB MCP Server, expanding from 5 to 9 total tools.
+**Tier 2 Implementation Complete** - Successfully implemented and tested 4 new analytics and insights tools for the YNAB MCP Server, expanding from 10 to 14 total tools.
 
 ## Recent Changes
 - **Latest Version**: 0.1.2 (2024-03-26) - Now using official MCP SDK
-- **Phase 1 Tools Added**: Implemented 4 new core workflow automation tools
+- **Tier 2 Tools Added**: Implemented 4 new analytics and insights tools
 - **Real Budget Testing**: Successfully tested with Smirnov Labs LLC budget
-- **Architecture Update**: All 9 tools now use official SDK patterns with proper MCP protocol handling
+- **Architecture Update**: All 14 tools now use official SDK patterns with proper MCP protocol handling
 - **Build System**: Updated to use official SDK without mcp-build dependency
 - **Server Implementation**: Complete rewrite using official Server class and request handlers
-- **Git Commit**: Successfully committed migration with detailed commit message (475ff1b)
+- **Git Commits**: Successfully committed Phase 1 (475ff1b) and Tier 2 (8ca019b) with detailed commit messages
 
 ## Current Status
 ### What's Working
@@ -21,7 +21,7 @@
 - ✅ **Server Functionality**: All tools working with new SDK implementation
 - ✅ **Documentation**: Comprehensive README and development guides
 
-### Current Tool Set (9 Total)
+### Current Tool Set (14 Total)
 **Original Tools (5):**
 1. **ListBudgetsTool**: Lists available YNAB budgets
 2. **BudgetSummaryTool**: Provides budget month summaries with categories and accounts
@@ -29,11 +29,20 @@
 4. **CreateTransactionTool**: Creates new transactions with natural language support
 5. **ApproveTransactionTool**: Approves existing transactions
 
-**New Phase 1 Tools (4):**
+**Phase 1 Tools (4):**
 6. **HandleOverspendingTool**: Automatically resolve overspent categories by moving funds
 7. **AutoDistributeFundsTool**: Intelligently allocate "Ready to Assign" money based on goals
 8. **BulkApproveTransactionsTool**: Approve multiple transactions matching criteria
 9. **MoveFundsBetweenCategoriesTool**: Transfer budgeted amounts between categories
+
+**Tier 2 Analytics & Insights Tools (4):**
+10. **AnalyzeSpendingPatternsTool**: Analyze spending patterns to detect trends and anomalies
+11. **GoalProgressReportTool**: Generate comprehensive goal progress reports with ratings
+12. **CashFlowForecastTool**: Generate cash flow projections based on historical patterns
+13. **CategoryPerformanceReviewTool**: Review category budget performance with ratings and recommendations
+
+**Additional Tools (1):**
+14. **NetWorthAnalysisTool**: Analyze current net worth across all accounts
 
 ## Next Steps
 ### Immediate Priorities
@@ -44,8 +53,9 @@
 5. **Explore Additional Features**: Leverage new SDK capabilities for enhanced functionality
 
 ### Future Enhancements
-- **Bulk Transaction Approval**: Approve multiple transactions with one call
-- **UpdateCategory Tool**: More general transaction/category update capabilities
+- **Tier 3 Tools**: Enhanced Category Management (SetCategoryGoals, BudgetFromHistory)
+- **Tier 4 Tools**: Transaction Intelligence (FindDuplicateTransactions, SmartTransactionSearch, CategorizePendingTransactions)
+- **Tier 5 Tools**: Specialized Tools (MonthEndCloseout, PayeeSpendingReport, ExportBudgetData)
 - **Enhanced Error Handling**: Leverage new SDK error handling patterns
 - **Additional MCP Features**: Explore prompts, resources, and other SDK capabilities
 

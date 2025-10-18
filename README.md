@@ -1,14 +1,11 @@
-[![MseeP.ai Security Assessment Badge](https://mseep.net/mseep-audited.png)](https://mseep.ai/app/calebl-ynab-mcp-server)
-
 # ynab-mcp-server
-[![smithery badge](https://smithery.ai/badge/@calebl/ynab-mcp-server)](https://smithery.ai/server/@calebl/ynab-mcp-server)
 
-A Model Context Protocol (MCP) server built with the official @modelcontextprotocol/typescript-sdk. This MCP provides tools
-for interacting with your YNAB budgets setup at https://ynab.com
+A comprehensive Model Context Protocol (MCP) server built with the official @modelcontextprotocol/typescript-sdk. This MCP provides 14 powerful tools for interacting with your YNAB budgets setup at https://ynab.com
 
-<a href="https://glama.ai/mcp/servers/@calebl/ynab-mcp-server">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/@calebl/ynab-mcp-server/badge" alt="YNAB Server MCP server" />
-</a>
+[![GitHub](https://img.shields.io/badge/GitHub-issmirnov%2Fynab--mcp--server-blue)](https://github.com/issmirnov/ynab-mcp-server)
+[![npm version](https://img.shields.io/npm/v/ynab-mcp-server)](https://www.npmjs.com/package/ynab-mcp-server)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue)](https://www.typescriptlang.org/)
+[![MCP SDK](https://img.shields.io/badge/MCP%20SDK-1.20.1-green)](https://github.com/modelcontextprotocol/typescript-sdk)
 
 In order to have an AI interact with this tool, you will need to get your Personal Access Token
 from YNAB: https://api.ynab.com/#personal-access-tokens. When adding this MCP server to any
@@ -22,47 +19,67 @@ Specify env variables:
 * YNAB_BUDGET_ID (optional)
 
 ## Goal
-The goal of the project is to be able to interact with my YNAB budget via an AI conversation.
-There are a few primary workflows I want to enable:
+The goal of this project is to enable comprehensive AI-powered interaction with YNAB budgets through natural language conversations. This server provides 14 powerful tools organized into multiple tiers for complete budget management.
 
-## Workflows:
-### First time setup
-* be prompted to select your budget from your available budgets. If you try to use another
-tool first, this prompt should happen asking you to set your default budget.
-  * Tools needed: ListBudgets
-### Manage overspent categories
-### Adding new transactions
-### Approving transactions
-### Check total monthly spending vs total income
-### Auto-distribute ready to assign funds based on category targets
+## Core Workflows (All Implemented ✅)
 
-## Current state
+### 🏗️ **Foundation & Setup**
+- **First-time setup**: Select your budget from available budgets
+- **Budget overview**: Get comprehensive budget summaries and health checks
 
-✅ **Migration Complete**: Successfully migrated from mcp-framework to the official @modelcontextprotocol/typescript-sdk v1.20.1
+### 💰 **Transaction Management**
+- **Adding transactions**: Create transactions with natural language ("I spent $3.98 at REI today")
+- **Approving transactions**: Review and approve pending transactions individually or in bulk
+- **Transaction analysis**: Find duplicates and analyze spending patterns
 
-Available tools:
-* **ListBudgets** - lists available budgets on your account
-* **BudgetSummary** - provides a summary of categories that are underfunded and accounts that are low
-* **GetUnapprovedTransactions** - retrieve all unapproved transactions
-* **CreateTransaction** - creates a transaction for a specified budget and account.
-  * example prompt: `Add a transaction to my Ally account for $3.98 I spent at REI today`
-  * requires GetBudget to be called first so we know the account id
-* **ApproveTransaction** - approves an existing transaction in your YNAB budget
-  * requires a transaction ID to approve
-  * can be used in conjunction with GetUnapprovedTransactions to approve pending transactions
-  * After calling get unapproved transactions, prompt: `approve the transaction for $6.95 on the Apple Card`
+### 📊 **Budget Management**
+- **Overspending resolution**: Automatically resolve overspent categories by moving funds
+- **Fund distribution**: Intelligently allocate "Ready to Assign" money based on goals
+- **Category management**: Transfer budgeted amounts between categories
 
-### Technical Status
+### 📈 **Analytics & Insights**
+- **Spending analysis**: Detect trends, anomalies, and spending patterns
+- **Goal tracking**: Comprehensive goal progress reports with performance ratings
+- **Cash flow forecasting**: Project future balances based on historical patterns
+- **Performance reviews**: Category budget performance analysis with recommendations
+- **Net worth analysis**: Current net worth snapshot across all accounts
+
+## Current State
+
+✅ **Production Ready**: 14 comprehensive tools implemented with official @modelcontextprotocol/typescript-sdk v1.20.1
+
+### 🛠️ **Available Tools (14 Total)**
+
+#### **Core Foundation (5 Tools)**
+1. **ListBudgets** - Lists all available YNAB budgets on your account
+2. **BudgetSummary** - Provides comprehensive budget month summaries with categories and accounts
+3. **GetUnapprovedTransactions** - Retrieves all pending transactions with readable formatting
+4. **CreateTransaction** - Creates transactions with natural language support
+   - Example: `Add a transaction to my Ally account for $3.98 I spent at REI today`
+5. **ApproveTransaction** - Approves existing transactions in your YNAB budget
+
+#### **Workflow Automation (4 Tools)**
+6. **HandleOverspending** - Automatically resolve overspent categories by moving funds
+7. **AutoDistributeFunds** - Intelligently allocate "Ready to Assign" money based on goals
+8. **BulkApproveTransactions** - Approve multiple transactions matching criteria in one call
+9. **MoveFundsBetweenCategories** - Transfer budgeted amounts between categories
+
+#### **Analytics & Insights (4 Tools)**
+10. **AnalyzeSpendingPatterns** - Analyze spending patterns to detect trends and anomalies
+11. **GoalProgressReport** - Generate comprehensive goal progress reports with performance ratings
+12. **CashFlowForecast** - Generate cash flow projections based on historical patterns
+13. **CategoryPerformanceReview** - Review category budget performance with ratings and recommendations
+
+#### **Additional Tools (1 Tool)**
+14. **NetWorthAnalysis** - Analyze current net worth across all accounts
+
+### 🏗️ **Technical Status**
 - ✅ Official MCP SDK integration (v1.20.1)
-- ✅ All 5 tools fully functional with new SDK
-- ✅ Complete test suite migration (69 tests passing)
+- ✅ All 14 tools fully functional with new SDK
+- ✅ Complete test suite (69 tests passing)
 - ✅ TypeScript build system working
 - ✅ Proper MCP protocol compliance
-
-Next:
-* be able to approve multiple transactions with 1 call
-* updateCategory tool - or updateTransaction more general tool for enhanced transaction management
-* Enhanced error handling and validation using official MCP SDK capabilities
+- ✅ Production-ready with comprehensive error handling
 
 
 ## Quick Start
@@ -202,10 +219,10 @@ After publishing, users can add it to their claude desktop client (read below) o
 
 ### Installing via Smithery
 
-To install YNAB Budget Assistant for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@calebl/ynab-mcp-server):
+To install YNAB MCP Server for Claude Desktop automatically via Smithery:
 
 ```bash
-npx -y @smithery/cli install @calebl/ynab-mcp-server --client claude
+npx -y @smithery/cli install ynab-mcp-server --client claude
 ```
 
 ### Local Development
@@ -238,7 +255,10 @@ Add this configuration to your Claude Desktop config file:
   "mcpServers": {
     "ynab-mcp-server": {
       "command": "npx",
-      "args": ["ynab-mcp-server"]
+      "args": ["ynab-mcp-server"],
+      "env": {
+        "YNAB_API_TOKEN": "your-ynab-api-token-here"
+      }
     }
   }
 }

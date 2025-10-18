@@ -11,11 +11,8 @@ interface CategoryPerformanceReviewInput {
 interface CategoryPerformance {
   category_id: string;
   category_name: string;
-  average_budgeted: number;
   average_budgeted_dollars: number;
-  average_spent: number;
   average_spent_dollars: number;
-  average_available: number;
   average_available_dollars: number;
   budget_utilization: number;
   overspend_frequency: number;
@@ -115,10 +112,10 @@ export default class CategoryPerformanceReviewTool {
     try {
       console.error(`Reviewing category performance for budget ${budgetId} over ${monthsToAnalyze} months`);
       
-      // Get historical budget data
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setMonth(endDate.getMonth() - monthsToAnalyze);
+      // Get historical budget data - go back from current month
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
 
       const categoryPerformance: CategoryPerformance[] = [];
       const insights: PerformanceInsight[] = [];
@@ -131,7 +128,10 @@ export default class CategoryPerformanceReviewTool {
           category.deleted === false && 
           category.hidden === false &&
           !category.name.includes("Inflow:") &&
-          category.name !== "Uncategorized"
+          category.name !== "Uncategorized" &&
+          !category.name.includes("Deferred Income") // Exclude deferred income categories
+          // Note: Credit card categories are typically in groups like "Credit Card Payments"
+          // but we'll be more conservative and only filter by name patterns for now
         );
 
       for (const category of allCategories) {
@@ -145,9 +145,17 @@ export default class CategoryPerformanceReviewTool {
           }[] = [];
 
           for (let i = 0; i < monthsToAnalyze; i++) {
-            const monthDate = new Date();
-            monthDate.setMonth(monthDate.getMonth() - i);
-            const monthKey = monthDate.toISOString().substring(0, 7) + '-01';
+            // Calculate month going back from current month
+            let targetMonth = currentMonth - i;
+            let targetYear = currentYear;
+            
+            // Handle year boundaries
+            while (targetMonth < 0) {
+              targetMonth += 12;
+              targetYear -= 1;
+            }
+            
+            const monthKey = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`;
 
             try {
               const monthBudget = await this.api.months.getBudgetMonth(budgetId, monthKey);
@@ -262,8 +270,19 @@ export default class CategoryPerformanceReviewTool {
             recommendations.push("Consider increasing budget allocation or reducing spending");
           }
           
-          if (budgetUtilization < 0.7) {
+          // Only suggest budget is too high if there's actually a budget allocated and it's consistently underutilized
+          if (averageBudgeted > 0 && budgetUtilization < 0.7 && underspendFrequency > 0.5) {
             recommendations.push("Budget may be too high - consider reallocating funds");
+          }
+          
+          // If there's spending but no budget, suggest adding a budget
+          if (averageBudgeted === 0 && averageSpent > 0) {
+            recommendations.push("Consider adding a budget for this category");
+          }
+          
+          // Don't suggest anything for categories with no budget and no spending
+          if (averageBudgeted === 0 && averageSpent === 0) {
+            // No recommendations for inactive categories
           }
           
           if (trend === 'declining') {
@@ -277,11 +296,8 @@ export default class CategoryPerformanceReviewTool {
           categoryPerformance.push({
             category_id: category.id,
             category_name: category.name,
-            average_budgeted: averageBudgeted,
             average_budgeted_dollars: Math.round(averageBudgeted / 1000 * 100) / 100,
-            average_spent: averageSpent,
             average_spent_dollars: Math.round(averageSpent / 1000 * 100) / 100,
-            average_available: averageAvailable,
             average_available_dollars: Math.round(averageAvailable / 1000 * 100) / 100,
             budget_utilization: Math.round(budgetUtilization * 100) / 100,
             overspend_frequency: Math.round(overspendFrequency * 100) / 100,
@@ -366,7 +382,7 @@ export default class CategoryPerformanceReviewTool {
       const categoriesNeedingAttention = categoryPerformance.filter(cat => cat.performance_rating === 'poor').length;
 
       const result: CategoryPerformanceReviewResult = {
-        review_period: `${monthsToAnalyze} months ending ${endDate.toISOString().substring(0, 7)}`,
+        review_period: `${monthsToAnalyze} months ending ${currentDate.toISOString().substring(0, 7)}`,
         total_categories_reviewed: categoryPerformance.length,
         category_performance: categoryPerformance,
         insights: insights,
