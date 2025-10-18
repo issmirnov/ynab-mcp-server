@@ -51,9 +51,20 @@ class ApproveTransactionTool {
                 throw new Error("Transaction not found");
             }
             const existingTransactionData = existingTransaction.data.transaction;
+            // Create the full transaction payload with all existing data, only changing the approved status
             const transaction = {
                 transaction: {
-                    approved: input.approved,
+                    account_id: existingTransactionData.account_id,
+                    date: existingTransactionData.date,
+                    amount: existingTransactionData.amount,
+                    payee_id: existingTransactionData.payee_id,
+                    payee_name: existingTransactionData.payee_name,
+                    category_id: existingTransactionData.category_id,
+                    memo: existingTransactionData.memo,
+                    cleared: existingTransactionData.cleared,
+                    approved: input.approved !== undefined ? input.approved : true,
+                    flag_color: existingTransactionData.flag_color,
+                    subtransactions: existingTransactionData.subtransactions,
                 }
             };
             const response = await this.api.transactions.updateTransaction(budgetId, existingTransactionData.id, transaction);
