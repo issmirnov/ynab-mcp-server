@@ -1,4 +1,5 @@
 import * as ynab from "ynab";
+import { handleAPIError, createRetryableAPICall } from "../utils/apiErrorHandler.js";
 export default class BudgetFromHistoryTool {
     api;
     budgetId;
@@ -74,7 +75,7 @@ export default class BudgetFromHistoryTool {
         const maxBudgetIncrease = (input.maxBudgetIncrease || 50) / 100; // Convert to decimal
         try {
             // Get current categories
-            const categoriesResponse = await this.api.categories.getCategories(budgetId);
+            const categoriesResponse = await createRetryableAPICall(() => this.api.categories.getCategories(budgetId), 'Get categories for budget analysis');
             const allCategories = categoriesResponse.data.category_groups
                 .flatMap((group) => group.categories)
                 .filter((category) => !category.deleted &&
@@ -113,7 +114,7 @@ export default class BudgetFromHistoryTool {
                         }
                         const monthKey = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`;
                         try {
-                            const monthBudget = await this.api.months.getBudgetMonth(budgetId, monthKey);
+                            const monthBudget = await createRetryableAPICall(() => this.api.months.getBudgetMonth(budgetId, monthKey), `Get budget month ${monthKey}`);
                             const monthCategory = monthBudget.data.month.categories.find((cat) => cat.id === category.id);
                             if (monthCategory) {
                                 const spending = Math.abs(monthCategory.activity || 0); // Activity is negative for spending
@@ -264,8 +265,8 @@ export default class BudgetFromHistoryTool {
             };
         }
         catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            throw new Error(`Failed to generate budget from history: ${errorMessage}`);
+            await handleAPIError(error, 'Budget from history analysis');
+            throw error; // This line will never be reached, but satisfies TypeScript
         }
     }
     calculateMedian(numbers) {

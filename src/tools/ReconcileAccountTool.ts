@@ -1,5 +1,6 @@
 import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { handleAPIError, createRetryableAPICall } from "../utils/apiErrorHandler.js";
 
 interface ReconcileAccountInput {
   budgetId?: string;
@@ -125,7 +126,10 @@ export default class ReconcileAccountTool {
 
     try {
       // Get all accounts
-      const accountsResponse = await this.api.accounts.getAccounts(budgetId);
+      const accountsResponse = await createRetryableAPICall(
+        () => this.api.accounts.getAccounts(budgetId),
+        'Get accounts for reconciliation'
+      );
       const allAccounts = accountsResponse.data.accounts.filter(
         (account: any) => !account.deleted && !account.closed
       );
@@ -201,8 +205,8 @@ export default class ReconcileAccountTool {
       };
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to reconcile account: ${errorMessage}`);
+      await handleAPIError(error, 'Account reconciliation');
+      throw error; // This line will never be reached, but satisfies TypeScript
     }
   }
 
@@ -286,10 +290,13 @@ export default class ReconcileAccountTool {
       const startDate = new Date(endDate);
       startDate.setMonth(startDate.getMonth() - 3); // Get 3 months of data
 
-      const transactionsResponse = await this.api.transactions.getTransactionsByAccount(
-        budgetId,
-        accountId,
-        startDate.toISOString().split('T')[0]
+      const transactionsResponse = await createRetryableAPICall(
+        () => this.api.transactions.getTransactionsByAccount(
+          budgetId,
+          accountId,
+          startDate.toISOString().split('T')[0]
+        ),
+        'Get transactions for reconciliation'
       );
 
       return transactionsResponse.data.transactions.filter((t: any) => !t.deleted);

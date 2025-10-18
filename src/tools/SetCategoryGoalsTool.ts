@@ -1,5 +1,6 @@
 import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { handleAPIError, createRetryableAPICall } from "../utils/apiErrorHandler.js";
 
 interface SetCategoryGoalsInput {
   budgetId?: string;

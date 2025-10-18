@@ -39,9 +39,16 @@ describe('ApproveTransactionTool', () => {
     const mockExistingTransaction = {
       id: 'transaction-123',
       account_id: 'account-456',
-      payee_name: 'Test Payee',
+      date: '2023-12-01',
       amount: -50000,
+      payee_id: 'payee-789',
+      payee_name: 'Test Payee',
+      category_id: undefined,
+      memo: undefined,
+      cleared: undefined,
       approved: false,
+      flag_color: undefined,
+      subtransactions: undefined,
     };
 
     const mockUpdatedTransaction = {
@@ -78,7 +85,17 @@ describe('ApproveTransactionTool', () => {
         'transaction-123',
         {
           transaction: {
+            account_id: 'account-456',
+            date: '2023-12-01',
+            amount: -50000,
+            payee_id: 'payee-789',
+            payee_name: 'Test Payee',
+            category_id: undefined,
+            memo: undefined,
+            cleared: undefined,
             approved: true,
+            flag_color: undefined,
+            subtransactions: undefined,
           },
         }
       );
@@ -121,7 +138,17 @@ describe('ApproveTransactionTool', () => {
         'transaction-123',
         {
           transaction: {
+            account_id: 'account-456',
+            date: '2023-12-01',
+            amount: -50000,
+            payee_id: 'payee-789',
+            payee_name: 'Test Payee',
+            category_id: undefined,
+            memo: undefined,
+            cleared: undefined,
             approved: true,
+            flag_color: undefined,
+            subtransactions: undefined,
           },
         }
       );
@@ -166,7 +193,17 @@ describe('ApproveTransactionTool', () => {
         'transaction-123',
         {
           transaction: {
+            account_id: 'account-456',
+            date: '2023-12-01',
+            amount: -50000,
+            payee_id: 'payee-789',
+            payee_name: 'Test Payee',
+            category_id: undefined,
+            memo: undefined,
+            cleared: undefined,
             approved: false,
+            flag_color: undefined,
+            subtransactions: undefined,
           },
         }
       );
@@ -293,7 +330,17 @@ describe('ApproveTransactionTool', () => {
         'transaction-123',
         {
           transaction: {
-            approved: undefined, // Will be undefined since not specified in input
+            account_id: 'account-456',
+            date: '2023-12-01',
+            amount: -50000,
+            payee_id: 'payee-789',
+            payee_name: 'Test Payee',
+            category_id: undefined,
+            memo: undefined,
+            cleared: undefined,
+            approved: true, // Default value when not specified
+            flag_color: undefined,
+            subtransactions: undefined,
           },
         }
       );

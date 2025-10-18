@@ -1,4 +1,5 @@
 import * as ynab from "ynab";
+import { optimizeCategories, optimizeAccounts, withContextOptimization } from "../utils/contextOptimizer.js";
 class BudgetSummaryTool {
     api;
     budgetId;
@@ -57,14 +58,12 @@ class BudgetSummaryTool {
                 category.name !== "Uncategorized" &&
                 category.name !== "Deferred Income SubCategory");
             const result = this.summaryPrompt(monthBudget.data.month, accounts, categories);
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(result, null, 2),
-                    },
-                ],
-            };
+            // Optimize for context efficiency
+            return withContextOptimization(result, {
+                maxTokens: 3000,
+                summarizeCategories: true,
+                summarizeAccounts: true
+            });
         }
         catch (error) {
             console.error(`Error getting budget ${budgetId}:`);
@@ -130,10 +129,10 @@ class BudgetSummaryTool {
                 to_be_budgeted: monthBudget.to_be_budgeted,
                 age_of_money: monthBudget.age_of_money,
                 deleted: monthBudget.deleted,
-                categories: categories
+                categories: optimizeCategories(categories, { maxItems: 15 })
             },
-            accounts: accounts,
-            note: "Divide all numbers by 1000 to get the balance in dollars. Only showing active (non-deleted, non-hidden) categories and open (non-deleted, non-closed) accounts.",
+            accounts: optimizeAccounts(accounts, { maxItems: 8 }),
+            note: "All amounts are in dollars. Showing top categories and accounts. Use specific queries for detailed data.",
         };
     }
 }

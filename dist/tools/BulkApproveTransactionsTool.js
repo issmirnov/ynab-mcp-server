@@ -1,4 +1,5 @@
 import * as ynab from "ynab";
+import { optimizeTransactions, withContextOptimization } from "../utils/contextOptimizer.js";
 class BulkApproveTransactionsTool {
     api;
     budgetId;
@@ -116,28 +117,17 @@ class BulkApproveTransactionsTool {
                 unapprovedTransactions: unapprovedTransactions.length,
                 totalAmount: totalAmount / 1000,
                 filters: input.filters || {},
-                transactions: unapprovedTransactions.map(t => ({
-                    id: t.id,
-                    date: t.date,
-                    amount: t.amount / 1000,
-                    payeeName: t.payee_name,
-                    categoryName: t.category_name,
-                    accountName: accounts.find(a => a.id === t.account_id)?.name || "Unknown",
-                    memo: t.memo,
-                    approved: t.approved,
-                    cleared: t.cleared
-                })),
+                transactions: optimizeTransactions(unapprovedTransactions.map(t => ({
+                    ...t,
+                    account_name: accounts.find(a => a.id === t.account_id)?.name || "Unknown"
+                })), { maxItems: 25 }),
                 approvedTransactions: approvedTransactions,
                 dryRun: input.dryRun || false
             };
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(result, null, 2),
-                    },
-                ],
-            };
+            return withContextOptimization(result, {
+                maxTokens: 4000,
+                summarizeTransactions: true
+            });
         }
         catch (error) {
             console.error(`Error bulk approving transactions for budget ${budgetId}:`, error);

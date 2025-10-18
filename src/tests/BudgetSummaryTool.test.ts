@@ -48,6 +48,7 @@ describe('BudgetSummaryTool', () => {
         balance: 150000, // $150.00
         deleted: false,
         closed: false,
+        on_budget: true,
       },
       {
         id: 'account-2',
@@ -56,6 +57,7 @@ describe('BudgetSummaryTool', () => {
         balance: 500000, // $500.00
         deleted: false,
         closed: false,
+        on_budget: true,
       },
       {
         id: 'account-3',
@@ -64,6 +66,7 @@ describe('BudgetSummaryTool', () => {
         balance: 0,
         deleted: true,
         closed: false,
+        on_budget: true,
       },
       {
         id: 'account-4',
@@ -72,6 +75,7 @@ describe('BudgetSummaryTool', () => {
         balance: 0,
         deleted: false,
         closed: true,
+        on_budget: true,
       },
     ];
 
@@ -151,7 +155,7 @@ describe('BudgetSummaryTool', () => {
       const resultText = result.content[0].text;
       expect(resultText).toContain('monthBudget');
       expect(resultText).toContain('accounts');
-      expect(resultText).toContain('Divide all numbers by 1000 to get the balance in dollars.');
+      expect(resultText).toContain('All amounts are in dollars. Showing top categories and accounts. Use specific queries for detailed data.');
       
       // Parse the JSON result to verify structure
       const parsedResult = JSON.parse(resultText);
@@ -185,7 +189,7 @@ describe('BudgetSummaryTool', () => {
       const resultText = result.content[0].text;
       expect(resultText).toContain('monthBudget');
       expect(resultText).toContain('accounts');
-      expect(resultText).toContain('Divide all numbers by 1000 to get the balance in dollars.');
+      expect(resultText).toContain('All amounts are in dollars. Showing top categories and accounts. Use specific queries for detailed data.');
     });
 
     it('should filter out deleted and closed accounts', async () => {
