@@ -5,17 +5,6 @@ import ApproveTransactionTool from '../tools/ApproveTransactionTool';
 // Mock the entire ynab module
 vi.mock('ynab');
 
-// Mock the mcp-framework logger
-vi.mock('mcp-framework', () => ({
-  MCPTool: class {
-    constructor() {}
-  },
-  logger: {
-    error: vi.fn(),
-    info: vi.fn(),
-  },
-}));
-
 describe('ApproveTransactionTool', () => {
   let tool: ApproveTransactionTool;
   let mockApi: {
@@ -94,9 +83,16 @@ describe('ApproveTransactionTool', () => {
         }
       );
       expect(result).toEqual({
-        success: true,
-        transactionId: 'transaction-123',
-        message: 'Transaction updated successfully',
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              transactionId: 'transaction-123',
+              message: 'Transaction updated successfully',
+            }, null, 2),
+          },
+        ],
       });
     });
 
@@ -130,9 +126,16 @@ describe('ApproveTransactionTool', () => {
         }
       );
       expect(result).toEqual({
-        success: true,
-        transactionId: 'transaction-123',
-        message: 'Transaction updated successfully',
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              transactionId: 'transaction-123',
+              message: 'Transaction updated successfully',
+            }, null, 2),
+          },
+        ],
       });
     });
 
@@ -168,9 +171,16 @@ describe('ApproveTransactionTool', () => {
         }
       );
       expect(result).toEqual({
-        success: true,
-        transactionId: 'transaction-123',
-        message: 'Transaction updated successfully',
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              transactionId: 'transaction-123',
+              message: 'Transaction updated successfully',
+            }, null, 2),
+          },
+        ],
       });
     });
 
@@ -184,9 +194,8 @@ describe('ApproveTransactionTool', () => {
         approved: true,
       };
 
-      await expect(tool.execute(input)).rejects.toThrow(
-        'No budget ID provided. Please provide a budget ID or set the YNAB_BUDGET_ID environment variable.'
-      );
+      const result = await tool.execute(input);
+      expect(result.content[0].text).toContain('No budget ID provided. Please provide a budget ID or set the YNAB_BUDGET_ID environment variable.');
     });
 
     it('should handle transaction not found error', async () => {
@@ -203,7 +212,7 @@ describe('ApproveTransactionTool', () => {
 
       const result = await tool.execute(input);
 
-      expect(result).toMatch(/Error getting unapproved transactions: Transaction not found/);
+      expect(result.content[0].text).toMatch(/Error updating transaction: Transaction not found/);
     });
 
     it('should handle API error when getting existing transaction', async () => {
@@ -219,7 +228,7 @@ describe('ApproveTransactionTool', () => {
 
       const result = await tool.execute(input);
 
-      expect(result).toMatch(/Error getting unapproved transactions: API Error: Budget not found/);
+      expect(result.content[0].text).toMatch(/Error updating transaction: API Error: Budget not found/);
     });
 
     it('should handle API error when updating transaction', async () => {
@@ -239,7 +248,7 @@ describe('ApproveTransactionTool', () => {
 
       const result = await tool.execute(input);
 
-      expect(result).toMatch(/Error getting unapproved transactions: API Error: Transaction update failed/);
+      expect(result.content[0].text).toMatch(/Error updating transaction: API Error: Transaction update failed/);
     });
 
     it('should handle case when update returns no transaction data', async () => {
@@ -259,7 +268,7 @@ describe('ApproveTransactionTool', () => {
 
       const result = await tool.execute(input);
 
-      expect(result).toMatch(/Error getting unapproved transactions: Failed to update transaction - no transaction data returned/);
+      expect(result.content[0].text).toMatch(/Error updating transaction: Failed to update transaction - no transaction data returned/);
     });
 
     it('should use default approved value of true when not specified', async () => {
@@ -289,9 +298,16 @@ describe('ApproveTransactionTool', () => {
         }
       );
       expect(result).toEqual({
-        success: true,
-        transactionId: 'transaction-123',
-        message: 'Transaction updated successfully',
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              transactionId: 'transaction-123',
+              message: 'Transaction updated successfully',
+            }, null, 2),
+          },
+        ],
       });
     });
 
@@ -308,24 +324,27 @@ describe('ApproveTransactionTool', () => {
 
       const result = await tool.execute(input);
 
-      expect(result).toMatch(/Error getting unapproved transactions: {"message":"Custom error object","code":500}/);
+      expect(result.content[0].text).toMatch(/Error updating transaction: {"message":"Custom error object","code":500}/);
     });
   });
 
   describe('tool configuration', () => {
     it('should have correct name and description', () => {
-      expect(tool.name).toBe('approve_transaction');
-      expect(tool.description).toBe('Approves an existing transaction in your YNAB budget.');
+      const toolDef = tool.getToolDefinition();
+      expect(toolDef.name).toBe('approve_transaction');
+      expect(toolDef.description).toBe('Approves an existing transaction in your YNAB budget.');
     });
 
     it('should have correct schema definition', () => {
-      expect(tool.schema).toHaveProperty('budgetId');
-      expect(tool.schema).toHaveProperty('transactionId');
-      expect(tool.schema).toHaveProperty('approved');
+      const toolDef = tool.getToolDefinition();
+      expect(toolDef.inputSchema).toHaveProperty('properties');
+      expect(toolDef.inputSchema.properties).toHaveProperty('budgetId');
+      expect(toolDef.inputSchema.properties).toHaveProperty('transactionId');
+      expect(toolDef.inputSchema.properties).toHaveProperty('approved');
       
-      expect(tool.schema.budgetId.description).toContain('budget containing the transaction');
-      expect(tool.schema.transactionId.description).toContain('id of the transaction to approve');
-      expect(tool.schema.approved.description).toContain('Whether the transaction should be marked as approved');
+      expect(toolDef.inputSchema.properties.budgetId.description).toContain('budget containing the transaction');
+      expect(toolDef.inputSchema.properties.transactionId.description).toContain('id of the transaction to approve');
+      expect(toolDef.inputSchema.properties.approved.description).toContain('Whether the transaction should be marked as approved');
     });
   });
 });

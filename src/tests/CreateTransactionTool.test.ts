@@ -5,17 +5,6 @@ import CreateTransactionTool from '../tools/CreateTransactionTool';
 // Mock the entire ynab module
 vi.mock('ynab');
 
-// Mock the mcp-framework logger
-vi.mock('mcp-framework', () => ({
-  MCPTool: class {
-    constructor() {}
-  },
-  logger: {
-    error: vi.fn(),
-    info: vi.fn(),
-  },
-}));
-
 describe('CreateTransactionTool', () => {
   let tool: CreateTransactionTool;
   let mockApi: {
@@ -96,9 +85,16 @@ describe('CreateTransactionTool', () => {
         }
       );
       expect(result).toEqual({
-        success: true,
-        transactionId: 'transaction-123',
-        message: 'Transaction created successfully',
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              transactionId: 'transaction-123',
+              message: 'Transaction created successfully',
+            }, null, 2),
+          },
+        ],
       });
     });
 
@@ -137,9 +133,16 @@ describe('CreateTransactionTool', () => {
         }
       );
       expect(result).toEqual({
-        success: true,
-        transactionId: 'transaction-123',
-        message: 'Transaction created successfully',
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              transactionId: 'transaction-123',
+              message: 'Transaction created successfully',
+            }, null, 2),
+          },
+        ],
       });
     });
 
@@ -163,9 +166,16 @@ describe('CreateTransactionTool', () => {
         expect.any(Object)
       );
       expect(result).toEqual({
-        success: true,
-        transactionId: 'transaction-123',
-        message: 'Transaction created successfully',
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              transactionId: 'transaction-123',
+              message: 'Transaction created successfully',
+            }, null, 2),
+          },
+        ],
       });
     });
 
@@ -208,9 +218,16 @@ describe('CreateTransactionTool', () => {
         }
       );
       expect(result).toEqual({
-        success: true,
-        transactionId: 'transaction-123',
-        message: 'Transaction created successfully',
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              transactionId: 'transaction-123',
+              message: 'Transaction created successfully',
+            }, null, 2),
+          },
+        ],
       });
     });
 
@@ -238,7 +255,8 @@ describe('CreateTransactionTool', () => {
           }),
         }
       );
-      expect(result.success).toBe(true);
+      const parsedResult = JSON.parse(result.content[0].text);
+      expect(parsedResult.success).toBe(true);
     });
 
     it('should throw error when no budget ID is provided', async () => {
@@ -253,9 +271,8 @@ describe('CreateTransactionTool', () => {
         payeeName: 'Test Payee',
       };
 
-      await expect(tool.execute(input)).rejects.toThrow(
-        'No budget ID provided. Please provide a budget ID or set the YNAB_BUDGET_ID environment variable.'
-      );
+      const result = await tool.execute(input);
+      expect(result.content[0].text).toContain('No budget ID provided. Please provide a budget ID or set the YNAB_BUDGET_ID environment variable.');
     });
 
     it('should throw error when neither payee_id nor payee_name is provided', async () => {
@@ -267,9 +284,8 @@ describe('CreateTransactionTool', () => {
         // Neither payeeId nor payeeName provided
       };
 
-      await expect(tool.execute(input)).rejects.toThrow(
-        'Either payee_id or payee_name must be provided'
-      );
+      const result = await tool.execute(input);
+      expect(result.content[0].text).toContain('Either payee_id or payee_name must be provided');
     });
 
     it('should return success false when API call fails', async () => {
@@ -287,7 +303,8 @@ describe('CreateTransactionTool', () => {
 
       const result = await tool.execute(input);
 
-      expect(result).toEqual({
+      const parsedResult = JSON.parse(result.content[0].text);
+      expect(parsedResult).toEqual({
         success: false,
         error: 'API Error: Budget not found',
       });
@@ -309,7 +326,8 @@ describe('CreateTransactionTool', () => {
 
       const result = await tool.execute(input);
 
-      expect(result).toEqual({
+      const parsedResult = JSON.parse(result.content[0].text);
+      expect(parsedResult).toEqual({
         success: false,
         error: 'Failed to create transaction - no transaction data returned',
       });
@@ -330,7 +348,8 @@ describe('CreateTransactionTool', () => {
 
       const result = await tool.execute(input);
 
-      expect(result).toEqual({
+      const parsedResult = JSON.parse(result.content[0].text);
+      expect(parsedResult).toEqual({
         success: false,
         error: 'Unknown error occurred',
       });
@@ -361,7 +380,8 @@ describe('CreateTransactionTool', () => {
           }),
         }
       );
-      expect(result.success).toBe(true);
+      const parsedResult = JSON.parse(result.content[0].text);
+      expect(parsedResult.success).toBe(true);
     });
 
     it('should handle cleared status correctly when true', async () => {
@@ -389,7 +409,8 @@ describe('CreateTransactionTool', () => {
           }),
         }
       );
-      expect(result.success).toBe(true);
+      const parsedResult = JSON.parse(result.content[0].text);
+      expect(parsedResult.success).toBe(true);
     });
 
     it('should handle approved status with nullish coalescing', async () => {
@@ -417,7 +438,8 @@ describe('CreateTransactionTool', () => {
           }),
         }
       );
-      expect(result.success).toBe(true);
+      const parsedResult = JSON.parse(result.content[0].text);
+      expect(parsedResult.success).toBe(true);
     });
 
     it('should handle flag color as enum value', async () => {
@@ -445,58 +467,63 @@ describe('CreateTransactionTool', () => {
           }),
         }
       );
-      expect(result.success).toBe(true);
+      const parsedResult = JSON.parse(result.content[0].text);
+      expect(parsedResult.success).toBe(true);
     });
   });
 
   describe('tool configuration', () => {
     it('should have correct name and description', () => {
-      expect(tool.name).toBe('create_transaction');
-      expect(tool.description).toBe('Creates a new transaction in your YNAB budget. Either payee_id or payee_name must be provided in addition to the other required fields.');
+      const toolDef = tool.getToolDefinition();
+      expect(toolDef.name).toBe('create_transaction');
+      expect(toolDef.description).toBe('Creates a new transaction in your YNAB budget. Either payee_id or payee_name must be provided in addition to the other required fields.');
     });
 
     it('should have correct schema definition', () => {
-      expect(tool.schema).toHaveProperty('budgetId');
-      expect(tool.schema).toHaveProperty('accountId');
-      expect(tool.schema).toHaveProperty('date');
-      expect(tool.schema).toHaveProperty('amount');
-      expect(tool.schema).toHaveProperty('payeeId');
-      expect(tool.schema).toHaveProperty('payeeName');
-      expect(tool.schema).toHaveProperty('categoryId');
-      expect(tool.schema).toHaveProperty('memo');
-      expect(tool.schema).toHaveProperty('cleared');
-      expect(tool.schema).toHaveProperty('approved');
-      expect(tool.schema).toHaveProperty('flagColor');
+      const toolDef = tool.getToolDefinition();
+      expect(toolDef.inputSchema).toHaveProperty('properties');
+      expect(toolDef.inputSchema.properties).toHaveProperty('budgetId');
+      expect(toolDef.inputSchema.properties).toHaveProperty('accountId');
+      expect(toolDef.inputSchema.properties).toHaveProperty('date');
+      expect(toolDef.inputSchema.properties).toHaveProperty('amount');
+      expect(toolDef.inputSchema.properties).toHaveProperty('payeeId');
+      expect(toolDef.inputSchema.properties).toHaveProperty('payeeName');
+      expect(toolDef.inputSchema.properties).toHaveProperty('categoryId');
+      expect(toolDef.inputSchema.properties).toHaveProperty('memo');
+      expect(toolDef.inputSchema.properties).toHaveProperty('cleared');
+      expect(toolDef.inputSchema.properties).toHaveProperty('approved');
+      expect(toolDef.inputSchema.properties).toHaveProperty('flagColor');
       
       // Check descriptions contain expected content
-      expect(tool.schema.budgetId.description).toContain('budget to create the transaction in');
-      expect(tool.schema.accountId.description).toContain('account to create the transaction in');
-      expect(tool.schema.date.description).toContain('date of the transaction in ISO format');
-      expect(tool.schema.amount.description).toContain('amount in dollars');
-      expect(tool.schema.payeeId.description).toContain('payee_name is provided');
-      expect(tool.schema.payeeName.description).toContain('payee_id is provided');
-      expect(tool.schema.categoryId.description).toContain('category id');
-      expect(tool.schema.memo.description).toContain('memo/note');
-      expect(tool.schema.cleared.description).toContain('Whether the transaction is cleared');
-      expect(tool.schema.approved.description).toContain('Whether the transaction is approved');
-      expect(tool.schema.flagColor.description).toContain('transaction flag color');
+      expect(toolDef.inputSchema.properties.budgetId.description).toContain('budget to create the transaction in');
+      expect(toolDef.inputSchema.properties.accountId.description).toContain('account to create the transaction in');
+      expect(toolDef.inputSchema.properties.date.description).toContain('date of the transaction in ISO format');
+      expect(toolDef.inputSchema.properties.amount.description).toContain('amount in dollars');
+      expect(toolDef.inputSchema.properties.payeeId.description).toContain('payee_name is provided');
+      expect(toolDef.inputSchema.properties.payeeName.description).toContain('payee_id is provided');
+      expect(toolDef.inputSchema.properties.categoryId.description).toContain('category id');
+      expect(toolDef.inputSchema.properties.memo.description).toContain('memo/note');
+      expect(toolDef.inputSchema.properties.cleared.description).toContain('Whether the transaction is cleared');
+      expect(toolDef.inputSchema.properties.approved.description).toContain('Whether the transaction is approved');
+      expect(toolDef.inputSchema.properties.flagColor.description).toContain('transaction flag color');
     });
 
     it('should have correct required vs optional fields', () => {
-      // Required fields (no optional() call)
-      expect(tool.schema.accountId.type._def.typeName).toBe('ZodString');
-      expect(tool.schema.date.type._def.typeName).toBe('ZodString');
-      expect(tool.schema.amount.type._def.typeName).toBe('ZodNumber');
+      const toolDef = tool.getToolDefinition();
+      // Check required fields are listed in required array
+      expect(toolDef.inputSchema.required).toContain('accountId');
+      expect(toolDef.inputSchema.required).toContain('date');
+      expect(toolDef.inputSchema.required).toContain('amount');
       
-      // Optional fields (have optional() call)
-      expect(tool.schema.budgetId.type._def.typeName).toBe('ZodOptional');
-      expect(tool.schema.payeeId.type._def.typeName).toBe('ZodOptional');
-      expect(tool.schema.payeeName.type._def.typeName).toBe('ZodOptional');
-      expect(tool.schema.categoryId.type._def.typeName).toBe('ZodOptional');
-      expect(tool.schema.memo.type._def.typeName).toBe('ZodOptional');
-      expect(tool.schema.cleared.type._def.typeName).toBe('ZodOptional');
-      expect(tool.schema.approved.type._def.typeName).toBe('ZodOptional');
-      expect(tool.schema.flagColor.type._def.typeName).toBe('ZodOptional');
+      // Check optional fields are not in required array
+      expect(toolDef.inputSchema.required).not.toContain('budgetId');
+      expect(toolDef.inputSchema.required).not.toContain('payeeId');
+      expect(toolDef.inputSchema.required).not.toContain('payeeName');
+      expect(toolDef.inputSchema.required).not.toContain('categoryId');
+      expect(toolDef.inputSchema.required).not.toContain('memo');
+      expect(toolDef.inputSchema.required).not.toContain('cleared');
+      expect(toolDef.inputSchema.required).not.toContain('approved');
+      expect(toolDef.inputSchema.required).not.toContain('flagColor');
     });
   });
 });
