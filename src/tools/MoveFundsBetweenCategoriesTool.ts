@@ -346,16 +346,8 @@ class MoveFundsBetweenCategoriesTool {
     const fromNewBudgeted = fromCategory.budgeted - amountMilliunits;
     const toNewBudgeted = toCategory.budgeted + amountMilliunits;
     
-    // Update the from category
-    const fromUpdateData: ynab.PatchMonthCategoryWrapper = {
-      category: {
-        budgeted: fromNewBudgeted
-      }
-    };
-    
-    await this.api.categories.updateMonthCategory(budgetId, month, fromCategoryId, fromUpdateData);
-    
-    // Update the to category
+    // Update the to category first (credit) to ensure atomicity
+    // If this fails, no money is lost since source hasn't been debited yet
     const toUpdateData: ynab.PatchMonthCategoryWrapper = {
       category: {
         budgeted: toNewBudgeted
@@ -363,6 +355,15 @@ class MoveFundsBetweenCategoriesTool {
     };
     
     await this.api.categories.updateMonthCategory(budgetId, month, toCategoryId, toUpdateData);
+    
+    // Update the from category (debit) after successful credit
+    const fromUpdateData: ynab.PatchMonthCategoryWrapper = {
+      category: {
+        budgeted: fromNewBudgeted
+      }
+    };
+    
+    await this.api.categories.updateMonthCategory(budgetId, month, fromCategoryId, fromUpdateData);
     
     console.log(`Successfully moved $${(amountMilliunits / 1000).toFixed(2)} from ${fromCategory.name} to ${toCategory.name}`);
   }

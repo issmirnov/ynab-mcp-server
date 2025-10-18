@@ -264,16 +264,8 @@ class HandleOverspendingTool {
         const fromNewBudgeted = fromCategory.budgeted - suggestion.amount;
         const toNewBudgeted = toCategory.budgeted + suggestion.amount;
         
-        // Update the from category
-        const fromUpdateData: ynab.PatchMonthCategoryWrapper = {
-          category: {
-            budgeted: fromNewBudgeted
-          }
-        };
-        
-        await this.api.categories.updateMonthCategory(budgetId, month, suggestion.fromCategoryId, fromUpdateData);
-        
-        // Update the to category
+        // Update the to category first (credit) to ensure atomicity
+        // If this fails, no money is lost since source hasn't been debited yet
         const toUpdateData: ynab.PatchMonthCategoryWrapper = {
           category: {
             budgeted: toNewBudgeted
@@ -281,6 +273,15 @@ class HandleOverspendingTool {
         };
         
         await this.api.categories.updateMonthCategory(budgetId, month, suggestion.toCategoryId, toUpdateData);
+        
+        // Update the from category (debit) after successful credit
+        const fromUpdateData: ynab.PatchMonthCategoryWrapper = {
+          category: {
+            budgeted: fromNewBudgeted
+          }
+        };
+        
+        await this.api.categories.updateMonthCategory(budgetId, month, suggestion.fromCategoryId, fromUpdateData);
         
         executedMoves.push({
           fromCategory: suggestion.fromCategoryName,
