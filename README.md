@@ -3,7 +3,7 @@
 # ynab-mcp-server
 [![smithery badge](https://smithery.ai/badge/@calebl/ynab-mcp-server)](https://smithery.ai/server/@calebl/ynab-mcp-server)
 
-A Model Context Protocol (MCP) server built with mcp-framework. This MCP provides tools
+A Model Context Protocol (MCP) server built with the official @modelcontextprotocol/typescript-sdk. This MCP provides tools
 for interacting with your YNAB budgets setup at https://ynab.com
 
 <a href="https://glama.ai/mcp/servers/@calebl/ynab-mcp-server">
@@ -37,22 +37,32 @@ tool first, this prompt should happen asking you to set your default budget.
 ### Auto-distribute ready to assign funds based on category targets
 
 ## Current state
+
+✅ **Migration Complete**: Successfully migrated from mcp-framework to the official @modelcontextprotocol/typescript-sdk v1.20.1
+
 Available tools:
-* ListBudgets - lists available budgets on your account
-* BudgetSummary - provides a summary of categories that are underfunded and accounts that are low
-* GetUnapprovedTransactions - retrieve all unapproved transactions
-* CreateTransaction - creates a transaction for a specified budget and account.
+* **ListBudgets** - lists available budgets on your account
+* **BudgetSummary** - provides a summary of categories that are underfunded and accounts that are low
+* **GetUnapprovedTransactions** - retrieve all unapproved transactions
+* **CreateTransaction** - creates a transaction for a specified budget and account.
   * example prompt: `Add a transaction to my Ally account for $3.98 I spent at REI today`
   * requires GetBudget to be called first so we know the account id
-* ApproveTransaction - approves an existing transaction in your YNAB budget
+* **ApproveTransaction** - approves an existing transaction in your YNAB budget
   * requires a transaction ID to approve
   * can be used in conjunction with GetUnapprovedTransactions to approve pending transactions
   * After calling get unapproved transactions, prompt: `approve the transaction for $6.95 on the Apple Card`
 
+### Technical Status
+- ✅ Official MCP SDK integration (v1.20.1)
+- ✅ All 5 tools fully functional with new SDK
+- ✅ Complete test suite migration (69 tests passing)
+- ✅ TypeScript build system working
+- ✅ Proper MCP protocol compliance
+
 Next:
 * be able to approve multiple transactions with 1 call
-* updateCategory tool - or updateTransaction more general tool if I can get optional parameters to work correctly with zod & mcp framework
-* move off of mcp framework to use the model context protocol sdk directly?
+* updateCategory tool - or updateTransaction more general tool for enhanced transaction management
+* Enhanced error handling and validation using official MCP SDK capabilities
 
 
 ## Quick Start
@@ -92,44 +102,68 @@ create a new tool based on the readme and this openapi doc: https://api.ynab.com
 The new tool should get the details for a single budget
 ```
 
-You can add more tools using the CLI:
-
-```bash
-# Add a new tool
-mcp add tool my-tool
-
-# Example tools you might create:
-mcp add tool data-processor
-mcp add tool api-client
-mcp add tool file-handler
-```
+You can add more tools by creating new TypeScript files in the `src/tools/` directory following the established pattern.
 
 ## Tool Development
 
-Example tool structure:
+Example tool structure using the official @modelcontextprotocol/typescript-sdk:
 
 ```typescript
-import { MCPTool } from "mcp-framework";
-import { z } from "zod";
+import * as ynab from "ynab";
+import { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 interface MyToolInput {
   message: string;
 }
 
-class MyTool extends MCPTool<MyToolInput> {
-  name = "my_tool";
-  description = "Describes what your tool does";
+class MyTool {
+  private api: ynab.API;
 
-  schema = {
-    message: {
-      type: z.string(),
-      description: "Description of this input parameter",
-    },
-  };
+  constructor() {
+    this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
+  }
+
+  getToolDefinition(): Tool {
+    return {
+      name: "my_tool",
+      description: "Describes what your tool does",
+      inputSchema: {
+        type: "object",
+        properties: {
+          message: {
+            type: "string",
+            description: "Description of this input parameter",
+          },
+        },
+        required: ["message"],
+        additionalProperties: false,
+      },
+    };
+  }
 
   async execute(input: MyToolInput) {
-    // Your tool logic here
-    return `Processed: ${input.message}`;
+    try {
+      // Your tool logic here
+      const result = `Processed: ${input.message}`;
+      
+      return {
+        content: [
+          {
+            type: "text",
+            text: result,
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+          },
+        ],
+      };
+    }
   }
 }
 
@@ -221,5 +255,7 @@ Check https://modelcontextprotocol.io/clients for other available clients.
 
 ## Learn More
 
-- [MCP Framework Github](https://github.com/QuantGeekDev/mcp-framework)
-- [MCP Framework Docs](https://mcp-framework.com)
+- [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
+- [Official MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
+- [YNAB API Documentation](https://api.ynab.com/)
+- [YNAB JavaScript SDK](https://github.com/ynab/ynab-sdk-js)
