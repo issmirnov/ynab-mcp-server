@@ -83,10 +83,13 @@ class HandleOverspendingTool {
             }
             // Find categories with positive balances that can contribute funds
             // Exclude credit card payment categories as they are needed to pay CC bills
+            // Credit card payment categories typically have names starting with "💳" or containing "CC" or "Card"
             const availableCategories = categories.filter(cat => cat.balance > 0 &&
                 (!input.sourceCategories || input.sourceCategories.includes(cat.id)) &&
                 cat.category_group_name !== "Internal Master Category" &&
-                cat.category_group_name !== "Credit Card Payments");
+                !cat.name.includes("💳") &&
+                !cat.name.includes("CC") &&
+                !cat.name.includes("Card"));
             if (availableCategories.length === 0) {
                 return {
                     content: [
