@@ -6,6 +6,7 @@ A comprehensive Model Context Protocol (MCP) server built with the official @mod
 
 [![GitHub](https://img.shields.io/badge/GitHub-issmirnov%2Fynab--mcp--server-blue)](https://github.com/issmirnov/ynab-mcp-server)
 [![npm version](https://img.shields.io/npm/v/ynab-mcp-server)](https://www.npmjs.com/package/ynab-mcp-server)
+[![Docker Image](https://img.shields.io/badge/Docker-ghcr.io%2Fissmirnov%2Fynab--mcp--server-blue)](https://github.com/issmirnov/ynab-mcp-server/pkgs/container/ynab-mcp-server)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue)](https://www.typescriptlang.org/)
 [![MCP SDK](https://img.shields.io/badge/MCP%20SDK-1.20.1-green)](https://github.com/modelcontextprotocol/typescript-sdk)
 
@@ -106,13 +107,44 @@ We maintain full compatibility with the original API while providing significant
 
 ## Quick Start
 
+### Using Docker (Recommended)
+
+The easiest way to run the YNAB MCP Server is using our pre-built Docker image:
+
 ```bash
+# Pull the latest image
+docker pull ghcr.io/issmirnov/ynab-mcp-server:latest
+
+# Run the container with your YNAB API token
+docker run -e YNAB_API_TOKEN=your-token-here ghcr.io/issmirnov/ynab-mcp-server:latest
+```
+
+### Using npm/npx
+
+```bash
+# Install and run directly
+npx ynab-mcp-server
+
+# Or install globally
+npm install -g ynab-mcp-server
+ynab-mcp-server
+```
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/issmirnov/ynab-mcp-server.git
+cd ynab-mcp-server
+
 # Install dependencies
 npm install
 
 # Build the project
 npm run build
 
+# Run locally
+npm start
 ```
 
 ## Project Structure
@@ -267,10 +299,29 @@ Add this configuration to your Claude Desktop config file:
 
 ### After Publishing
 
+#### Using Docker (Recommended)
+
 Add this configuration to your Claude Desktop config file:
 
 **MacOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "ynab-mcp-server": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i",
+        "-e", "YNAB_API_TOKEN=your-ynab-api-token-here",
+        "ghcr.io/issmirnov/ynab-mcp-server:latest"
+      ]
+    }
+  }
+}
+```
+
+#### Using npm/npx
 
 ```json
 {
