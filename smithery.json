@@ -1,33 +1,11 @@
 {
-  "name": "@issmirnov/ynab-mcp-server",
-  "version": "1.1.5",
-  "description": "Comprehensive MCP server for YNAB with 18 AI-powered tools for budget management, automation, and analytics",
-  "author": "Ivan Smirnov <isgsmirnov@gmail.com>",
-  "homepage": "https://github.com/issmirnov/ynab-mcp-server",
-  "license": "MIT",
-  "runtime": "node",
-  "categories": ["finance", "productivity", "automation"],
-  "config": {
-    "mcpServers": {
-      "ynab-mcp-server": {
-        "command": "npx",
-        "args": ["-y", "@issmirnov/ynab-mcp-server"],
-        "env": {
-          "YNAB_API_TOKEN": "your-ynab-api-token-here"
-        }
+  "mcpServers": {
+    "@issmirnov/ynab-mcp-server": {
+      "command": "npx",
+      "args": ["-y", "@issmirnov/ynab-mcp-server"],
+      "env": {
+        "YNAB_API_TOKEN": ""
       }
     }
-  },
-  "environmentVariables": [
-    {
-      "name": "YNAB_API_TOKEN",
-      "description": "Your YNAB Personal Access Token from https://api.ynab.com/#personal-access-tokens",
-      "required": true
-    },
-    {
-      "name": "YNAB_BUDGET_ID",
-      "description": "Default budget ID to use (optional, can be specified per-request)",
-      "required": false
-    }
-  ]
+  }
 }

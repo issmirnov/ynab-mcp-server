@@ -147,16 +147,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// Environment validation
-function validateEnvironment() {
-  if (!process.env.YNAB_API_TOKEN) {
-    console.error("ERROR: YNAB_API_TOKEN environment variable is required");
-    console.error("Please set YNAB_API_TOKEN to your YNAB Personal Access Token");
-    console.error("You can get one from: https://app.ynab.com/settings/developer");
-    process.exit(1);
+// Environment validation (informational only - tools will validate at execution)
+function logEnvironmentStatus() {
+  if (process.env.YNAB_API_TOKEN) {
+    console.error("✓ YNAB_API_TOKEN is set");
+  } else {
+    console.error("⚠ YNAB_API_TOKEN is not set (will be required when executing tools)");
   }
-
-  console.error("✓ YNAB_API_TOKEN is set");
 
   if (process.env.YNAB_BUDGET_ID) {
     console.error(`✓ YNAB_BUDGET_ID is set: ${process.env.YNAB_BUDGET_ID}`);
@@ -167,7 +164,7 @@ function validateEnvironment() {
 
 // Start the server
 async function main() {
-  validateEnvironment();
+  logEnvironmentStatus();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("YNAB MCP Server running on stdio");

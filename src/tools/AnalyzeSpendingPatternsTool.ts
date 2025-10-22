@@ -62,10 +62,7 @@ export default class AnalyzeSpendingPatternsTool {
   private budgetId: string | undefined;
 
   constructor() {
-    const token = process.env.YNAB_API_TOKEN;
-    if (!token) {
-      throw new Error("YNAB_API_TOKEN environment variable is required");
-    }
+    const token = process.env.YNAB_API_TOKEN || "";
     this.api = new ynab.API(token);
     this.budgetId = process.env.YNAB_BUDGET_ID;
   }
@@ -125,6 +122,16 @@ export default class AnalyzeSpendingPatternsTool {
 
   async execute(input: AnalyzeSpendingPatternsInput) {
     try {
+      if (!process.env.YNAB_API_TOKEN) {
+        return {
+          isError: true,
+          content: [{
+            type: "text" as const,
+            text: "Error: YNAB_API_TOKEN environment variable is required"
+          }]
+        };
+      }
+
       const budgetId = getBudgetId(input.budgetId || this.budgetId);
       const monthsToAnalyze = Math.min(input.months || 6, 12);
       const includeInsights = input.includeInsights !== false;

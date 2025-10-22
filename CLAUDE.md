@@ -251,7 +251,7 @@ This server follows all MCP best practices:
 - ✅ **Type Safety**: Proper TypeScript types throughout (with documented `as any` usage in MCP handler)
 
 ## Project Status
-- **Version**: 1.1.5
+- **Version**: 1.1.7
 - **Status**: Production ready with 18 comprehensive tools
 - **Framework**: Official @modelcontextprotocol/sdk v1.20.1
 - **Test Coverage**: 274 tests (251 passing, 91.6% pass rate) across 17 test files

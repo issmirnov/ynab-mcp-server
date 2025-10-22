@@ -70,10 +70,7 @@ export default class GoalProgressReportTool {
   private budgetId: string | undefined;
 
   constructor() {
-    const token = process.env.YNAB_API_TOKEN;
-    if (!token) {
-      throw new Error("YNAB_API_TOKEN environment variable is required");
-    }
+    const token = process.env.YNAB_API_TOKEN || "";
     this.api = new ynab.API(token);
     this.budgetId = process.env.YNAB_BUDGET_ID;
   }
@@ -133,6 +130,16 @@ export default class GoalProgressReportTool {
 
   async execute(input: GoalProgressReportInput) {
     try {
+      if (!process.env.YNAB_API_TOKEN) {
+        return {
+          isError: true,
+          content: [{
+            type: "text" as const,
+            text: "Error: YNAB_API_TOKEN environment variable is required"
+          }]
+        };
+      }
+
       const budgetId = getBudgetId(input.budgetId || this.budgetId);
       const targetMonth = normalizeMonth(input.month);
       const includeCompleted = input.includeCompleted !== false;
