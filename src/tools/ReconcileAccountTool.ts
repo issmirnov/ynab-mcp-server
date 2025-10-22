@@ -288,8 +288,8 @@ export default class ReconcileAccountTool {
       };
 
     } catch (error) {
-      await handleAPIError(error, 'Account reconciliation');
       const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Error reconciling account: ${errorMessage}`);
       return {
         isError: true,
         content: [

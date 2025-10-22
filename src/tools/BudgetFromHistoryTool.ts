@@ -388,8 +388,8 @@ export default class BudgetFromHistoryTool {
       };
 
     } catch (error) {
-      await handleAPIError(error, 'Budget from history analysis');
       const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Error analyzing budget from history: ${errorMessage}`);
       return {
         isError: true,
         content: [
