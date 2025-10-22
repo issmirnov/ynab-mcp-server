@@ -1,5 +1,7 @@
 # Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
 
+buildCommand: npm install && npm run build
+
 startCommand:
   type: stdio
   configSchema:
