@@ -32,10 +32,10 @@ npx -y @issmirnov/ynab-mcp-server
 npm install -g @issmirnov/ynab-mcp-server
 ```
 
-### Option 3: Using Smithery (Claude Desktop)
-```bash
-npx -y @smithery/cli install @issmirnov/ynab-mcp-server --client claude
-```
+### Option 3: Using Smithery (Coming Soon) 🔄
+> **Note**: This server uses stdio transport (local execution) rather than streamable HTTP. Smithery's hosted deployment currently focuses on shttp servers. We're exploring options for Smithery integration. In the meantime, use the npm/npx or Docker methods above which work perfectly with Claude Desktop.
+
+For manual Claude Desktop setup, see [Using with Claude Desktop](#using-with-claude-desktop) below.
 
 ## Setup
 
