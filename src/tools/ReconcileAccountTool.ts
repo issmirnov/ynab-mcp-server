@@ -632,15 +632,19 @@ export default class ReconcileAccountTool {
 
   private calculateAmountConfidence(values: string[]): number {
     if (values.length === 0) return 0;
-    
+
     let validAmounts = 0;
     for (const value of values) {
-      const cleaned = value.replace(/[$,]/g, '');
+      let cleaned = value.replace(/[$,]/g, '');
+      // Handle parentheses for negative amounts
+      if (cleaned.startsWith('(') && cleaned.endsWith(')')) {
+        cleaned = cleaned.slice(1, -1);
+      }
       if (!isNaN(parseFloat(cleaned)) && (cleaned.includes('.') || cleaned.includes('-'))) {
         validAmounts++;
       }
     }
-    
+
     return validAmounts / values.length;
   }
 
@@ -876,7 +880,7 @@ export default class ReconcileAccountTool {
         );
 
         // Exact match: same amount and date within 1 day and high description similarity
-        if (amountDiff <= tolerance && daysDiff <= 1 && descriptionSimilarity > 0.9) {
+        if (amountDiff <= tolerance && daysDiff <= 1 && descriptionSimilarity >= 0.9) {
           matches.push({
             ynab_transaction_id: ynabTxn.id,
             ynab_date: ynabTxn.date,
@@ -1075,7 +1079,7 @@ export default class ReconcileAccountTool {
       'auto', 'pay', 'credit', 'debit', 'fee', 'withdrawal', 'deposit',
       'online', 'electronic', 'wire', 'check', 'card', 'pos', 'atm',
       'td', 'amt', 'ref', 'conf', 'auth', 'app', 'mobile', 'digital',
-      'inc', 'corp', 'llc', 'ltd', 'co', 'company', 'bank', 'financial'
+      'inc', 'corp', 'llc', 'ltd', 'co', 'com', 'company', 'bank', 'financial'
     ];
     
     // Split on various delimiters and clean up
@@ -1092,18 +1096,17 @@ export default class ReconcileAccountTool {
       // Normalize common banking abbreviations
       if (word === 'gsbank') return 'apple';
       if (word === 'mercuryach') return 'mercury';
-      if (word === 'privacycom') return 'privacy';
+      if (word === 'privacycom' || word === 'pwp') return 'privacy';
       if (word === 'chase') return 'chase';
       if (word === 'wells' || word === 'fargo') return 'wellsfargo';
       if (word === 'schwab') return 'schwab';
       if (word === 'bankamerica' || word === 'bofa') return 'bankofamerica';
-      if (word === 'pwp') return 'privacy'; // PwP is Privacy.com
-      
+
       // IMPROVED: Handle company name variations
       if (word === 'mcdonaldmazda') return 'mcdonaldmazda'; // Keep as is for partial matching
       if (word === 'hylandvillage') return 'hyland'; // Extract company name
       if (word === 'smirnovlabs') return 'smirnovlabs'; // Keep as is for partial matching
-      
+
       return word;
     });
 
@@ -1188,9 +1191,9 @@ export default class ReconcileAccountTool {
     if (hasImportantMatch) {
       // More generous boosting for important word matches
       if (similarity > 0.3) {
-        return Math.min(1.0, similarity + 0.3); // Boost by 30% instead of 20%
+        return Math.min(1.0, similarity + 0.4); // Boost by 40% for important matches
       } else {
-        return Math.min(1.0, similarity + 0.4); // Even bigger boost for low similarity
+        return Math.min(1.0, similarity + 0.5); // Even bigger boost for low similarity
       }
     }
     

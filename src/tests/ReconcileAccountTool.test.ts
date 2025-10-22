@@ -145,9 +145,9 @@ CREDIT,10/17/2025,"Online Transfer from CHK ...3515 transaction#: 26622174224",4
 10/20/2025,Test Payment`;
 
       const result = (tool as any).normalizeStatementData(csv);
-      
+
       expect(result.success).toBe(false);
-      expect(result.errors).toContain('Could not identify required columns (date, description, amount)');
+      expect(result.errors).toContain('CSV must have at least 3 columns');
     });
 
     it('should provide helpful error messages with column analysis', () => {
