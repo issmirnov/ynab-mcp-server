@@ -161,7 +161,7 @@ describe('BudgetFromHistoryTool', () => {
       expect(parsedResult.strategy_used).toBe('average');
     });
 
-    it.skip('should use different strategies', async () => {
+    it('should use different strategies', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
       mockApi.months.getBudgetMonth.mockResolvedValue({
         data: {
@@ -198,7 +198,7 @@ describe('BudgetFromHistoryTool', () => {
       }
     });
 
-    it.skip('should handle dry run mode', async () => {
+    it('should handle dry run mode', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
       mockApi.months.getBudgetMonth.mockResolvedValue({
         data: {
@@ -232,7 +232,7 @@ describe('BudgetFromHistoryTool', () => {
       expect(parsedResult.note).toContain('Suggestions are based on historical spending');
     });
 
-    it.skip('should filter by specific categories', async () => {
+    it('should filter by specific categories', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
       mockApi.months.getBudgetMonth.mockResolvedValue({
         data: {
@@ -265,7 +265,7 @@ describe('BudgetFromHistoryTool', () => {
       expect(parsedResult.suggestions.every((s: any) => s.category_id === 'cat-groceries')).toBe(true);
     });
 
-    it.skip('should exclude specified categories', async () => {
+    it('should exclude specified categories', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
       mockApi.months.getBudgetMonth.mockResolvedValue({
         data: {
@@ -298,7 +298,7 @@ describe('BudgetFromHistoryTool', () => {
       expect(parsedResult.suggestions.every((s: any) => s.category_name !== 'Groceries')).toBe(true);
     });
 
-    it.skip('should respect minSpendingThreshold', async () => {
+    it('should respect minSpendingThreshold', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
       mockApi.months.getBudgetMonth.mockResolvedValue({
         data: {
@@ -332,7 +332,7 @@ describe('BudgetFromHistoryTool', () => {
       expect(parsedResult.suggestions.every((s: any) => s.historical_average >= 500)).toBe(true);
     });
 
-    it.skip('should respect maxBudgetIncrease', async () => {
+    it('should respect maxBudgetIncrease', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
       mockApi.months.getBudgetMonth.mockResolvedValue({
         data: {
@@ -366,7 +366,7 @@ describe('BudgetFromHistoryTool', () => {
       expect(parsedResult).toHaveProperty('suggestions');
     });
 
-    it.skip('should handle months parameter with constraints', async () => {
+    it('should handle months parameter with constraints', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
       mockApi.months.getBudgetMonth.mockResolvedValue({
         data: {
@@ -421,7 +421,7 @@ describe('BudgetFromHistoryTool', () => {
       expect(result).toHaveProperty('isError', true);
     });
 
-    it.skip('should return markdown format when requested', async () => {
+    it('should return markdown format when requested', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
       mockApi.months.getBudgetMonth.mockResolvedValue({
         data: {

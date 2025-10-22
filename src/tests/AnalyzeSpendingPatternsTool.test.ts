@@ -3,6 +3,10 @@ import * as ynab from 'ynab';
 import AnalyzeSpendingPatternsTool from '../tools/AnalyzeSpendingPatternsTool';
 
 vi.mock('ynab');
+vi.mock('../utils/apiErrorHandler.js', () => ({
+  handleAPIError: vi.fn(),
+  createRetryableAPICall: async (fn: any) => await fn(),
+}));
 
 describe('AnalyzeSpendingPatternsTool', () => {
   let tool: AnalyzeSpendingPatternsTool;
@@ -696,8 +700,7 @@ describe('AnalyzeSpendingPatternsTool', () => {
       expect(result.content[0].text).toContain('Error analyzing spending patterns');
     });
 
-    // TODO: Fix partial category failure handling mock setup
-    it.skip('should continue with other categories if one fails', async () => {
+    it('should continue with other categories if one fails', async () => {
       const mockCategories = {
         data: {
           category_groups: [

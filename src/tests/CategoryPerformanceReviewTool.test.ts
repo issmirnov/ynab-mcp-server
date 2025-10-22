@@ -92,8 +92,7 @@ describe('CategoryPerformanceReviewTool', () => {
       },
     };
 
-    // TODO: Fix multi-month budget data mock setup
-    it.skip('should generate performance review', async () => {
+    it('should generate performance review', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategoriesData);
       mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthData);
 
@@ -128,8 +127,7 @@ describe('CategoryPerformanceReviewTool', () => {
       expect(result).toHaveProperty('isError', true);
     });
 
-    // TODO: Fix markdown format mock setup
-    it.skip('should return markdown format when requested', async () => {
+    it('should return markdown format when requested', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategoriesData);
       mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthData);
 
