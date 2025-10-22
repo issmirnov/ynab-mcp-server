@@ -1,15 +1,40 @@
 {
-  "name": "ynab-mcp-server",
-  "version": "0.1.2",
-  "description": "ynab-mcp-server MCP server",
-  "author": "Caleb LeNoir <caleb.lenoir@hey.com>",
+  "name": "@issmirnov/ynab-mcp-server",
+  "version": "1.1.5",
+  "description": "Comprehensive MCP server for YNAB with 18 AI-powered tools for budget management, automation, and analytics",
+  "author": "Ivan Smirnov <isgsmirnov@gmail.com>",
+  "contributors": [
+    "Caleb LeNoir <caleb.lenoir@hey.com>"
+  ],
+  "license": "MIT",
   "type": "module",
   "bin": {
-    "ynab-mcp-server": "./dist/index.js"
+    "ynab-mcp-server": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "keywords": [
+    "ynab",
+    "mcp",
+    "model-context-protocol",
+    "budget",
+    "finance",
+    "ai",
+    "automation",
+    "claude",
+    "anthropic"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/issmirnov/ynab-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/issmirnov/ynab-mcp-server/issues"
+  },
+  "homepage": "https://github.com/issmirnov/ynab-mcp-server#readme",
   "scripts": {
     "build": "tsc && chmod +x dist/index.js",
     "prepare": "npm run build",
@@ -32,7 +57,7 @@
     "vitest": "^3.2.4"
   },
   "engines": {
-    "node": ">=22.0.0",
-    "npm": ">=10.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }

@@ -1,0 +1,51 @@
+# Source files (we only ship compiled dist/)
+src/
+*.ts
+!*.d.ts
+tsconfig.json
+
+# Tests
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+src/tests/
+coverage/
+.nyc_output/
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment and config
+.env
+.env.*
+*.local
+
+# Build artifacts
+node_modules/
+*.tgz
+
+# Documentation (included via files in package.json)
+CLAUDE.md
+PUBLISHING.md
+.prettierrc
+.eslintrc*
+
+# CI/CD
+.github/
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Misc
+.DS_Store
+*.swp
+*.swo
+*~

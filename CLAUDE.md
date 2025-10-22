@@ -32,11 +32,11 @@ npm test:coverage
 
 ## Architecture Overview
 
-This is a **Model Context Protocol (MCP) server** that provides 17 comprehensive AI tools for interacting with YNAB (You Need A Budget) budgets. The architecture uses the official MCP SDK and follows MCP best practices:
+This is a **Model Context Protocol (MCP) server** that provides 18 comprehensive AI tools for interacting with YNAB (You Need A Budget) budgets. The architecture uses the official MCP SDK and follows MCP best practices:
 
 ### Core Structure
 - **Entry Point**: `src/index.ts` - Server setup using official `@modelcontextprotocol/sdk` with environment validation
-- **Tools Directory**: `src/tools/` - Contains all 17 MCP tools as individual TypeScript classes
+- **Tools Directory**: `src/tools/` - Contains all 18 MCP tools as individual TypeScript classes
 - **Utilities**: `src/utils/` - Common utilities for amount conversion, date formatting, error handling
 - **Framework**: Built with official `@modelcontextprotocol/sdk` v1.20.1 for proper MCP protocol handling
 
@@ -206,7 +206,7 @@ export default NewTool;
 - Test files follow pattern: `**/*.{test,spec}.{ts,js}`
 - Coverage reports available via `npm run test:coverage`
 - Tests should be put into the `src/tests` folder
-- All 17 tools have test coverage
+- All 18 tools have test coverage
 - Test files: 17 total (12 fully passing, 5 with partial failures in complex tools)
 - When any code is modified, update the test coverage to account for the change
 
@@ -251,11 +251,11 @@ This server follows all MCP best practices:
 - ✅ **Type Safety**: Proper TypeScript types throughout (with documented `as any` usage in MCP handler)
 
 ## Project Status
-- **Version**: 0.1.3
-- **Status**: Production ready with 17 comprehensive tools
+- **Version**: 1.1.5
+- **Status**: Production ready with 18 comprehensive tools
 - **Framework**: Official @modelcontextprotocol/sdk v1.20.1
 - **Test Coverage**: 274 tests (251 passing, 91.6% pass rate) across 17 test files
 - **MCP Compliance**: Fully compliant with MCP best practices
 - **Pagination**: Supported on 6 list-type tools
-- **Error Handling**: apiErrorHandler with retry logic on all 17 tools
+- **Error Handling**: apiErrorHandler with retry logic on all 18 tools
 - **Architecture**: Manual tool registration with proper MCP protocol handling

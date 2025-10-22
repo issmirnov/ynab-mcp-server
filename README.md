@@ -5,7 +5,7 @@ A comprehensive Model Context Protocol (MCP) server that transforms how you inte
 > **Acknowledgments**: This project is based on the original work by [Caleb LeNoir](https://github.com/calebl/ynab-mcp-server) and has been significantly expanded with additional tools, analytics capabilities, and enhanced functionality. We thank Caleb for the foundational work that made this comprehensive version possible.
 
 [![GitHub](https://img.shields.io/badge/GitHub-issmirnov%2Fynab--mcp--server-blue)](https://github.com/issmirnov/ynab-mcp-server)
-[![npm version](https://img.shields.io/npm/v/ynab-mcp-server)](https://www.npmjs.com/package/ynab-mcp-server)
+[![npm version](https://img.shields.io/npm/v/@issmirnov/ynab-mcp-server)](https://www.npmjs.com/package/@issmirnov/ynab-mcp-server)
 [![Docker Image](https://img.shields.io/badge/Docker-ghcr.io%2Fissmirnov%2Fynab--mcp--server-blue)](https://github.com/issmirnov/ynab-mcp-server/pkgs/container/ynab-mcp-server)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue)](https://www.typescriptlang.org/)
 [![MCP SDK](https://img.shields.io/badge/MCP%20SDK-1.20.1-green)](https://github.com/modelcontextprotocol/typescript-sdk)
@@ -13,6 +13,29 @@ A comprehensive Model Context Protocol (MCP) server that transforms how you inte
 ## Quick Links
 
 📚 [Real-World Workflows](#real-world-workflows) | 🛠️ [All 18 Tools](#available-tools-18-total) | 🚀 [Quick Start](#quick-start) | 🔧 [Setup Guide](#using-with-claude-desktop)
+
+## Installation
+
+Choose your preferred installation method:
+
+### Option 1: Using Docker (Recommended) 🐳
+```bash
+docker pull ghcr.io/issmirnov/ynab-mcp-server:latest
+```
+
+### Option 2: Using npm/npx 📦
+```bash
+# Run directly without installation
+npx -y @issmirnov/ynab-mcp-server
+
+# Or install globally
+npm install -g @issmirnov/ynab-mcp-server
+```
+
+### Option 3: Using Smithery (Claude Desktop)
+```bash
+npx -y @smithery/cli install @issmirnov/ynab-mcp-server --client claude
+```
 
 ## Setup
 
@@ -404,10 +427,10 @@ docker run -e YNAB_API_TOKEN=your-token-here ghcr.io/issmirnov/ynab-mcp-server:l
 
 ```bash
 # Install and run directly
-npx ynab-mcp-server
+npx @issmirnov/ynab-mcp-server
 
 # Or install globally
-npm install -g ynab-mcp-server
+npm install -g @issmirnov/ynab-mcp-server
 ynab-mcp-server
 ```
 
@@ -611,7 +634,7 @@ Add this configuration to your Claude Desktop config file:
   "mcpServers": {
     "ynab-mcp-server": {
       "command": "npx",
-      "args": ["ynab-mcp-server"],
+      "args": ["-y", "@issmirnov/ynab-mcp-server"],
       "env": {
         "YNAB_API_TOKEN": "your-ynab-api-token-here"
       }

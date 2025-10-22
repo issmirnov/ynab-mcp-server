@@ -31,7 +31,7 @@ jobs:
       run: npm run build
     
     - name: Publish to npm
-      run: npm publish
+      run: npm publish --provenance --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     
@@ -55,9 +55,9 @@ jobs:
           ```
           
           ## Installation Options
-          
+
           - **Docker (Recommended)**: `ghcr.io/issmirnov/ynab-mcp-server:latest`
-          - **npm**: `npm install -g ynab-mcp-server`
-          - **npx**: `npx ynab-mcp-server`
+          - **npm**: `npm install -g @issmirnov/ynab-mcp-server`
+          - **npx**: `npx -y @issmirnov/ynab-mcp-server`
         draft: false
         prerelease: false
