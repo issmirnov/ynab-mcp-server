@@ -9,6 +9,7 @@ import {
   milliUnitsToAmount,
   formatCurrency
 } from "../utils/commonUtils.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface SetCategoryGoalsInput {
   budgetId?: string;
@@ -53,9 +54,14 @@ export default class SetCategoryGoalsTool {
   private api: ynab.API;
   private budgetId?: string;
 
-  constructor(budgetId?: string, ynabApi?: ynab.API) {
-    this.api = ynabApi || new ynab.API(process.env.YNAB_API_TOKEN || "");
-    this.budgetId = budgetId || process.env.YNAB_BUDGET_ID;
+  constructor(budgetIdOrConfig?: string | ToolRuntimeConfig, ynabApi?: ynab.API) {
+    const runtime = createToolRuntime(
+      typeof budgetIdOrConfig === "string"
+        ? { budgetId: budgetIdOrConfig, ynabApi }
+        : budgetIdOrConfig
+    );
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId;
   }
 
   getToolDefinition(): Tool {
@@ -124,7 +130,7 @@ export default class SetCategoryGoalsTool {
 
   async execute(input: SetCategoryGoalsInput): Promise<{ content: Array<{ type: string; text: string }>, isError?: boolean }> {
     try {
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
       // Get all categories
       const categoriesResponse = await this.api.categories.getCategories(budgetId);
       const allCategories = categoriesResponse.data.category_groups

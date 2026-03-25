@@ -2,6 +2,7 @@ import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface NetWorthAnalysisInput {
   budgetId?: string;
@@ -34,9 +35,10 @@ class NetWorthAnalysisTool {
   private api: ynab.API;
   private budgetId: string;
 
-  constructor() {
-    this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
-    this.budgetId = process.env.YNAB_BUDGET_ID || "";
+  constructor(config?: ToolRuntimeConfig) {
+    const runtime = createToolRuntime(config);
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId || "";
   }
 
   getToolDefinition(): Tool {
@@ -70,7 +72,7 @@ class NetWorthAnalysisTool {
 
   async execute(input: NetWorthAnalysisInput) {
     try {
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
       console.error(`Getting current net worth for budget ${budgetId}`);
 
       // Get all accounts (both on-budget and tracking)

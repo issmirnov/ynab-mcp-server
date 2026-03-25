@@ -10,6 +10,7 @@ import {
   normalizeMonth,
   formatCurrency
 } from "../utils/commonUtils.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface ReconcileAccountInput {
   budgetId?: string;
@@ -98,9 +99,14 @@ export default class ReconcileAccountTool {
   private api: ynab.API;
   private budgetId?: string;
 
-  constructor(budgetId?: string, ynabApi?: ynab.API) {
-    this.api = ynabApi || new ynab.API(process.env.YNAB_API_TOKEN || "");
-    this.budgetId = budgetId || process.env.YNAB_BUDGET_ID;
+  constructor(budgetIdOrConfig?: string | ToolRuntimeConfig, ynabApi?: ynab.API) {
+    const runtime = createToolRuntime(
+      typeof budgetIdOrConfig === "string"
+        ? { budgetId: budgetIdOrConfig, ynabApi }
+        : budgetIdOrConfig
+    );
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId;
   }
 
   getToolDefinition(): Tool {
@@ -184,7 +190,7 @@ export default class ReconcileAccountTool {
 
   async execute(input: ReconcileAccountInput) {
     try {
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
       if (!input.statementData || !input.statementBalance || !input.statementDate) {
         throw new Error("Missing required parameters: statementData, statementBalance, and statementDate are required.");

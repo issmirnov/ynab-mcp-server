@@ -2,6 +2,7 @@ import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface ListTransactionsInput {
   budgetId?: string;
@@ -45,9 +46,10 @@ class ListTransactionsTool {
   private api: ynab.API;
   private budgetId: string;
 
-  constructor() {
-    this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
-    this.budgetId = process.env.YNAB_BUDGET_ID || "";
+  constructor(config?: ToolRuntimeConfig) {
+    const runtime = createToolRuntime(config);
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId || "";
   }
 
   getToolDefinition(): Tool {
@@ -142,7 +144,7 @@ class ListTransactionsTool {
 
   async execute(input: ListTransactionsInput) {
     try {
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
       console.error(`Listing transactions for budget ${budgetId}`);
 

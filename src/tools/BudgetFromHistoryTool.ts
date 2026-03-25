@@ -10,6 +10,7 @@ import {
   normalizeMonth,
   formatCurrency
 } from "../utils/commonUtils.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface BudgetFromHistoryInput {
   budgetId?: string;
@@ -65,9 +66,14 @@ export default class BudgetFromHistoryTool {
   private api: ynab.API;
   private budgetId?: string;
 
-  constructor(budgetId?: string, ynabApi?: ynab.API) {
-    this.api = ynabApi || new ynab.API(process.env.YNAB_API_TOKEN || "");
-    this.budgetId = budgetId || process.env.YNAB_BUDGET_ID;
+  constructor(budgetIdOrConfig?: string | ToolRuntimeConfig, ynabApi?: ynab.API) {
+    const runtime = createToolRuntime(
+      typeof budgetIdOrConfig === "string"
+        ? { budgetId: budgetIdOrConfig, ynabApi }
+        : budgetIdOrConfig
+    );
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId;
   }
 
   getToolDefinition(): Tool {
@@ -143,7 +149,7 @@ export default class BudgetFromHistoryTool {
 
   async execute(input: BudgetFromHistoryInput) {
     try {
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
       const monthsToAnalyze = input.months || 6;
       const strategy = input.strategy || 'average';
       const minSpendingThreshold = amountToMilliUnits(input.minSpendingThreshold || 10.00);

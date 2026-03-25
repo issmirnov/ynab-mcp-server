@@ -1,27 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
+    "target": "es2021",
+    "lib": ["es2021"],
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "types": ["@cloudflare/workers-types/2023-07-01", "@types/node"],
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "noEmit": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "preserveSymlinks": true,
-    "baseUrl": "./src",
-    "paths": {
-      "/*": ["./*"]
-    }
+    "strict": true,
+    "skipLibCheck": true
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "worker-configuration.d.ts"
   ],
   "exclude": [
     "node_modules",
-    "src/tests",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "dist",
+    "src/tests"
   ]
 }

@@ -2,6 +2,7 @@ import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface AnalyzeSpendingPatternsInput {
   budgetId?: string;
@@ -60,11 +61,13 @@ interface AnalyzeSpendingPatternsResult {
 export default class AnalyzeSpendingPatternsTool {
   private api: ynab.API;
   private budgetId: string | undefined;
+  private hasToken: boolean;
 
-  constructor() {
-    const token = process.env.YNAB_API_TOKEN || "";
-    this.api = new ynab.API(token);
-    this.budgetId = process.env.YNAB_BUDGET_ID;
+  constructor(config?: ToolRuntimeConfig) {
+    const runtime = createToolRuntime(config);
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId;
+    this.hasToken = runtime.hasToken;
   }
 
   getToolDefinition(): Tool {
@@ -122,7 +125,7 @@ export default class AnalyzeSpendingPatternsTool {
 
   async execute(input: AnalyzeSpendingPatternsInput) {
     try {
-      if (!process.env.YNAB_API_TOKEN) {
+      if (!this.hasToken) {
         return {
           isError: true,
           content: [{
@@ -132,7 +135,7 @@ export default class AnalyzeSpendingPatternsTool {
         };
       }
 
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
       const monthsToAnalyze = Math.min(input.months || 6, 12);
       const includeInsights = input.includeInsights !== false;
       console.error(`Analyzing spending patterns for budget ${budgetId} over ${monthsToAnalyze} months`);

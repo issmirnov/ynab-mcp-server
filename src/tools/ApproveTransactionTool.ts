@@ -2,6 +2,7 @@ import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { truncateResponse, CHARACTER_LIMIT, getBudgetId } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface UpdateTransactionInput {
   budgetId?: string;
@@ -14,9 +15,10 @@ class ApproveTransactionTool {
   private api: ynab.API;
   private budgetId: string;
 
-  constructor() {
-    this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
-    this.budgetId = process.env.YNAB_BUDGET_ID || "";
+  constructor(config?: ToolRuntimeConfig) {
+    const runtime = createToolRuntime(config);
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId || "";
   }
 
   getToolDefinition(): Tool {
@@ -60,7 +62,7 @@ class ApproveTransactionTool {
 
   async execute(input: UpdateTransactionInput) {
     try {
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
       // First, get the existing transaction to ensure we don't lose any data
       const existingTransaction = await createRetryableAPICall(

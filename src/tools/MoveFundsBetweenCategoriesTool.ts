@@ -10,6 +10,7 @@ import {
   formatCurrency,
 } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface MoveFundsBetweenCategoriesInput {
   budgetId?: string;
@@ -41,9 +42,10 @@ class MoveFundsBetweenCategoriesTool {
   private api: ynab.API;
   private budgetId: string;
 
-  constructor() {
-    this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
-    this.budgetId = process.env.YNAB_BUDGET_ID || "";
+  constructor(config?: ToolRuntimeConfig) {
+    const runtime = createToolRuntime(config);
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId || "";
   }
 
   getToolDefinition(): Tool {
@@ -113,7 +115,7 @@ class MoveFundsBetweenCategoriesTool {
 
   async execute(input: MoveFundsBetweenCategoriesInput) {
     try {
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
       if (!input.moves || input.moves.length === 0) {
         return {

@@ -2,6 +2,7 @@ import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { truncateResponse, CHARACTER_LIMIT, getBudgetId, normalizeMonth, milliUnitsToAmount, formatCurrency } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface GoalProgressReportInput {
   budgetId?: string;
@@ -68,11 +69,13 @@ interface GoalProgressReportResult {
 export default class GoalProgressReportTool {
   private api: ynab.API;
   private budgetId: string | undefined;
+  private hasToken: boolean;
 
-  constructor() {
-    const token = process.env.YNAB_API_TOKEN || "";
-    this.api = new ynab.API(token);
-    this.budgetId = process.env.YNAB_BUDGET_ID;
+  constructor(config?: ToolRuntimeConfig) {
+    const runtime = createToolRuntime(config);
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId;
+    this.hasToken = runtime.hasToken;
   }
 
   getToolDefinition(): Tool {
@@ -130,7 +133,7 @@ export default class GoalProgressReportTool {
 
   async execute(input: GoalProgressReportInput) {
     try {
-      if (!process.env.YNAB_API_TOKEN) {
+      if (!this.hasToken) {
         return {
           isError: true,
           content: [{
@@ -140,7 +143,7 @@ export default class GoalProgressReportTool {
         };
       }
 
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
       const targetMonth = normalizeMonth(input.month);
       const includeCompleted = input.includeCompleted !== false;
       const includeInsights = input.includeInsights !== false;
