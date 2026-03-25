@@ -118,7 +118,17 @@ The intended flow is:
 
 - New YNAB OAuth apps start in Restricted Mode with a 25-user cap until YNAB approves the app.
 - YNAB access tokens expire after 2 hours; this Worker refreshes them with the stored refresh token.
-- If you want public multi-user deployment, you still need a privacy policy and the rest of the YNAB OAuth review requirements before asking YNAB to lift Restricted Mode.
+
+## YNAB approval checklist
+
+- [x] Use OAuth authorization code flow with PKCE
+- [x] Avoid collecting YNAB or financial account passwords directly
+- [x] Publish a privacy policy and expose it in the app UI
+- [x] Show the required non-affiliation footer in the app UI
+- [ ] Rename the public Worker hostname so the DNS name does not include `ynab` unless preceded by `for`
+- [ ] Set the privacy policy URL in the YNAB OAuth app configuration
+- [ ] Confirm the production OAuth scope is the minimum necessary for the enabled tools
+- [ ] Replace the generic privacy-policy contact/deletion channel with a real support email or deletion contact method before review
 
 ## Scripts
 

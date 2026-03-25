@@ -30,7 +30,9 @@ We do not sell YNAB user data.
 
 ## Data Storage
 
-The service stores the minimum data needed to operate:
+This service runs on an ephemeral Cloudflare Worker. It does not maintain or operate a separate long-term application database of your YNAB budget contents, and it is not designed to retain your YNAB budget data as a stored dataset. Budget data is accessed from YNAB only as needed to fulfill the tool request you initiate through your MCP client.
+
+The service does store the minimum OAuth-related data needed to operate:
 
 - YNAB OAuth access tokens
 - YNAB OAuth refresh tokens
@@ -41,7 +43,7 @@ This data is stored in Cloudflare-hosted infrastructure used by the service, inc
 
 ## Data Retention
 
-Stored OAuth credentials and related operational metadata are retained only as long as reasonably necessary to operate the service, maintain active access, and support security and debugging. Revoked or no-longer-needed credentials should be removed in the normal course of operation.
+Stored OAuth credentials and related operational metadata are retained only as long as needed to keep your connector working. Budget data fetched from YNAB to answer a request is not intentionally retained as an application dataset after the request is completed. If you remove the connector connection or revoke the YNAB OAuth grant, associated stored OAuth credentials should no longer be needed and should be removed in the normal course of operation.
 
 ## Data Sharing
 
@@ -59,9 +61,11 @@ We use OAuth-based delegated access rather than asking for your YNAB password. S
 
 You can stop using the service at any time by:
 
-- disconnecting the MCP client
+- removing the connection in your AI client's settings for custom connectors or connected apps
 - revoking the YNAB OAuth grant associated with this service
+
+You have full control to disconnect this MCP server at any time. If you remove the connector from the AI client where you added it, that ends future access through this integration from that client. You may also revoke the YNAB OAuth grant for this service at any time.
 
 ## Contact
 
-For questions about this privacy policy or the handling of YNAB user data, contact the operator of this service through the repository or deployment contact channel associated with this app.
+For questions about this privacy policy, requests related to stored OAuth credentials, or the handling of YNAB user data, contact `ivan@smirnovlabs.com`.

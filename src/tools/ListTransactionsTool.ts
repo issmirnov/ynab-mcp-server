@@ -61,7 +61,7 @@ class ListTransactionsTool {
         properties: {
           budgetId: {
             type: "string",
-            description: "The ID of the budget to list transactions from (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)",
+            description: "The ID of the budget to list transactions from. Optional when a default budget is set or only one budget exists.",
           },
           accountId: {
             type: "string",

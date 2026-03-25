@@ -30,7 +30,7 @@ class BudgetSummaryTool {
         properties: {
           budgetId: {
             type: "string",
-            description: "The ID of the budget to get a summary for (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)",
+            description: "The ID of the budget to get a summary for. Optional when a default budget is set or only one budget exists.",
           },
           month: {
             type: "string",

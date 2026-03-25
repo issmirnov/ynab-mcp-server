@@ -38,7 +38,7 @@ class CreateTransactionTool {
         properties: {
           budgetId: {
             type: "string",
-            description: "The id of the budget to create the transaction in (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)",
+            description: "The ID of the budget to create the transaction in. Optional when a default budget is set or only one budget exists.",
           },
           accountId: {
             type: "string",

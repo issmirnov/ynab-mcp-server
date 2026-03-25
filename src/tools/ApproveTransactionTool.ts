@@ -30,7 +30,7 @@ class ApproveTransactionTool {
         properties: {
           budgetId: {
             type: "string",
-            description: "The id of the budget containing the transaction (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)",
+            description: "The ID of the budget containing the transaction. Optional when a default budget is set or only one budget exists.",
           },
           transactionId: {
             type: "string",

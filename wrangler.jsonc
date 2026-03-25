@@ -1,33 +1,37 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "ynab-mcp-server",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-03-10",
-  "compatibility_flags": ["nodejs_compat"],
-  "migrations": [
-    {
-      "new_sqlite_classes": ["YnabMCP"],
-      "tag": "v1"
-    }
-  ],
-  "durable_objects": {
-    "bindings": [
-      {
-        "class_name": "YnabMCP",
-        "name": "MCP_OBJECT"
-      }
-    ]
-  },
-  "kv_namespaces": [
-    {
-      "binding": "OAUTH_KV",
-      "id": "<ADD_KV_NAMESPACE_ID>"
-    }
-  ],
-  "observability": {
-    "enabled": true
-  },
-  "dev": {
-    "port": 8788
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "ynab-mcp-server",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-03-10",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"migrations": [
+		{
+			"new_sqlite_classes": [
+				"YnabMCP"
+			],
+			"tag": "v1"
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"class_name": "YnabMCP",
+				"name": "MCP_OBJECT"
+			}
+		]
+	},
+	"kv_namespaces": [
+		{
+			"binding": "OAUTH_KV",
+			"id": "<ADD_KV_NAMESPACE_ID>"
+		}
+	],
+	"observability": {
+		"enabled": true
+	},
+	"dev": {
+		"port": 8788
+	}
 }

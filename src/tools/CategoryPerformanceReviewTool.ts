@@ -89,7 +89,7 @@ export default class CategoryPerformanceReviewTool {
         properties: {
           budgetId: {
             type: "string",
-            description: "The ID of the budget to analyze (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)",
+            description: "The ID of the budget to analyze. Optional when a default budget is set or only one budget exists.",
           },
           months: {
             type: "number",
@@ -180,51 +180,61 @@ export default class CategoryPerformanceReviewTool {
           // but we'll be more conservative and only filter by name patterns for now
         );
 
+      const categoryDataById = new Map<string, {
+        category: ynab.Category;
+        monthlyData: {
+          month: string;
+          budgeted: number;
+          activity: number;
+          available: number;
+        }[];
+      }>();
+
       for (const category of allCategories) {
+        categoryDataById.set(category.id, {
+          category,
+          monthlyData: [],
+        });
+      }
+
+      for (let i = 0; i < monthsToAnalyze; i++) {
+        let targetMonth = currentMonth - i;
+        let targetYear = currentYear;
+
+        while (targetMonth < 0) {
+          targetMonth += 12;
+          targetYear -= 1;
+        }
+
+        const monthKey = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`;
+
         try {
-          // Get monthly data for this category
-          const monthlyData: { 
-            month: string; 
-            budgeted: number; 
-            activity: number; 
-            available: number; 
-          }[] = [];
+          const monthBudget = await createRetryableAPICall(
+            () => this.api.months.getBudgetMonth(budgetId, monthKey),
+            `Get budget month ${monthKey}`
+          );
 
-          for (let i = 0; i < monthsToAnalyze; i++) {
-            // Calculate month going back from current month
-            let targetMonth = currentMonth - i;
-            let targetYear = currentYear;
-            
-            // Handle year boundaries
-            while (targetMonth < 0) {
-              targetMonth += 12;
-              targetYear -= 1;
+          for (const monthCategory of monthBudget.data.month.categories) {
+            const existing = categoryDataById.get(monthCategory.id);
+
+            if (!existing) {
+              continue;
             }
-            
-            const monthKey = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`;
 
-            try {
-              const monthBudget = await createRetryableAPICall(
-                () => this.api.months.getBudgetMonth(budgetId, monthKey),
-                `Get budget month ${monthKey}`
-              );
-              const monthCategory = monthBudget.data.month.categories.find(
-                cat => cat.id === category.id
-              );
-
-              if (monthCategory) {
-                monthlyData.push({
-                  month: monthKey,
-                  budgeted: monthCategory.budgeted || 0,
-                  activity: monthCategory.activity || 0,
-                  available: monthCategory.balance || 0,
-                });
-              }
-            } catch (error) {
-              console.error(`Error getting data for month ${monthKey}:`, error);
-              // Continue with other months
-            }
+            existing.monthlyData.push({
+              month: monthKey,
+              budgeted: monthCategory.budgeted || 0,
+              activity: monthCategory.activity || 0,
+              available: monthCategory.balance || 0,
+            });
           }
+        } catch (error) {
+          console.error(`Error getting data for month ${monthKey}:`, error);
+        }
+      }
+
+      for (const { category, monthlyData } of categoryDataById.values()) {
+        try {
 
           if (monthlyData.length === 0) {
             continue; // Skip categories with no data

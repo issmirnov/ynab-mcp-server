@@ -6,3 +6,5 @@ logs
 data
 coverage
 dist/
+.dev.vars
+wrangler.local.jsonc

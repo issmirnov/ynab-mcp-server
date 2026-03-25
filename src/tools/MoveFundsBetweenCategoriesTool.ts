@@ -57,7 +57,7 @@ class MoveFundsBetweenCategoriesTool {
         properties: {
           budgetId: {
             type: "string",
-            description: "The ID of the budget to move funds in (optional, defaults to YNAB_BUDGET_ID environment variable)",
+            description: "The ID of the budget to move funds in. Optional when a default budget is set or only one budget exists.",
           },
           month: {
             type: "string",

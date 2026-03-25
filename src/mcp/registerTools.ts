@@ -14,15 +14,18 @@ import GetUnapprovedTransactionsTool from "../tools/GetUnapprovedTransactionsToo
 import GoalProgressReportTool from "../tools/GoalProgressReportTool.js";
 import HandleOverspendingTool from "../tools/HandleOverspendingTool.js";
 import ListBudgetsTool from "../tools/ListBudgetsTool.js";
+import ListCategoriesTool from "../tools/ListCategoriesTool.js";
 import ListTransactionsTool from "../tools/ListTransactionsTool.js";
 import MoveFundsBetweenCategoriesTool from "../tools/MoveFundsBetweenCategoriesTool.js";
 import NetWorthAnalysisTool from "../tools/NetWorthAnalysisTool.js";
 import ReconcileAccountTool from "../tools/ReconcileAccountTool.js";
+import SetDefaultBudgetTool from "../tools/SetDefaultBudgetTool.js";
 import SetCategoryGoalsTool from "../tools/SetCategoryGoalsTool.js";
 import type { ToolRuntimeConfig } from "../tools/runtime.js";
 import { jsonSchemaObjectToZodShape } from "../utils/jsonSchemaToZod.js";
 import { getValidAccessToken } from "../auth/ynab.js";
 import type { AuthProps } from "../auth/types.js";
+import { resolveBudgetSelection } from "../auth/preferences.js";
 
 type ToolClass = new (config?: ToolRuntimeConfig) => {
   getToolDefinition(): Tool;
@@ -31,6 +34,8 @@ type ToolClass = new (config?: ToolRuntimeConfig) => {
 
 const TOOL_CLASSES: ToolClass[] = [
   ListBudgetsTool as unknown as ToolClass,
+  SetDefaultBudgetTool as unknown as ToolClass,
+  ListCategoriesTool as unknown as ToolClass,
   BudgetSummaryTool as unknown as ToolClass,
   CreateTransactionTool as unknown as ToolClass,
   GetUnapprovedTransactionsTool as unknown as ToolClass,
@@ -50,11 +55,32 @@ const TOOL_CLASSES: ToolClass[] = [
   ListTransactionsTool as unknown as ToolClass,
 ];
 
-async function createRuntimeConfig(env: Env, props: AuthProps): Promise<ToolRuntimeConfig> {
+function shouldResolveBudget(definition: Tool) {
+  return definition.name !== "ynab_list_budgets" && definition.name !== "ynab_set_default_budget";
+}
+
+async function createRuntimeConfig(
+  env: Env,
+  props: AuthProps,
+  definition: Tool,
+  input: Record<string, unknown>
+): Promise<ToolRuntimeConfig> {
   const accessToken = await getValidAccessToken(env, props.ynabUserId);
+  const api = new ynab.API(accessToken);
+
   return {
-    ynabApi: new ynab.API(accessToken),
+    ynabApi: api,
     hasToken: true,
+    budgetId: shouldResolveBudget(definition)
+      ? await resolveBudgetSelection(
+          env.OAUTH_KV,
+          props.ynabUserId,
+          api,
+          typeof input.budgetId === "string" ? input.budgetId : undefined
+        )
+      : undefined,
+    env,
+    ynabUserId: props.ynabUserId,
   };
 }
 
@@ -72,7 +98,8 @@ export function registerYnabTools(server: McpServer, env: Env, props: AuthProps)
         inputSchema: jsonSchemaObjectToZodShape(definition.inputSchema as any),
       },
       async (args) => {
-        const tool = new ToolClass(await createRuntimeConfig(env, props));
+        const input = args as Record<string, unknown>;
+        const tool = new ToolClass(await createRuntimeConfig(env, props, definition, input));
         return tool.execute(args as Record<string, unknown>);
       }
     );
