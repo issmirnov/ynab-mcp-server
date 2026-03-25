@@ -12,7 +12,9 @@
     "deploy": "wrangler deploy",
     "cf-typegen": "wrangler types",
     "type-check": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
+    "test": "npm run test:unit && npm run test:workers",
+    "test:unit": "vitest run --config vitest.config.ts --passWithNoTests",
+    "test:workers": "vitest run --config vitest.worker.config.ts --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "keywords": [
@@ -43,6 +45,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.13.4",
     "@types/node": "^25.3.0",
     "@vitest/coverage-v8": "^4.0.18",
     "typescript": "^5.9.3",
