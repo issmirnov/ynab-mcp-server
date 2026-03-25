@@ -18,7 +18,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '22.x'
         cache: 'npm'
     
     - name: Install dependencies
@@ -27,8 +27,8 @@ jobs:
     - name: Run tests
       run: npm test
     
-    - name: Build project
-      run: npm run build
+    - name: Validate worker project
+      run: npm run type-check
     
     - name: Comment on PR
       uses: actions/github-script@v7
