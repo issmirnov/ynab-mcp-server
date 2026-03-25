@@ -61,7 +61,7 @@ class BulkApproveTransactionsTool {
         properties: {
           budgetId: {
             type: "string",
-            description: "The ID of the budget to approve transactions for (optional, defaults to YNAB_BUDGET_ID environment variable)",
+            description: "The ID of the budget to approve transactions for. Optional when a default budget is set or only one budget exists.",
           },
           filters: {
             type: "object",

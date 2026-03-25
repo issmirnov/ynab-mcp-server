@@ -4,13 +4,11 @@ import type { OAuthStatePayload } from "./types.js";
 const STATE_COOKIE = "__Host-YNAB_MCP_STATE";
 
 export async function createOAuthState(
-  oauthReqInfo: AuthRequest,
-  codeVerifier: string,
+  payload: OAuthStatePayload,
   kv: KVNamespace,
   ttlSeconds = 600
 ) {
   const stateToken = crypto.randomUUID();
-  const payload: OAuthStatePayload = { oauthReqInfo, codeVerifier };
 
   await kv.put(`oauth:state:${stateToken}`, JSON.stringify(payload), {
     expirationTtl: ttlSeconds,
@@ -68,7 +66,7 @@ export async function validateOAuthState(request: Request, kv: KVNamespace) {
   await kv.delete(`oauth:state:${stateToken}`);
 
   return {
-    payload: JSON.parse(rawPayload) as OAuthStatePayload & { oauthReqInfo: AuthRequest },
+    payload: JSON.parse(rawPayload) as OAuthStatePayload | { flow: "grant"; oauthReqInfo: AuthRequest; codeVerifier: string },
     clearCookie: `${STATE_COOKIE}=; HttpOnly; Secure; Path=/; SameSite=Lax; Max-Age=0`,
   };
 }

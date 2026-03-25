@@ -33,16 +33,16 @@ export function amountToMilliUnits(amount: number): number {
 }
 
 /**
- * Get budget ID from input or environment variable
+ * Get budget ID from input or resolved user default
  * @param budgetId - Optional budget ID from tool input
  * @returns Budget ID string
  * @throws Error if no budget ID is available
  */
 export function getBudgetId(budgetId?: string, defaultBudgetId?: string): string {
-  const id = budgetId || defaultBudgetId || process.env.YNAB_BUDGET_ID;
+  const id = budgetId || defaultBudgetId;
   if (!id) {
     throw new Error(
-      "Budget ID is required. Either provide budgetId parameter or set YNAB_BUDGET_ID environment variable. Use the list_budgets tool to find your budget ID."
+      "Budget ID is required. Set a default budget with ynab_set_default_budget, rely on auto-selection when you only have one budget, or pass budgetId explicitly."
     );
   }
   return id;

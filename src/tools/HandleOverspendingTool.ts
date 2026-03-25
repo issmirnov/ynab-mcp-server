@@ -51,7 +51,7 @@ class HandleOverspendingTool {
         properties: {
           budgetId: {
             type: "string",
-            description: "The ID of the budget to handle overspending for (optional, defaults to YNAB_BUDGET_ID environment variable)",
+            description: "The ID of the budget to handle overspending for. Optional when a default budget is set or only one budget exists.",
           },
           month: {
             type: "string",

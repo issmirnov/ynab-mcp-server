@@ -50,7 +50,7 @@ class NetWorthAnalysisTool {
         properties: {
           budgetId: {
             type: "string",
-            description: "The ID of the budget to analyze (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)",
+            description: "The ID of the budget to analyze. Optional when a default budget is set or only one budget exists.",
           },
           response_format: {
             type: "string",

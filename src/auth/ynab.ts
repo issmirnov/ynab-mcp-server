@@ -121,6 +121,10 @@ export async function saveStoredToken(kv: KVNamespace, ynabUserId: string, token
   await kv.put(`ynab:token:${ynabUserId}`, JSON.stringify(token));
 }
 
+export async function deleteStoredToken(kv: KVNamespace, ynabUserId: string) {
+  await kv.delete(`ynab:token:${ynabUserId}`);
+}
+
 export async function getValidAccessToken(env: Env, ynabUserId: string) {
   const storedToken = await loadStoredToken(env.OAUTH_KV, ynabUserId);
   if (!storedToken) {

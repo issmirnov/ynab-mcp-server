@@ -73,7 +73,7 @@ export default class SetCategoryGoalsTool {
         properties: {
           budgetId: {
             type: "string",
-            description: "The ID of the budget to update (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)",
+            description: "The ID of the budget to update. Optional when a default budget is set or only one budget exists.",
           },
           categoryId: {
             type: "string",
