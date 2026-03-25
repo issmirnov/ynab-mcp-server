@@ -1,6 +1,0 @@
-# This file has been split into focused workflows:
-# - ci.yml: Continuous Integration (lint, test, build)
-# - security.yml: Security scanning
-# - release.yml: Package publishing
-# - docker.yml: Docker image building
-# - dependabot.yml: Dependabot validation
