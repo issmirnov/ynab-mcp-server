@@ -2,6 +2,7 @@ import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { getBudgetId, amountToMilliUnits, truncateResponse, CHARACTER_LIMIT } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface CreateTransactionInput {
   budgetId?: string;
@@ -22,9 +23,10 @@ class CreateTransactionTool {
   private api: ynab.API;
   private budgetId: string;
 
-  constructor() {
-    this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
-    this.budgetId = process.env.YNAB_BUDGET_ID || "";
+  constructor(config?: ToolRuntimeConfig) {
+    const runtime = createToolRuntime(config);
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId || "";
   }
 
   getToolDefinition(): Tool {
@@ -99,7 +101,7 @@ class CreateTransactionTool {
 
   async execute(input: CreateTransactionInput) {
     try {
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
       if(!input.payeeId && !input.payeeName) {
         return {

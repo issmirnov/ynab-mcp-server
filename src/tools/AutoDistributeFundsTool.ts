@@ -11,6 +11,7 @@ import {
   formatDate
 } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface AutoDistributeFundsInput {
   budgetId?: string;
@@ -37,9 +38,10 @@ class AutoDistributeFundsTool {
   private api: ynab.API;
   private budgetId: string;
 
-  constructor() {
-    this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
-    this.budgetId = process.env.YNAB_BUDGET_ID || "";
+  constructor(config?: ToolRuntimeConfig) {
+    const runtime = createToolRuntime(config);
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId || "";
   }
 
   getToolDefinition(): Tool {
@@ -94,7 +96,7 @@ class AutoDistributeFundsTool {
 
   async execute(input: AutoDistributeFundsInput) {
     try {
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
       const month = normalizeMonth(input.month);
 
       console.log(`Auto-distributing funds for budget ${budgetId}, month ${month}`);

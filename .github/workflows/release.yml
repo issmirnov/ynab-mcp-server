@@ -8,9 +8,8 @@ env:
   NODE_VERSION: '22.x'
 
 jobs:
-  # Package and Publish
-  publish:
-    name: Publish Package
+  release:
+    name: Worker Release Prep
     runs-on: ubuntu-latest
     
     steps:
@@ -27,37 +26,11 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Build project
-      run: npm run build
-    
-    - name: Publish to npm
-      run: npm publish --provenance --access public
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-    
-    - name: Create GitHub Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.event.release.tag_name }}
-        release_name: ${{ github.event.release.name }}
-        body: |
-          ${{ github.event.release.body }}
-          
-          ## Docker Image
-          
-          This release is also available as a Docker image:
-          
-          ```bash
-          docker pull ghcr.io/issmirnov/ynab-mcp-server:${{ github.event.release.tag_name }}
-          docker pull ghcr.io/issmirnov/ynab-mcp-server:latest
-          ```
-          
-          ## Installation Options
+    - name: Generate Worker types
+      run: npm run cf-typegen
 
-          - **Docker (Recommended)**: `ghcr.io/issmirnov/ynab-mcp-server:latest`
-          - **npm**: `npm install -g @issmirnov/ynab-mcp-server`
-          - **npx**: `npx -y @issmirnov/ynab-mcp-server`
-        draft: false
-        prerelease: false
+    - name: Validate release branch
+      run: npm run type-check
+
+    - name: Release note
+      run: echo "Release workflow now validates the Cloudflare Worker project. Deployment should happen via Wrangler."

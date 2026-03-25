@@ -2,6 +2,7 @@ import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { truncateResponse, CHARACTER_LIMIT } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface ListBudgetsInput {
   response_format?: "json" | "markdown";
@@ -9,9 +10,12 @@ interface ListBudgetsInput {
 
 class ListBudgetsTool {
   private api: ynab.API;
+  private hasToken: boolean;
 
-  constructor() {
-    this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
+  constructor(config?: ToolRuntimeConfig) {
+    const runtime = createToolRuntime(config);
+    this.api = runtime.api;
+    this.hasToken = runtime.hasToken;
   }
 
   getToolDefinition(): Tool {
@@ -41,7 +45,7 @@ class ListBudgetsTool {
 
   async execute(input: ListBudgetsInput) {
     try {
-      if (!process.env.YNAB_API_TOKEN) {
+      if (!this.hasToken) {
         return {
           isError: true,
           content: [

@@ -11,6 +11,7 @@ import {
   formatDate
 } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface HandleOverspendingInput {
   budgetId?: string;
@@ -35,9 +36,10 @@ class HandleOverspendingTool {
   private api: ynab.API;
   private budgetId: string;
 
-  constructor() {
-    this.api = new ynab.API(process.env.YNAB_API_TOKEN || "");
-    this.budgetId = process.env.YNAB_BUDGET_ID || "";
+  constructor(config?: ToolRuntimeConfig) {
+    const runtime = createToolRuntime(config);
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId || "";
   }
 
   getToolDefinition(): Tool {
@@ -98,7 +100,7 @@ class HandleOverspendingTool {
 
   async execute(input: HandleOverspendingInput) {
     try {
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
       const month = normalizeMonth(input.month);
 
       console.log(`Handling overspending for budget ${budgetId}, month ${month}`);

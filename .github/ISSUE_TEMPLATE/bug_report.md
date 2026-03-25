@@ -30,7 +30,7 @@ A clear and concise description of what actually happened.
 ## Environment
 
 - **OS**: [e.g. macOS, Windows, Linux]
-- **Node.js Version**: [e.g. 20.11.0]
+- **Node.js Version**: [e.g. 22.12.0]
 - **Package Version**: [e.g. 0.1.2]
 - **MCP Client**: [e.g. Claude Desktop, Cline, etc.]
 

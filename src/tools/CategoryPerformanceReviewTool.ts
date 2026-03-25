@@ -9,6 +9,7 @@ import {
   formatCurrency
 } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface CategoryPerformanceReviewInput {
   budgetId?: string;
@@ -70,11 +71,13 @@ interface CategoryPerformanceReviewResult {
 export default class CategoryPerformanceReviewTool {
   private api: ynab.API;
   private budgetId: string | undefined;
+  private hasToken: boolean;
 
-  constructor() {
-    const token = process.env.YNAB_API_TOKEN || "";
-    this.api = new ynab.API(token);
-    this.budgetId = process.env.YNAB_BUDGET_ID;
+  constructor(config?: ToolRuntimeConfig) {
+    const runtime = createToolRuntime(config);
+    this.api = runtime.api;
+    this.budgetId = runtime.budgetId;
+    this.hasToken = runtime.hasToken;
   }
 
   getToolDefinition(): Tool {
@@ -134,7 +137,7 @@ export default class CategoryPerformanceReviewTool {
 
   async execute(input: CategoryPerformanceReviewInput) {
     try {
-      if (!process.env.YNAB_API_TOKEN) {
+      if (!this.hasToken) {
         return {
           isError: true,
           content: [{
@@ -144,7 +147,7 @@ export default class CategoryPerformanceReviewTool {
         };
       }
 
-      const budgetId = getBudgetId(input.budgetId || this.budgetId);
+      const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
       const monthsToAnalyze = Math.min(input.months || 6, 12);
       const includeInsights = input.includeInsights !== false;

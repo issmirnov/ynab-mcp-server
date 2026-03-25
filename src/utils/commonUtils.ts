@@ -38,8 +38,8 @@ export function amountToMilliUnits(amount: number): number {
  * @returns Budget ID string
  * @throws Error if no budget ID is available
  */
-export function getBudgetId(budgetId?: string): string {
-  const id = budgetId || process.env.YNAB_BUDGET_ID;
+export function getBudgetId(budgetId?: string, defaultBudgetId?: string): string {
+  const id = budgetId || defaultBudgetId || process.env.YNAB_BUDGET_ID;
   if (!id) {
     throw new Error(
       "Budget ID is required. Either provide budgetId parameter or set YNAB_BUDGET_ID environment variable. Use the list_budgets tool to find your budget ID."

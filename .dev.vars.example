@@ -1,0 +1,4 @@
+YNAB_OAUTH_CLIENT_ID=replace-me
+YNAB_OAUTH_CLIENT_SECRET=replace-me
+# Optional. Set to read-only for read-only deployments.
+YNAB_OAUTH_SCOPE=
