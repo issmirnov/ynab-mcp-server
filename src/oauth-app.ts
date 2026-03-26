@@ -203,7 +203,7 @@ function renderConsentPage(oauthReqInfo: AuthRequest, clientInfo: ClientInfo, cs
         </p>
         <div class="actions">
           <button class="primary" type="submit" name="decision" value="approve">Continue to YNAB</button>
-          <button class="secondary" type="submit" name="decision" value="deny">Deny</button>
+          <button class="secondary" type="submit" name="decision" value="deny" formnovalidate>Deny</button>
         </div>
       </form>
     </div>`
