@@ -2,6 +2,10 @@ import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import {
+  isActionableUncategorizedTransaction,
+  isUncategorizedCategoryFilter,
+} from "../utils/transactionClassification.js";
 import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface ListTransactionsInput {
@@ -89,7 +93,7 @@ class ListTransactionsTool {
               },
               category: {
                 type: "string",
-                description: "Filter by category name (supports partial matching)",
+                description: "Filter by category name (supports partial matching). Use 'uncategorized' to find actionable spending transactions that still need a category; transfers, starting balances, reconciliation adjustments, inflows, and off-budget activity are excluded.",
               },
               minAmount: {
                 type: "number",
@@ -276,6 +280,8 @@ class ListTransactionsTool {
     categories: ynab.Category[],
     filters: NonNullable<ListTransactionsInput['filters']>
   ): ynab.TransactionDetail[] {
+    const categoryFilter = filters.category?.trim().toLowerCase();
+
     return transactions.filter(transaction => {
       // Filter by approval status
       if (filters.approved !== undefined && transaction.approved !== filters.approved) {
@@ -305,8 +311,12 @@ class ListTransactionsTool {
       }
 
       // Filter by category
-      if (filters.category) {
-        if (!transaction.category_name || !transaction.category_name.toLowerCase().includes(filters.category.toLowerCase())) {
+      if (categoryFilter) {
+        if (isUncategorizedCategoryFilter(categoryFilter)) {
+          if (!isActionableUncategorizedTransaction(transaction, accounts)) {
+            return false;
+          }
+        } else if (!transaction.category_name || !transaction.category_name.toLowerCase().includes(categoryFilter)) {
           return false;
         }
       }

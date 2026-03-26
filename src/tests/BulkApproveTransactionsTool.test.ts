@@ -39,12 +39,17 @@ describe('BulkApproveTransactionsTool', () => {
       },
     };
 
-    (ynab.API as any).mockImplementation(() => mockApi);
+    (ynab.API as any).mockImplementation(function () {
+      return mockApi;
+    });
 
     process.env.YNAB_API_TOKEN = 'test-token';
     process.env.YNAB_BUDGET_ID = 'test-budget-id';
 
-    tool = new BulkApproveTransactionsTool();
+    tool = new BulkApproveTransactionsTool({
+      ynabApi: mockApi as any,
+      budgetId: 'test-budget-id',
+    });
   });
 
   describe('tool configuration', () => {
@@ -225,6 +230,137 @@ describe('BulkApproveTransactionsTool', () => {
 
       const parsedResult = JSON.parse(result.content[0].text);
       expect(parsedResult.matchingTransactions).toBe(1);
+    });
+
+    it('should treat uncategorized as actionable spending only', async () => {
+      mockApi.transactions.getTransactions.mockResolvedValue({
+        data: {
+          transactions: [
+            ...mockTransactions,
+            {
+              id: 'txn-4',
+              account_id: 'acc-1',
+              date: '2024-01-18',
+              amount: -12000,
+              payee_name: 'Coffee Shop',
+              payee_id: 'payee-4',
+              category_name: null,
+              category_id: null,
+              memo: 'Needs category',
+              approved: false,
+              cleared: ynab.TransactionClearedStatus.Uncleared,
+              flag_color: null,
+              deleted: false,
+              transfer_account_id: null,
+              transfer_transaction_id: null,
+              subtransactions: [],
+            },
+            {
+              id: 'txn-5',
+              account_id: 'acc-1',
+              date: '2024-01-19',
+              amount: -8000,
+              payee_name: 'Starting Balance',
+              payee_id: null,
+              category_name: null,
+              category_id: null,
+              memo: 'System transaction',
+              approved: false,
+              cleared: ynab.TransactionClearedStatus.Uncleared,
+              flag_color: null,
+              deleted: false,
+              transfer_account_id: null,
+              transfer_transaction_id: null,
+              subtransactions: [],
+            },
+            {
+              id: 'txn-6',
+              account_id: 'acc-1',
+              date: '2024-01-20',
+              amount: 500,
+              payee_name: 'Interest',
+              payee_id: 'payee-6',
+              category_name: null,
+              category_id: null,
+              memo: 'Inflow',
+              approved: false,
+              cleared: ynab.TransactionClearedStatus.Cleared,
+              flag_color: null,
+              deleted: false,
+              transfer_account_id: null,
+              transfer_transaction_id: null,
+              subtransactions: [],
+            },
+            {
+              id: 'txn-7',
+              account_id: 'acc-2',
+              date: '2024-01-21',
+              amount: -22000,
+              payee_name: 'Brokerage Transfer',
+              payee_id: 'payee-7',
+              category_name: null,
+              category_id: null,
+              memo: 'Off budget',
+              approved: false,
+              cleared: ynab.TransactionClearedStatus.Cleared,
+              flag_color: null,
+              deleted: false,
+              transfer_account_id: null,
+              transfer_transaction_id: null,
+              subtransactions: [],
+            },
+            {
+              id: 'txn-8',
+              account_id: 'acc-1',
+              date: '2024-01-22',
+              amount: -18000,
+              payee_name: 'Transfer : Savings',
+              payee_id: null,
+              category_name: null,
+              category_id: null,
+              memo: 'Transfer',
+              approved: false,
+              cleared: ynab.TransactionClearedStatus.Cleared,
+              flag_color: null,
+              deleted: false,
+              transfer_account_id: 'acc-3',
+              transfer_transaction_id: 'txn-8-mirror',
+              subtransactions: [],
+            },
+          ],
+        },
+      });
+      mockApi.accounts.getAccounts.mockResolvedValue({
+        data: {
+          accounts: [
+            ...mockAccounts,
+            {
+              id: 'acc-2',
+              name: 'Brokerage Account',
+              type: 'investment',
+              balance: 1250000,
+              deleted: false,
+              closed: false,
+              on_budget: false,
+            },
+          ],
+        },
+      });
+
+      const result = await tool.execute({
+        budgetId: 'test-budget-id',
+        filters: {
+          category: 'uncategorized',
+        },
+        dryRun: true,
+        response_format: 'json',
+      });
+
+      const parsedResult = JSON.parse(result.content[0].text);
+      expect(parsedResult.matchingTransactions).toBe(1);
+      expect(parsedResult.unapprovedTransactions).toBe(1);
+      expect(parsedResult.transactions).toHaveLength(1);
+      expect(parsedResult.transactions[0].id).toBe('txn-4');
     });
 
     it('should filter by account name', async () => {

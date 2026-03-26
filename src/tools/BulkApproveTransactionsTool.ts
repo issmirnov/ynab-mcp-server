@@ -10,6 +10,10 @@ import {
   formatCurrency,
 } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import {
+  isActionableUncategorizedTransaction,
+  isUncategorizedCategoryFilter,
+} from "../utils/transactionClassification.js";
 import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface BulkApproveTransactionsInput {
@@ -72,7 +76,7 @@ class BulkApproveTransactionsTool {
               },
               category: {
                 type: "string",
-                description: "Filter by category name (supports partial matching)",
+                description: "Filter by category name (supports partial matching). Use 'uncategorized' to target actionable spending transactions still missing a category; transfers, starting balances, reconciliation adjustments, inflows, and off-budget activity are excluded.",
               },
               account: {
                 type: "string",
@@ -323,6 +327,8 @@ class BulkApproveTransactionsTool {
     categories: ynab.Category[],
     filters: NonNullable<BulkApproveTransactionsInput['filters']>
   ): ynab.TransactionDetail[] {
+    const categoryFilter = filters.category?.trim().toLowerCase();
+
     return transactions.filter(transaction => {
       // Payee filter
       if (filters.payee) {
@@ -333,10 +339,16 @@ class BulkApproveTransactionsTool {
       }
 
       // Category filter
-      if (filters.category) {
-        const categoryName = transaction.category_name?.toLowerCase() || "";
-        if (!categoryName.includes(filters.category.toLowerCase())) {
-          return false;
+      if (categoryFilter) {
+        if (isUncategorizedCategoryFilter(categoryFilter)) {
+          if (!isActionableUncategorizedTransaction(transaction, accounts)) {
+            return false;
+          }
+        } else {
+          const categoryName = transaction.category_name?.toLowerCase() || "";
+          if (!categoryName.includes(categoryFilter)) {
+            return false;
+          }
         }
       }
 
