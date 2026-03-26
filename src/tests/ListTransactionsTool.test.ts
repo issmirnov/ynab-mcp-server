@@ -33,12 +33,17 @@ describe('ListTransactionsTool', () => {
       },
     };
 
-    (ynab.API as any).mockImplementation(() => mockApi);
+    (ynab.API as any).mockImplementation(function () {
+      return mockApi;
+    });
 
     process.env.YNAB_API_TOKEN = 'test-token';
     process.env.YNAB_BUDGET_ID = 'test-budget-id';
 
-    tool = new ListTransactionsTool();
+    tool = new ListTransactionsTool({
+      ynabApi: mockApi as any,
+      budgetId: 'test-budget-id',
+    });
   });
 
   describe('execute', () => {
@@ -53,6 +58,7 @@ describe('ListTransactionsTool', () => {
         account_id: 'account-1',
         account_name: 'Chase Bank',
         payee_name: 'Test Payee 1',
+        category_id: 'category-1',
         category_name: 'Test Category',
         deleted: false,
         transfer_account_id: null,
@@ -72,6 +78,7 @@ describe('ListTransactionsTool', () => {
         account_id: 'account-1',
         account_name: 'Chase Bank',
         payee_name: 'Test Payee 2',
+        category_id: null,
         category_name: 'Test Category 2',
         deleted: false,
         transfer_account_id: 'transfer-account-id',
@@ -91,6 +98,7 @@ describe('ListTransactionsTool', () => {
         account_id: 'account-2',
         account_name: 'Savings Account',
         payee_name: null,
+        category_id: null,
         category_name: null,
         deleted: false,
         transfer_account_id: null,
@@ -110,6 +118,7 @@ describe('ListTransactionsTool', () => {
         account_id: 'account-1',
         account_name: 'Chase Bank',
         payee_name: 'Test Payee 3',
+        category_id: 'category-3',
         category_name: 'Test Category 3',
         deleted: true, // This should be filtered out
         transfer_account_id: null,
@@ -141,7 +150,7 @@ describe('ListTransactionsTool', () => {
         id: 'account-2',
         name: 'Savings Account',
         type: 'savings',
-        on_budget: true,
+        on_budget: false,
         closed: false,
         note: null,
         balance: 500000,
@@ -316,6 +325,111 @@ describe('ListTransactionsTool', () => {
       const responseData = JSON.parse(result.content[0].text);
       expect(responseData.transactions).toHaveLength(1);
       expect(responseData.transactions[0].category_name).toBe('Test Category 2');
+    });
+
+    it('should treat uncategorized as actionable spending only', async () => {
+      mockApi.transactions.getTransactions.mockResolvedValue({
+        data: {
+          transactions: [
+            ...mockTransactionData,
+            {
+              id: 'transaction-5',
+              date: '2023-01-05',
+              amount: -3200,
+              memo: 'Needs category',
+              approved: true,
+              cleared: ynab.TransactionClearedStatus.Uncleared,
+              account_id: 'account-1',
+              account_name: 'Chase Bank',
+              payee_name: 'Coffee Shop',
+              category_id: null,
+              category_name: null,
+              deleted: false,
+              transfer_account_id: null,
+              transfer_transaction_id: null,
+              matched_transaction_id: null,
+              import_id: null,
+              flag_color: null,
+              flag_name: null,
+            },
+            {
+              id: 'transaction-6',
+              date: '2023-01-06',
+              amount: -1500,
+              memo: 'Starting balance',
+              approved: true,
+              cleared: ynab.TransactionClearedStatus.Uncleared,
+              account_id: 'account-1',
+              account_name: 'Chase Bank',
+              payee_name: 'Starting Balance',
+              category_id: null,
+              category_name: null,
+              deleted: false,
+              transfer_account_id: null,
+              transfer_transaction_id: null,
+              matched_transaction_id: null,
+              import_id: null,
+              flag_color: null,
+              flag_name: null,
+            },
+            {
+              id: 'transaction-7',
+              date: '2023-01-07',
+              amount: -2000,
+              memo: 'Adjustment',
+              approved: true,
+              cleared: ynab.TransactionClearedStatus.Uncleared,
+              account_id: 'account-1',
+              account_name: 'Chase Bank',
+              payee_name: 'Reconciliation Balance Adjustment',
+              category_id: null,
+              category_name: null,
+              deleted: false,
+              transfer_account_id: null,
+              transfer_transaction_id: null,
+              matched_transaction_id: null,
+              import_id: null,
+              flag_color: null,
+              flag_name: null,
+            },
+            {
+              id: 'transaction-8',
+              date: '2023-01-08',
+              amount: 450,
+              memo: 'Interest',
+              approved: true,
+              cleared: ynab.TransactionClearedStatus.Cleared,
+              account_id: 'account-1',
+              account_name: 'Chase Bank',
+              payee_name: 'Bank Interest',
+              category_id: null,
+              category_name: null,
+              deleted: false,
+              transfer_account_id: null,
+              transfer_transaction_id: null,
+              matched_transaction_id: null,
+              import_id: null,
+              flag_color: null,
+              flag_name: null,
+            },
+          ],
+        },
+      });
+
+      const input = {
+        filters: {
+          category: 'uncategorized',
+        },
+        response_format: 'json' as const,
+      };
+
+      const result = await tool.execute(input);
+
+      expect(result).toHaveProperty('content');
+      const responseData = JSON.parse(result.content[0].text);
+      expect(responseData.transactions).toHaveLength(1);
+      expect(responseData.transactions[0].id).toBe('transaction-5');
+      expect(responseData.transactions[0].payee_name).toBe('Coffee Shop');
     });
 
     it('should filter transactions by amount range', async () => {
