@@ -26,6 +26,10 @@ import { jsonSchemaObjectToZodShape } from "../utils/jsonSchemaToZod.js";
 import { getValidAccessToken } from "../auth/ynab.js";
 import type { AuthProps } from "../auth/types.js";
 import { resolveBudgetSelection } from "../auth/preferences.js";
+import {
+  invalidateBudgetPreferenceCaches,
+  invalidateBudgetScopedCaches,
+} from "../resources/invalidation.js";
 
 type ToolClass = new (config?: ToolRuntimeConfig) => {
   getToolDefinition(): Tool;
@@ -99,8 +103,19 @@ export function registerYnabTools(server: McpServer, env: Env, props: AuthProps)
       },
       async (args) => {
         const input = args as Record<string, unknown>;
-        const tool = new ToolClass(await createRuntimeConfig(env, props, definition, input));
-        return tool.execute(args as Record<string, unknown>);
+        const runtime = await createRuntimeConfig(env, props, definition, input);
+        const tool = new ToolClass(runtime);
+        const result = await tool.execute(args as Record<string, unknown>);
+
+        if (!definition.annotations?.readOnlyHint && !result?.isError) {
+          if (definition.name === "ynab_set_default_budget") {
+            await invalidateBudgetPreferenceCaches(env.OAUTH_KV, props.ynabUserId);
+          } else if (runtime.budgetId) {
+            await invalidateBudgetScopedCaches(env.OAUTH_KV, props.ynabUserId, runtime.budgetId, input);
+          }
+        }
+
+        return result;
       }
     );
   }

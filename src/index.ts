@@ -2,6 +2,7 @@ import OAuthProvider from "@cloudflare/workers-oauth-provider";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { McpAgent } from "agents/mcp";
 import type { AuthProps } from "./auth/types.js";
+import { registerYnabResources } from "./resources/registerResources.js";
 import { registerYnabTools } from "./mcp/registerTools.js";
 import app from "./oauth-app.js";
 
@@ -16,6 +17,7 @@ export class YnabMCP extends McpAgent<Env, Record<string, never>, AuthProps> {
       throw new Error("Missing authenticated user context");
     }
 
+    registerYnabResources(this.server, this.env, this.props);
     registerYnabTools(this.server, this.env, this.props);
   }
 }

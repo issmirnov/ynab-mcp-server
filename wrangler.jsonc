@@ -33,5 +33,16 @@
 	},
 	"dev": {
 		"port": 8788
+	},
+	"env": {
+		"staging": {
+			"name": "ynab-mcp-server-staging",
+			"kv_namespaces": [
+				{
+					"binding": "OAUTH_KV",
+					"id": "<ADD_STAGING_KV_NAMESPACE_ID>"
+				}
+			]
+		}
 	}
 }
