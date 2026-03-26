@@ -17,9 +17,10 @@ describe("worker public routes", () => {
     const html = await response.text();
 
     expect(response.status).toBe(200);
-    expect(html).toContain("Hosted MCP server for YNAB");
+    expect(html).toContain("Hosted MCP connector for YNAB plans");
     expect(html).toContain('href="/privacy"');
     expect(html).toContain('href="/delete"');
+    expect(html).toContain("not officially supported by YNAB");
   });
 
   it("renders the privacy page with contact and disconnection guidance", async () => {

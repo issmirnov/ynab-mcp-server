@@ -8,26 +8,26 @@ const FIXED_RESOURCES = [
   {
     name: "ynab_budgets_resource",
     uri: "ynab://budgets",
-    title: "YNAB Budgets",
-    description: "Read the authenticated user's available YNAB budgets.",
+    title: "YNAB Plans",
+    description: "Read the authenticated user's available YNAB plans.",
   },
   {
     name: "ynab_default_budget_resource",
     uri: "ynab://budgets/default",
-    title: "Default YNAB Budget",
-    description: "Read the resolved default YNAB budget for the authenticated user.",
+    title: "Default YNAB Plan",
+    description: "Read the resolved default YNAB plan for the authenticated user.",
   },
   {
     name: "ynab_default_categories_resource",
     uri: "ynab://budgets/default/categories",
-    title: "Default Budget Categories",
-    description: "Read grouped categories for the authenticated user's default YNAB budget.",
+    title: "Default Plan Categories",
+    description: "Read grouped categories for the authenticated user's default YNAB plan.",
   },
   {
     name: "ynab_default_current_month_resource",
     uri: "ynab://budgets/default/month/current",
-    title: "Default Budget Current Month",
-    description: "Read current-month summary data for the authenticated user's default YNAB budget.",
+    title: "Default Plan Current Month",
+    description: "Read current-month summary data for the authenticated user's default YNAB plan.",
   },
 ] as const;
 
