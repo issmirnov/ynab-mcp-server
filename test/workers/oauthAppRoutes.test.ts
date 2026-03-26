@@ -18,6 +18,8 @@ describe("worker public routes", () => {
 
     expect(response.status).toBe(200);
     expect(html).toContain("Hosted MCP connector for YNAB plans");
+    expect(html).toContain("Install Instructions");
+    expect(html).toContain("github.com/issmirnov/ynab-mcp-server#readme");
     expect(html).toContain('href="/privacy"');
     expect(html).toContain('href="/delete"');
     expect(html).toContain("not officially supported by YNAB");

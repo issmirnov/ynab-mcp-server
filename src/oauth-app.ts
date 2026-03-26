@@ -15,6 +15,7 @@ import type { AuthProps } from "./auth/types.js";
 const app = new Hono<{ Bindings: Env & { OAUTH_PROVIDER: OAuthHelpers } }>();
 const CSRF_COOKIE = "__Host-YNAB_MCP_CSRF";
 const APP_NAME = "MCP for YNAB";
+const INSTALL_GUIDE_URL = "https://github.com/issmirnov/ynab-mcp-server#readme";
 const PRIVACY_LAST_UPDATED = "2026-03-25";
 const AFFILIATION_NOTICE = "We are not affiliated, associated, or in any way officially connected with YNAB or any of its subsidiaries or affiliates. The official YNAB website can be found at https://www.ynab.com. The names YNAB and You Need A Budget, as well as related names, tradenames, marks, trademarks, emblems, and images are registered trademarks of YNAB.";
 const UNSUPPORTED_NOTICE = "This app is not officially supported by YNAB in any way. Use it at your own risk.";
@@ -220,8 +221,10 @@ function renderHomePage(request: Request) {
       <p>This service connects supported MCP clients to a user’s YNAB account through OAuth.</p>
       <p class="meta"><strong>Unsupported app notice:</strong> ${escapeHtml(UNSUPPORTED_NOTICE)}</p>
       <p class="meta"><strong>MCP endpoint:</strong> <code>${escapeHtml(mcpUrl)}</code></p>
+      <p class="meta">Need setup help? Follow the hosted connector instructions on GitHub.</p>
       <div class="actions">
-        <a class="link-button primary" href="/privacy">Privacy Policy</a>
+        <a class="link-button primary" href="${escapeHtml(INSTALL_GUIDE_URL)}">Install Instructions</a>
+        <a class="link-button secondary" href="/privacy">Privacy Policy</a>
         <a class="link-button secondary" href="/delete">Delete my data</a>
       </div>
     </div>`
