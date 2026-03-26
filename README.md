@@ -139,4 +139,4 @@ Read the privacy policy here:
 
 ## For Self-Hosting or Operators
 
-If you are trying to deploy or host this service yourself, the README is not the best place to start. This file is intentionally written for end users connecting a hosted service in ChatGPT or Claude.
+If you are trying to deploy or host this service yourself, use [CONTRIBUTING.md](/home/vania/Projects/3.third_party/ynab-mcp-server.4/CONTRIBUTING.md). This README is intentionally written for end users connecting the hosted service in ChatGPT or Claude.
