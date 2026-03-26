@@ -7,7 +7,7 @@ Use this if you want your AI assistant to read your budgets, accounts, categorie
 ## What You Need
 
 - a YNAB account
-- a hosted MCP URL from us, such as `https://mcp.example.com/mcp`
+- the hosted MCP URL: `https://ynab-mcp-server.smirnov-labs.workers.dev/mcp`
 - ChatGPT or Claude with support for custom MCP connectors
 
 ## Quick Start
@@ -28,7 +28,7 @@ As of March 25, 2026, OpenAI requires developer mode for custom MCP connectors.
 
 - You need a ChatGPT plan that supports custom MCP connectors.
 - If you are on a workspace plan, your admin may need to enable developer mode first.
-- You need your hosted MCP URL, for example `https://mcp.example.com/mcp`.
+- You need this hosted MCP URL: `https://ynab-mcp-server.smirnov-labs.workers.dev/mcp`.
 
 ### Step-by-step
 
@@ -60,7 +60,7 @@ As of March 25, 2026, Anthropic supports remote MCP connectors in the Connectors
 ### Before you start
 
 - You need a Claude plan that supports remote MCP connectors.
-- You need your hosted MCP URL, for example `https://mcp.example.com/mcp`.
+- You need this hosted MCP URL: `https://ynab-mcp-server.smirnov-labs.workers.dev/mcp`.
 - If you are on Claude Team or Enterprise, your workspace owner may need to add the connector first.
 
 ### Step-by-step for Claude Pro or Max
