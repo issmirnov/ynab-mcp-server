@@ -1,140 +1,142 @@
 # ynab-mcp-server
 
-Hosted YNAB MCP server for ChatGPT and Claude connectors, built for Cloudflare Workers and per-user OAuth.
+Connect YNAB to ChatGPT or Claude with a hosted MCP server.
 
-## What changed
+Use this if you want your AI assistant to read your budgets, accounts, categories, payees, and transactions from YNAB after you sign in with your own YNAB account.
 
-This repo now targets:
+## What You Need
 
-- Remote MCP on Cloudflare Workers at `/mcp`
-- MCP client OAuth via `@cloudflare/workers-oauth-provider`
-- Upstream YNAB OAuth using the authorization code flow
-- Per-user YNAB token storage in Cloudflare KV
-- The existing 18 YNAB tools mounted behind request-scoped auth
+- a YNAB account
+- the hosted MCP URL: `https://ynab-mcp-server.smirnov-labs.workers.dev/mcp`
+- ChatGPT or Claude with support for custom MCP connectors
 
-This is no longer a local `stdio` package-first project.
+## Quick Start
 
-## Architecture
+1. Get your hosted MCP URL.
+2. Add that URL in ChatGPT or Claude.
+3. Click Connect.
+4. Sign in with YNAB when prompted.
+5. Return to your chat and start asking YNAB questions.
 
-- `src/index.ts`: Worker entrypoint, MCP Durable Object, OAuth provider wiring
-- `src/oauth-app.ts`: `/authorize` and `/callback` routes
-- `src/auth/ynab.ts`: YNAB OAuth exchange and refresh logic
-- `src/mcp/registerTools.ts`: Registers the YNAB tool set on the remote MCP server
-- `src/tools/`: Existing YNAB tool implementations, refactored for request-scoped auth
+## Set Up in ChatGPT
 
-## Local development
+These steps are for the ChatGPT web app.
 
-1. Install dependencies:
+As of March 25, 2026, OpenAI requires developer mode for custom MCP connectors.
 
-```bash
-npm install
-```
+### Before you start
 
-2. Generate Worker types if needed:
+- You need a ChatGPT plan that supports custom MCP connectors.
+- If you are on a workspace plan, your admin may need to enable developer mode first.
+- You need this hosted MCP URL: `https://ynab-mcp-server.smirnov-labs.workers.dev/mcp`.
 
-```bash
-npm run cf-typegen
-```
+### Step-by-step
 
-3. Add local secrets with Wrangler or `.dev.vars`.
+1. Open `chatgpt.com`.
+2. Open Settings.
+3. Enable developer mode if it is not already enabled.
+4. Go to Apps or Connectors and choose to create a custom app or connector.
+5. Paste your hosted MCP URL.
+6. Choose OAuth if ChatGPT asks for an authentication method.
+7. Save or create the connector.
+8. Start a new chat.
+9. Open the tools menu and enable the new connector.
+10. When redirected, sign in with YNAB and approve access.
+11. Return to ChatGPT and send a test prompt.
 
-4. Start the Worker:
+### Good first prompts
 
-```bash
-npm run dev
-```
+- `Show me the balances of all my budget accounts.`
+- `List my budget categories with available amounts.`
+- `Find my most recent grocery transactions.`
+- `What were my largest spending categories last month?`
 
-The local MCP endpoint will be:
+## Set Up in Claude
 
-```text
-http://localhost:8788/mcp
-```
+These steps are for `claude.ai`.
 
-## Cloudflare deployment
+As of March 25, 2026, Anthropic supports remote MCP connectors in the Connectors settings.
 
-You need:
+### Before you start
 
-- A Cloudflare account
-- A YNAB OAuth application
-- One Cloudflare KV namespace bound as `OAUTH_KV`
-- A deployed Worker with a Durable Object binding for `YnabMCP`
+- You need a Claude plan that supports remote MCP connectors.
+- You need this hosted MCP URL: `https://ynab-mcp-server.smirnov-labs.workers.dev/mcp`.
+- If you are on Claude Team or Enterprise, your workspace owner may need to add the connector first.
 
-### 1. Create the KV namespace
+### Step-by-step for Claude Pro or Max
 
-```bash
-wrangler kv namespace create OAUTH_KV
-```
+1. Open `claude.ai`.
+2. Open Settings.
+3. Open Connectors.
+4. Click `Add custom connector`.
+5. Paste your hosted MCP URL.
+6. Save the connector.
+7. Click `Connect`.
+8. When redirected, sign in with YNAB and approve access.
+9. Start a new chat.
+10. Use the `+` menu to enable the connector for that conversation.
+11. Send a test prompt.
 
-Then copy the namespace ID into `wrangler.jsonc`.
+### Step-by-step for Claude Team or Enterprise
 
-### 2. Create the YNAB OAuth app
+1. Ask your workspace owner to open `Organization settings -> Connectors`.
+2. Have them add the custom connector using your hosted MCP URL.
+3. After that is done, open your own Claude settings.
+4. Go to Connectors.
+5. Find the new custom connector.
+6. Click `Connect`.
+7. When redirected, sign in with YNAB and approve access.
+8. Start a new chat.
+9. Use the `+` menu to enable the connector for that conversation.
+10. Send a test prompt.
 
-In YNAB Developer Settings, create a new OAuth application and configure:
+### Good first prompts
 
-- Homepage URL: `https://<your-worker-domain>`
-- Redirect URL: `https://<your-worker-domain>/callback`
+- `Show me my current account balances in YNAB.`
+- `What categories are overspent right now?`
+- `Find transactions from Amazon in the last 30 days.`
+- `Summarize my spending by category this month.`
 
-You will need:
+## What Happens When You Connect
 
-- `YNAB_OAUTH_CLIENT_ID`
-- `YNAB_OAUTH_CLIENT_SECRET`
+1. ChatGPT or Claude connects to the hosted MCP URL.
+2. The MCP server sends you to YNAB sign-in.
+3. You approve access to your YNAB account.
+4. The service stores the OAuth tokens needed to make future YNAB requests on your behalf.
+5. Your assistant can then use YNAB tools in chat.
 
-Optional:
+## Troubleshooting
 
-- `YNAB_OAUTH_SCOPE=read-only` if you want a read-only deployment. Leave unset for full tool access.
+### The connector does not appear in ChatGPT
 
-### 3. Set Worker secrets
+- Confirm your plan supports custom MCP connectors.
+- Confirm developer mode is enabled.
+- If you are on a workspace plan, confirm your admin enabled the required settings.
 
-```bash
-wrangler secret put YNAB_OAUTH_CLIENT_ID
-wrangler secret put YNAB_OAUTH_CLIENT_SECRET
-wrangler secret put YNAB_OAUTH_SCOPE
-```
+### The connector does not appear in Claude
 
-### 4. Deploy
+- Confirm your plan supports remote MCP connectors.
+- On Team or Enterprise, confirm your workspace owner added the connector first.
 
-```bash
-npm run deploy
-```
+### I connected, but YNAB tools are not working
 
-Your remote MCP URL will be:
+- Disconnect and reconnect the connector.
+- Make sure you completed the YNAB OAuth approval step.
+- Start a fresh chat and re-enable the connector for that conversation.
 
-```text
-https://<your-worker-domain>/mcp
-```
+### The MCP URL is not working
 
-## Connector behavior
+- Make sure you pasted the full HTTPS URL.
+- Do not remove the trailing `/mcp` if your hosted URL includes it.
 
-The intended flow is:
+## Privacy
 
-1. ChatGPT or Claude connects to `/mcp`
-2. The MCP client is redirected through this Worker’s OAuth flow
-3. The Worker redirects the user to YNAB OAuth
-4. YNAB returns an auth code to `/callback`
-5. The Worker stores the user’s YNAB access/refresh tokens in KV
-6. Tool calls run with that user’s refreshed YNAB token
+This service uses OAuth to connect to your YNAB account. It does not ask for your YNAB password directly.
 
-## Important deployment notes
+Read the privacy policy here:
 
-- New YNAB OAuth apps start in Restricted Mode with a 25-user cap until YNAB approves the app.
-- YNAB access tokens expire after 2 hours; this Worker refreshes them with the stored refresh token.
+- [PRIVACY.md](/home/vania/Projects/3.third_party/ynab-mcp-server.4/PRIVACY.md)
 
-## YNAB approval checklist
+## For Self-Hosting or Operators
 
-- [x] Use OAuth authorization code flow with PKCE
-- [x] Avoid collecting YNAB or financial account passwords directly
-- [x] Publish a privacy policy and expose it in the app UI
-- [x] Show the required non-affiliation footer in the app UI
-- [ ] Rename the public Worker hostname so the DNS name does not include `ynab` unless preceded by `for`
-- [ ] Set the privacy policy URL in the YNAB OAuth app configuration
-- [ ] Confirm the production OAuth scope is the minimum necessary for the enabled tools
-- [ ] Replace the generic privacy-policy contact/deletion channel with a real support email or deletion contact method before review
-
-## Scripts
-
-```bash
-npm run dev
-npm run type-check
-npm run cf-typegen
-npm run deploy
-```
+If you are trying to deploy or host this service yourself, use [CONTRIBUTING.md](/home/vania/Projects/3.third_party/ynab-mcp-server.4/CONTRIBUTING.md). This README is intentionally written for end users connecting the hosted service in ChatGPT or Claude.
