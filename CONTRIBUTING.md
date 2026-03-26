@@ -103,6 +103,39 @@ Production MCP endpoint:
 https://<your-domain>/mcp
 ```
 
+### Staging Deploys
+
+Use a separate Worker environment for staging so connector and OAuth testing does not disturb production users.
+
+1. Create a second KV namespace for staging:
+
+```bash
+wrangler kv namespace create OAUTH_KV --env staging
+```
+
+2. Copy the returned namespace ID into `wrangler.jsonc` under `env.staging.kv_namespaces`.
+
+3. Set staging-only secrets:
+
+```bash
+wrangler secret put YNAB_OAUTH_CLIENT_ID --env staging
+wrangler secret put YNAB_OAUTH_CLIENT_SECRET --env staging
+wrangler secret put YNAB_OAUTH_SCOPE --env staging
+```
+
+4. Deploy staging:
+
+```bash
+npm run deploy:staging
+```
+
+That publishes a separate Worker named `ynab-mcp-server-staging` with its own `workers.dev` hostname and isolated KV-backed auth/session state.
+
+Important:
+
+- use a separate YNAB OAuth app for staging, because the callback URL is different
+- keep staging on its own KV namespace so user tokens, defaults, and cache state do not mix with production
+
 ## Connector Behavior
 
 1. ChatGPT or Claude connects to `/mcp`.
@@ -132,8 +165,23 @@ https://<your-domain>/mcp
 
 ```bash
 npm run dev
+npm run dev:staging
 npm run type-check
 npm run test
 npm run cf-typegen
 npm run deploy
+npm run deploy:staging
 ```
+
+## Local Smoke Tests
+
+To test resources without living in MCP Inspector:
+
+```bash
+npm run smoke:resources
+node scripts/mcp-smoke-client.mjs read-resource 'ynab://budgets/default'
+node scripts/mcp-smoke-client.mjs read-resource 'ynab://budgets/default/categories'
+node scripts/mcp-smoke-client.mjs read-resource 'ynab://budgets/default/month/current'
+```
+
+The smoke client persists its OAuth session in `data/mcp-smoke-auth.json`.

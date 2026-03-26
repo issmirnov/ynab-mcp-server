@@ -103,7 +103,7 @@ As of March 25, 2026, Anthropic supports remote MCP connectors in the Connectors
 2. The MCP server sends you to YNAB sign-in.
 3. You approve access to your YNAB account.
 4. The service stores the OAuth tokens needed to make future YNAB requests on your behalf.
-5. Your assistant can then use YNAB tools in chat.
+5. Your assistant can then use YNAB tools and resources in chat.
 
 ## Troubleshooting
 
@@ -135,8 +135,9 @@ This service uses OAuth to connect to your YNAB account. It does not ask for you
 
 Read the privacy policy here:
 
-- [PRIVACY.md](/home/vania/Projects/3.third_party/ynab-mcp-server.4/PRIVACY.md)
+- [PRIVACY.md](./PRIVACY.md)
 
 ## For Self-Hosting or Operators
 
-If you are trying to deploy or host this service yourself, use [CONTRIBUTING.md](/home/vania/Projects/3.third_party/ynab-mcp-server.4/CONTRIBUTING.md). This README is intentionally written for end users connecting the hosted service in ChatGPT or Claude.
+If you are trying to deploy or host this service yourself, use [CONTRIBUTING.md](./CONTRIBUTING.md).
+This README is intentionally written for end users connecting the hosted service in ChatGPT or Claude.

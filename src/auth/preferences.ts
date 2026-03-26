@@ -37,22 +37,5 @@ export async function resolveBudgetSelection(
     return preferences.defaultBudgetId;
   }
 
-  const budgetsResponse = await api.budgets.getBudgets();
-  const budgets = budgetsResponse.data.budgets;
-
-  if (budgets.length === 1) {
-    const [budget] = budgets;
-
-    await saveUserPreferences(kv, ynabUserId, {
-      ...preferences,
-      defaultBudgetId: budget.id,
-      defaultBudgetName: budget.name,
-    });
-
-    return budget.id;
-  }
-
-  throw new Error(
-    "Multiple budgets found. Set a default budget with ynab_set_default_budget or pass budgetId explicitly."
-  );
+  return "default";
 }

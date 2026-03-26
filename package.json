@@ -8,9 +8,12 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
+    "dev:staging": "wrangler dev --env staging",
     "start": "wrangler dev",
     "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
     "cf-typegen": "wrangler types",
+    "smoke:resources": "node scripts/mcp-smoke-client.mjs list-resources",
     "type-check": "tsc --noEmit",
     "test": "npm run test:unit && npm run test:workers",
     "test:unit": "vitest run --config vitest.config.ts --passWithNoTests",
