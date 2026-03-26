@@ -8,13 +8,13 @@ This service provides a hosted Model Context Protocol (MCP) server for YNAB. It 
 
 ## Data We Access
 
-When you authorize this service with YNAB, we may access the budget data your YNAB account permits through the granted OAuth scope. Depending on the scope and features used, that can include:
+When you authorize this service with YNAB, we may access the plan data your YNAB account permits through the granted OAuth scope. Depending on the scope and features used, that can include:
 
-- budget metadata
+- plan metadata
 - accounts
 - categories
 - transactions
-- monthly budget information
+- monthly plan information
 - other related YNAB planning data needed to fulfill MCP tool requests
 
 ## How We Use Data
@@ -30,7 +30,7 @@ We do not sell YNAB user data.
 
 ## Data Storage
 
-This service runs on an ephemeral Cloudflare Worker. It does not maintain or operate a separate long-term application database of your YNAB budget contents, and it is not designed to retain your YNAB budget data as a stored dataset. Budget data is accessed from YNAB only as needed to fulfill the tool request you initiate through your MCP client.
+This service runs on an ephemeral Cloudflare Worker. It does not maintain or operate a separate long-term application database of your YNAB plan contents, and it is not designed to retain your YNAB plan data as a stored dataset. Plan data is accessed from YNAB only as needed to fulfill the tool request you initiate through your MCP client.
 
 The service does store the minimum OAuth-related data needed to operate:
 
@@ -43,7 +43,7 @@ This data is stored in Cloudflare-hosted infrastructure used by the service, inc
 
 ## Data Retention
 
-Stored OAuth credentials and related operational metadata are retained only as long as needed to keep your connector working. Budget data fetched from YNAB to answer a request is not intentionally retained as an application dataset after the request is completed. If you remove the connector connection or revoke the YNAB OAuth grant, associated stored OAuth credentials should no longer be needed and should be removed in the normal course of operation.
+Stored OAuth credentials and related operational metadata are retained only as long as needed to keep your connector working. Plan data fetched from YNAB to answer a request is not intentionally retained as an application dataset after the request is completed. If you remove the connector connection or revoke the YNAB OAuth grant, associated stored OAuth credentials should no longer be needed and should be removed in the normal course of operation.
 
 ## Data Sharing
 

@@ -2,12 +2,12 @@
 
 Connect YNAB to ChatGPT or Claude with a hosted MCP server.
 
-Use this if you want your AI assistant to read your budgets, accounts, categories, payees, and transactions from YNAB after you sign in with your own YNAB account.
+Use this if you want your AI assistant to read your YNAB plans, accounts, categories, payees, and transactions after you sign in with your own YNAB account.
 
 ## What You Need
 
 - a YNAB account
-- the hosted MCP URL: `https://ynab-mcp-server.smirnov-labs.workers.dev/mcp`
+- the hosted MCP URL: `https://mcpforynab.smirnovlabs.com/mcp`
 - ChatGPT or Claude with support for custom MCP connectors
 
 ## Quick Start
@@ -28,7 +28,7 @@ As of March 25, 2026, OpenAI requires developer mode for custom MCP connectors.
 
 - You need a ChatGPT plan that supports custom MCP connectors.
 - If you are on a workspace plan, your admin may need to enable developer mode first.
-- You need this hosted MCP URL: `https://ynab-mcp-server.smirnov-labs.workers.dev/mcp`.
+- You need this hosted MCP URL: `https://mcpforynab.smirnovlabs.com/mcp`.
 
 ### Step-by-step
 
@@ -46,8 +46,8 @@ As of March 25, 2026, OpenAI requires developer mode for custom MCP connectors.
 
 ### Good first prompts
 
-- `Show me the balances of all my budget accounts.`
-- `List my budget categories with available amounts.`
+- `Show me the balances of all my plan accounts.`
+- `List my plan categories with available amounts.`
 - `Find my most recent grocery transactions.`
 - `What were my largest spending categories last month?`
 
@@ -60,7 +60,7 @@ As of March 25, 2026, Anthropic supports remote MCP connectors in the Connectors
 ### Before you start
 
 - You need a Claude plan that supports remote MCP connectors.
-- You need this hosted MCP URL: `https://ynab-mcp-server.smirnov-labs.workers.dev/mcp`.
+- You need this hosted MCP URL: `https://mcpforynab.smirnovlabs.com/mcp`.
 - If you are on Claude Team or Enterprise, your workspace owner may need to add the connector first.
 
 ### Step-by-step for Claude Pro or Max
@@ -132,6 +132,8 @@ As of March 25, 2026, Anthropic supports remote MCP connectors in the Connectors
 ## Privacy
 
 This service uses OAuth to connect to your YNAB account. It does not ask for your YNAB password directly.
+
+This app is not officially supported by YNAB in any way. Use it at your own risk.
 
 Read the privacy policy here:
 
