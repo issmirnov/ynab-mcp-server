@@ -99,14 +99,21 @@ async function resolveDefaultBudgetData(env: Env, props: AuthProps, api: ynab.AP
   return cached.data;
 }
 
+function getDefaultBudgetReadTarget(defaultBudget: DefaultBudgetData) {
+  return defaultBudget.selectionSource === "user_preference"
+    ? defaultBudget.budget.id
+    : "default";
+}
+
 async function getDefaultCategories(env: Env, props: AuthProps, api: ynab.API) {
   const defaultBudget = await resolveDefaultBudgetData(env, props, api);
+  const budgetReadTarget = getDefaultBudgetReadTarget(defaultBudget);
   const cached = await getOrSetCachedJson<CategoriesData>(
     env.OAUTH_KV,
-    getCategoriesCacheKey(props.ynabUserId, "default"),
+    getCategoriesCacheKey(props.ynabUserId, budgetReadTarget),
     RESOURCE_CACHE_TTLS.categories,
     async () => {
-      const categoriesResponse = await api.categories.getCategories("default");
+      const categoriesResponse = await api.categories.getCategories(budgetReadTarget);
 
       return {
         budgetId: defaultBudget.budget.id,
@@ -139,13 +146,14 @@ async function getDefaultCategories(env: Env, props: AuthProps, api: ynab.API) {
 
 async function getCurrentMonth(env: Env, props: AuthProps, api: ynab.API) {
   const defaultBudget = await resolveDefaultBudgetData(env, props, api);
+  const budgetReadTarget = getDefaultBudgetReadTarget(defaultBudget);
   const normalizedMonth = normalizeMonth("current");
   const cached = await getOrSetCachedJson<CurrentMonthData>(
     env.OAUTH_KV,
-    getMonthCacheKey(props.ynabUserId, "default", normalizedMonth),
+    getMonthCacheKey(props.ynabUserId, budgetReadTarget, normalizedMonth),
     RESOURCE_CACHE_TTLS.month,
     async () => {
-      const monthResponse = await api.months.getBudgetMonth("default", normalizedMonth);
+      const monthResponse = await api.months.getBudgetMonth(budgetReadTarget, normalizedMonth);
       const month = monthResponse.data.month;
 
       return {

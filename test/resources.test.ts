@@ -107,8 +107,63 @@ describe("YNAB resources", () => {
       api
     );
 
-    expect(api.categories.getCategories).toHaveBeenCalledWith("default");
+    expect(api.categories.getCategories).toHaveBeenCalledWith("budget-1");
     expect(result.contents[0].text).toContain("Rent");
+  });
+
+  it("uses the MCP override budget id when reading default categories", async () => {
+    const { kv, store } = createKvStub();
+    store.set(
+      "ynab:prefs:user-1",
+      JSON.stringify({
+        defaultBudgetId: "budget-override",
+        defaultBudgetName: "Colorado Override",
+      })
+    );
+
+    const api = {
+      budgets: {
+        getBudgets: vi.fn(async () => ({
+          data: {
+            budgets: [{ id: "budget-override", name: "Colorado Override" }],
+          },
+        })),
+        getBudgetById: vi.fn(),
+      },
+      categories: {
+        getCategories: vi.fn(async () => ({
+          data: {
+            category_groups: [
+              {
+                id: "group-1",
+                name: "Monthly Bills",
+                categories: [
+                  {
+                    id: "cat-1",
+                    name: "Rent",
+                    deleted: false,
+                    hidden: false,
+                  },
+                ],
+              },
+            ],
+          },
+        })),
+      },
+      months: {
+        getBudgetMonth: vi.fn(),
+      },
+    } as any;
+
+    await readYnabResource(
+      new URL("ynab://budgets/default/categories"),
+      createEnv(kv),
+      { ynabUserId: "user-1" },
+      api
+    );
+
+    expect(api.categories.getCategories).toHaveBeenCalledWith("budget-override");
+    expect(api.budgets.getBudgetById).not.toHaveBeenCalled();
   });
 
   it("reads default budget data from YNAB when no MCP override is stored", async () => {
