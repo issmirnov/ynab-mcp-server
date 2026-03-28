@@ -316,6 +316,12 @@ function renderPrivacyPage() {
 
 app.get("/", (c) => c.html(renderHomePage(c.req.raw)));
 app.get("/privacy", (c) => c.html(renderPrivacyPage()));
+app.get("/.well-known/glama.json", (c) =>
+  c.json({
+    $schema: "https://glama.ai/mcp/schemas/connector.json",
+    maintainers: [{ email: "isgsmirnov@gmail.com" }],
+  })
+);
 app.get("/delete", (c) => {
   const { token, setCookie } = createCsrfCookie();
   return new Response(renderDeletePage(token), {
