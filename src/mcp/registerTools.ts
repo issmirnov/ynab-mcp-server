@@ -9,6 +9,7 @@ import BudgetSummaryTool from "../tools/BudgetSummaryTool.js";
 import BulkApproveTransactionsTool from "../tools/BulkApproveTransactionsTool.js";
 import CashFlowForecastTool from "../tools/CashFlowForecastTool.js";
 import CategoryPerformanceReviewTool from "../tools/CategoryPerformanceReviewTool.js";
+import CreateScheduledTransactionTool from "../tools/CreateScheduledTransactionTool.js";
 import CreateTransactionTool from "../tools/CreateTransactionTool.js";
 import GetUnapprovedTransactionsTool from "../tools/GetUnapprovedTransactionsTool.js";
 import GoalProgressReportTool from "../tools/GoalProgressReportTool.js";
@@ -42,6 +43,7 @@ const TOOL_CLASSES: ToolClass[] = [
   ListCategoriesTool as unknown as ToolClass,
   BudgetSummaryTool as unknown as ToolClass,
   CreateTransactionTool as unknown as ToolClass,
+  CreateScheduledTransactionTool as unknown as ToolClass,
   GetUnapprovedTransactionsTool as unknown as ToolClass,
   ApproveTransactionTool as unknown as ToolClass,
   HandleOverspendingTool as unknown as ToolClass,
