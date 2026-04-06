@@ -12,6 +12,7 @@ import CategoryPerformanceReviewTool from "../tools/CategoryPerformanceReviewToo
 import CreateScheduledTransactionTool from "../tools/CreateScheduledTransactionTool.js";
 import CreateTransactionTool from "../tools/CreateTransactionTool.js";
 import DeleteScheduledTransactionTool from "../tools/DeleteScheduledTransactionTool.js";
+import DeleteTransactionTool from "../tools/DeleteTransactionTool.js";
 import GetUnapprovedTransactionsTool from "../tools/GetUnapprovedTransactionsTool.js";
 import GoalProgressReportTool from "../tools/GoalProgressReportTool.js";
 import HandleOverspendingTool from "../tools/HandleOverspendingTool.js";
@@ -25,6 +26,7 @@ import ReconcileAccountTool from "../tools/ReconcileAccountTool.js";
 import SetDefaultBudgetTool from "../tools/SetDefaultBudgetTool.js";
 import SetCategoryGoalsTool from "../tools/SetCategoryGoalsTool.js";
 import UpdateScheduledTransactionTool from "../tools/UpdateScheduledTransactionTool.js";
+import UpdateTransactionTool from "../tools/UpdateTransactionTool.js";
 import type { ToolRuntimeConfig } from "../tools/runtime.js";
 import { jsonSchemaObjectToZodShape } from "../utils/jsonSchemaToZod.js";
 import { getValidAccessToken } from "../auth/ynab.js";
@@ -65,6 +67,8 @@ const TOOL_CLASSES: ToolClass[] = [
   ListScheduledTransactionsTool as unknown as ToolClass,
   UpdateScheduledTransactionTool as unknown as ToolClass,
   DeleteScheduledTransactionTool as unknown as ToolClass,
+  UpdateTransactionTool as unknown as ToolClass,
+  DeleteTransactionTool as unknown as ToolClass,
 ];
 
 function shouldResolveBudget(definition: Tool) {
@@ -82,6 +86,7 @@ async function createRuntimeConfig(
 
   return {
     ynabApi: api,
+    accessToken,
     hasToken: true,
     budgetId: shouldResolveBudget(definition)
       ? await resolveBudgetSelection(
