@@ -137,8 +137,9 @@ class CreateScheduledTransactionTool {
         };
       }
 
-      // Enforce categoryId for on-budget accounts
-      if (!input.categoryId) {
+      // Enforce categoryId for on-budget accounts (except transfers)
+      const isTransfer = input.payeeName?.startsWith("Transfer :") || input.payeeId?.startsWith("transfer_");
+      if (!input.categoryId && !isTransfer) {
         const accountResponse = await createRetryableAPICall(
           () => this.api.accounts.getAccountById(budgetId, input.accountId),
           "Get account to check on-budget status"

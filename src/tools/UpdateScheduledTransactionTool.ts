@@ -151,7 +151,9 @@ class UpdateScheduledTransactionTool {
           frequency:
             (input.frequency as ynab.ScheduledTransactionFrequency) ||
             current.frequency,
-          payee_id: input.payeeId !== undefined ? input.payeeId : current.payee_id,
+          payee_id: input.payeeName !== undefined && input.payeeId === undefined
+            ? null
+            : input.payeeId !== undefined ? input.payeeId : current.payee_id,
           payee_name:
             input.payeeName !== undefined ? input.payeeName : current.payee_name,
           category_id:

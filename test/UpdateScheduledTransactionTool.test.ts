@@ -130,6 +130,46 @@ describe('UpdateScheduledTransactionTool', () => {
       );
     });
 
+    it('should null out payee_id when payeeName is provided without payeeId', async () => {
+      const { tool, updateScheduledTransaction } = createTool();
+
+      await tool.execute({
+        scheduledTransactionId: 'scheduled-123',
+        payeeName: 'New Payee',
+      });
+
+      expect(updateScheduledTransaction).toHaveBeenCalledWith(
+        'test-budget-id',
+        'scheduled-123',
+        expect.objectContaining({
+          scheduled_transaction: expect.objectContaining({
+            payee_id: null,
+            payee_name: 'New Payee',
+          }),
+        })
+      );
+    });
+
+    it('should preserve payee_id when neither payeeName nor payeeId is provided', async () => {
+      const { tool, updateScheduledTransaction } = createTool();
+
+      await tool.execute({
+        scheduledTransactionId: 'scheduled-123',
+        memo: 'Just a memo change',
+      });
+
+      expect(updateScheduledTransaction).toHaveBeenCalledWith(
+        'test-budget-id',
+        'scheduled-123',
+        expect.objectContaining({
+          scheduled_transaction: expect.objectContaining({
+            payee_id: 'payee-1',
+            payee_name: 'Netflix',
+          }),
+        })
+      );
+    });
+
     it('should allow clearing flagColor with null', async () => {
       const existingWithFlag = { ...mockExistingTransaction, flag_color: 'red' };
       const getScheduledTransactionById = vi.fn(async () => ({
