@@ -11,17 +11,20 @@ import CashFlowForecastTool from "../tools/CashFlowForecastTool.js";
 import CategoryPerformanceReviewTool from "../tools/CategoryPerformanceReviewTool.js";
 import CreateScheduledTransactionTool from "../tools/CreateScheduledTransactionTool.js";
 import CreateTransactionTool from "../tools/CreateTransactionTool.js";
+import DeleteScheduledTransactionTool from "../tools/DeleteScheduledTransactionTool.js";
 import GetUnapprovedTransactionsTool from "../tools/GetUnapprovedTransactionsTool.js";
 import GoalProgressReportTool from "../tools/GoalProgressReportTool.js";
 import HandleOverspendingTool from "../tools/HandleOverspendingTool.js";
 import ListBudgetsTool from "../tools/ListBudgetsTool.js";
 import ListCategoriesTool from "../tools/ListCategoriesTool.js";
+import ListScheduledTransactionsTool from "../tools/ListScheduledTransactionsTool.js";
 import ListTransactionsTool from "../tools/ListTransactionsTool.js";
 import MoveFundsBetweenCategoriesTool from "../tools/MoveFundsBetweenCategoriesTool.js";
 import NetWorthAnalysisTool from "../tools/NetWorthAnalysisTool.js";
 import ReconcileAccountTool from "../tools/ReconcileAccountTool.js";
 import SetDefaultBudgetTool from "../tools/SetDefaultBudgetTool.js";
 import SetCategoryGoalsTool from "../tools/SetCategoryGoalsTool.js";
+import UpdateScheduledTransactionTool from "../tools/UpdateScheduledTransactionTool.js";
 import type { ToolRuntimeConfig } from "../tools/runtime.js";
 import { jsonSchemaObjectToZodShape } from "../utils/jsonSchemaToZod.js";
 import { getValidAccessToken } from "../auth/ynab.js";
@@ -59,6 +62,9 @@ const TOOL_CLASSES: ToolClass[] = [
   BudgetFromHistoryTool as unknown as ToolClass,
   ReconcileAccountTool as unknown as ToolClass,
   ListTransactionsTool as unknown as ToolClass,
+  ListScheduledTransactionsTool as unknown as ToolClass,
+  UpdateScheduledTransactionTool as unknown as ToolClass,
+  DeleteScheduledTransactionTool as unknown as ToolClass,
 ];
 
 function shouldResolveBudget(definition: Tool) {
