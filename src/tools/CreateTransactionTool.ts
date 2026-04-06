@@ -50,7 +50,7 @@ class CreateTransactionTool {
           },
           amount: {
             type: "number",
-            description: "The amount in dollars (e.g. 10.99)",
+            description: "The transaction amount in dollars with up to two decimal places. Use negative for expenses (e.g. -42.50), positive for income (e.g. 1250.00). Do NOT send milliunits or cents — just the dollar amount as you would see it on a bank statement.",
           },
           payeeId: {
             type: "string",

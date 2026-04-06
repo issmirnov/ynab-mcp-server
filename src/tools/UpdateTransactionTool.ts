@@ -4,22 +4,22 @@ import { truncateResponse, CHARACTER_LIMIT, getBudgetId, amountToMilliUnits, mil
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
 import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
-interface UpdateScheduledTransactionInput {
+interface UpdateTransactionInput {
   budgetId?: string;
-  scheduledTransactionId: string;
-  accountId?: string;
-  date?: string;
+  transactionId: string;
   amount?: number;
-  frequency?: string;
+  date?: string;
   payeeId?: string;
   payeeName?: string;
   categoryId?: string;
   memo?: string;
   flagColor?: string | null;
+  approved?: boolean;
+  cleared?: "cleared" | "uncleared" | "reconciled";
   response_format?: "json" | "markdown";
 }
 
-class UpdateScheduledTransactionTool {
+class UpdateTransactionTool {
   private api: ynab.API;
   private budgetId: string;
 
@@ -31,9 +31,9 @@ class UpdateScheduledTransactionTool {
 
   getToolDefinition(): Tool {
     return {
-      name: "ynab_update_scheduled_transaction",
+      name: "ynab_update_transaction",
       description:
-        "Updates an existing scheduled (recurring) transaction in your YNAB budget. Only the fields you provide will be changed; all other fields remain as-is. Use ynab_list_scheduled_transactions to find the scheduled transaction ID.",
+        "Updates an existing transaction in your YNAB budget. Only the fields you provide will be changed; all other fields remain as-is. Use ynab_list_transactions to find the transaction ID.",
       inputSchema: {
         type: "object",
         properties: {
@@ -42,43 +42,18 @@ class UpdateScheduledTransactionTool {
             description:
               "The ID of the budget. Optional when a default budget is set or only one budget exists.",
           },
-          scheduledTransactionId: {
+          transactionId: {
             type: "string",
-            description: "The ID of the scheduled transaction to update.",
-          },
-          accountId: {
-            type: "string",
-            description: "New account ID for the scheduled transaction.",
-          },
-          date: {
-            type: "string",
-            description:
-              "New next occurrence date in ISO format (e.g. 2024-03-24). Must be a future date no more than 5 years out.",
+            description: "The ID of the transaction to update.",
           },
           amount: {
             type: "number",
             description:
               "New amount in dollars with up to two decimal places. Use negative for expenses (e.g. -42.50), positive for income (e.g. 1250.00). Do NOT send milliunits or cents — just the dollar amount as you would see it on a bank statement.",
           },
-          frequency: {
+          date: {
             type: "string",
-            enum: [
-              "never",
-              "daily",
-              "weekly",
-              "everyOtherWeek",
-              "twiceAMonth",
-              "every4Weeks",
-              "monthly",
-              "everyOtherMonth",
-              "every3Months",
-              "every4Months",
-              "twiceAYear",
-              "yearly",
-              "everyOtherYear",
-            ],
-            description:
-              "New recurrence frequency. Use 'never' for a one-time scheduled transaction.",
+            description: "New transaction date in ISO format (e.g. 2024-03-24). Must not be a future date.",
           },
           payeeId: {
             type: "string",
@@ -87,7 +62,7 @@ class UpdateScheduledTransactionTool {
           payeeName: {
             type: "string",
             description:
-              "New payee name. A new payee will be created if no match is found.",
+              "New payee name. A new payee will be created if no match is found. When provided without payeeId, the existing payee link is cleared so YNAB resolves the new name.",
           },
           categoryId: {
             type: "string",
@@ -96,13 +71,21 @@ class UpdateScheduledTransactionTool {
           },
           memo: {
             type: "string",
-            description: "New memo/note for the scheduled transaction.",
+            description: "New memo/note for the transaction.",
           },
           flagColor: {
             type: ["string", "null"],
             enum: ["red", "orange", "yellow", "green", "blue", "purple", null],
-            description:
-              "New flag color, or null to remove the flag.",
+            description: "New flag color, or null to remove the flag.",
+          },
+          approved: {
+            type: "boolean",
+            description: "Set to true to approve, false to unapprove.",
+          },
+          cleared: {
+            type: "string",
+            enum: ["cleared", "uncleared", "reconciled"],
+            description: "New cleared status for the transaction.",
           },
           response_format: {
             type: "string",
@@ -111,11 +94,11 @@ class UpdateScheduledTransactionTool {
               "Response format: 'json' for machine-readable output, 'markdown' for human-readable output (default: markdown).",
           },
         },
-        required: ["scheduledTransactionId"],
+        required: ["transactionId"],
         additionalProperties: false,
       },
       annotations: {
-        title: "Update YNAB Scheduled Transaction",
+        title: "Update YNAB Transaction",
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: true,
@@ -124,82 +107,84 @@ class UpdateScheduledTransactionTool {
     };
   }
 
-  async execute(input: UpdateScheduledTransactionInput) {
+  async execute(input: UpdateTransactionInput) {
     try {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
-      // Fetch existing transaction to merge with updates
+      // Fetch existing transaction to show changes
       const existing = await createRetryableAPICall(
-        () =>
-          this.api.scheduledTransactions.getScheduledTransactionById(
-            budgetId,
-            input.scheduledTransactionId
-          ),
-        "Get scheduled transaction for update"
+        () => this.api.transactions.getTransactionById(budgetId, input.transactionId),
+        "Get transaction for update"
       );
 
-      const current = existing.data.scheduled_transaction;
+      const current = existing.data.transaction;
 
-      const scheduledTransaction: ynab.PutScheduledTransactionWrapper = {
-        scheduled_transaction: {
-          account_id: input.accountId || current.account_id,
-          date: input.date || current.date_next,
-          amount:
-            input.amount !== undefined
-              ? amountToMilliUnits(input.amount)
-              : current.amount,
-          frequency:
-            (input.frequency as ynab.ScheduledTransactionFrequency) ||
-            current.frequency,
-          payee_id: input.payeeName !== undefined && input.payeeId === undefined
-            ? null
-            : input.payeeId !== undefined ? input.payeeId : current.payee_id,
-          payee_name:
-            input.payeeName !== undefined ? input.payeeName : current.payee_name,
-          category_id:
-            input.categoryId !== undefined
-              ? input.categoryId
-              : current.category_id,
-          memo: input.memo !== undefined ? input.memo : current.memo,
-          flag_color:
-            input.flagColor !== undefined
-              ? (input.flagColor as ynab.TransactionFlagColor | null)
-              : current.flag_color,
-        },
-      };
+      const transaction: ynab.ExistingTransaction = {};
+
+      if (input.amount !== undefined) {
+        transaction.amount = amountToMilliUnits(input.amount);
+      }
+      if (input.date !== undefined) {
+        transaction.date = input.date;
+      }
+      if (input.payeeName !== undefined && input.payeeId === undefined) {
+        transaction.payee_id = null;
+        transaction.payee_name = input.payeeName;
+      } else {
+        if (input.payeeId !== undefined) {
+          transaction.payee_id = input.payeeId;
+        }
+        if (input.payeeName !== undefined) {
+          transaction.payee_name = input.payeeName;
+        }
+      }
+      if (input.categoryId !== undefined) {
+        transaction.category_id = input.categoryId;
+      }
+      if (input.memo !== undefined) {
+        transaction.memo = input.memo;
+      }
+      if (input.flagColor !== undefined) {
+        transaction.flag_color = input.flagColor as ynab.TransactionFlagColor | null;
+      }
+      if (input.approved !== undefined) {
+        transaction.approved = input.approved;
+      }
+      if (input.cleared !== undefined) {
+        transaction.cleared = input.cleared as ynab.TransactionClearedStatus;
+      }
 
       const response = await createRetryableAPICall(
         () =>
-          this.api.scheduledTransactions.updateScheduledTransaction(
+          this.api.transactions.updateTransaction(
             budgetId,
-            input.scheduledTransactionId,
-            scheduledTransaction
+            input.transactionId,
+            { transaction }
           ),
-        "Update scheduled transaction"
+        "Update transaction"
       );
 
-      if (!response.data.scheduled_transaction) {
-        throw new Error(
-          "Failed to update scheduled transaction - no data returned"
-        );
+      if (!response.data.transaction) {
+        throw new Error("Failed to update transaction - no data returned");
       }
 
-      const st = response.data.scheduled_transaction;
-      const changes = this.describeChanges(current, st);
+      const updated = response.data.transaction;
+      const changes = this.describeChanges(current, updated);
 
       const result = {
         success: true,
-        scheduledTransactionId: st.id,
-        frequency: st.frequency,
-        nextDate: st.date_next,
-        amount: milliUnitsToAmount(st.amount),
-        payeeName: st.payee_name,
-        categoryName: st.category_name,
-        accountName: st.account_name,
-        memo: st.memo,
-        flagColor: st.flag_color,
+        transactionId: updated.id,
+        date: updated.date,
+        amount: milliUnitsToAmount(updated.amount),
+        payeeName: updated.payee_name,
+        categoryName: updated.category_name,
+        accountName: updated.account_name,
+        memo: updated.memo,
+        approved: updated.approved,
+        cleared: updated.cleared,
+        flagColor: updated.flag_color,
         changes,
-        message: "Scheduled transaction updated successfully",
+        message: "Transaction updated successfully",
       };
 
       const format = input.response_format || "markdown";
@@ -214,12 +199,7 @@ class UpdateScheduledTransactionTool {
       const { text } = truncateResponse(responseText, CHARACTER_LIMIT);
 
       return {
-        content: [
-          {
-            type: "text",
-            text,
-          },
-        ],
+        content: [{ type: "text", text }],
       };
     } catch (error) {
       return {
@@ -227,7 +207,7 @@ class UpdateScheduledTransactionTool {
         content: [
           {
             type: "text",
-            text: `Error updating scheduled transaction: ${
+            text: `Error updating transaction: ${
               error instanceof Error ? error.message : String(error)
             }`,
           },
@@ -237,8 +217,8 @@ class UpdateScheduledTransactionTool {
   }
 
   private describeChanges(
-    before: ynab.ScheduledTransactionDetail,
-    after: ynab.ScheduledTransactionDetail
+    before: ynab.TransactionDetail,
+    after: ynab.TransactionDetail
   ): string[] {
     const changes: string[] = [];
 
@@ -247,11 +227,8 @@ class UpdateScheduledTransactionTool {
         `Amount: ${formatCurrency(milliUnitsToAmount(before.amount))} → ${formatCurrency(milliUnitsToAmount(after.amount))}`
       );
     }
-    if (before.frequency !== after.frequency) {
-      changes.push(`Frequency: ${before.frequency} → ${after.frequency}`);
-    }
-    if (before.date_next !== after.date_next) {
-      changes.push(`Next date: ${before.date_next} → ${after.date_next}`);
+    if (before.date !== after.date) {
+      changes.push(`Date: ${before.date} → ${after.date}`);
     }
     if (before.payee_name !== after.payee_name) {
       changes.push(
@@ -263,15 +240,14 @@ class UpdateScheduledTransactionTool {
         `Category: ${before.category_name || "(none)"} → ${after.category_name || "(none)"}`
       );
     }
-    if (before.account_name !== after.account_name) {
-      changes.push(
-        `Account: ${before.account_name} → ${after.account_name}`
-      );
-    }
     if (before.memo !== after.memo) {
-      changes.push(
-        `Memo: "${before.memo || ""}" → "${after.memo || ""}"`
-      );
+      changes.push(`Memo: "${before.memo || ""}" → "${after.memo || ""}"`);
+    }
+    if (before.approved !== after.approved) {
+      changes.push(`Approved: ${before.approved} → ${after.approved}`);
+    }
+    if (before.cleared !== after.cleared) {
+      changes.push(`Cleared: ${before.cleared} → ${after.cleared}`);
     }
     if (before.flag_color !== after.flag_color) {
       changes.push(
@@ -284,19 +260,20 @@ class UpdateScheduledTransactionTool {
 
   private formatMarkdown(result: {
     success: boolean;
-    scheduledTransactionId: string;
-    frequency: string;
-    nextDate: string;
+    transactionId: string;
+    date: string;
     amount: number;
     payeeName?: string | null;
     categoryName?: string | null;
     accountName: string;
     memo?: string | null;
+    approved: boolean;
+    cleared: string;
     flagColor?: string | null;
     changes: string[];
     message: string;
   }): string {
-    let output = "# Scheduled Transaction Updated Successfully\n\n";
+    let output = "# Transaction Updated Successfully\n\n";
     output += `✅ ${result.message}\n\n`;
 
     if (result.changes.length > 0) {
@@ -308,10 +285,9 @@ class UpdateScheduledTransactionTool {
     }
 
     output += "## Current State\n";
-    output += `- **ID:** \`${result.scheduledTransactionId}\`\n`;
+    output += `- **ID:** \`${result.transactionId}\`\n`;
+    output += `- **Date:** ${result.date}\n`;
     output += `- **Amount:** ${formatCurrency(result.amount)}\n`;
-    output += `- **Frequency:** ${result.frequency}\n`;
-    output += `- **Next Date:** ${result.nextDate}\n`;
     output += `- **Account:** ${result.accountName}\n`;
     if (result.payeeName) {
       output += `- **Payee:** ${result.payeeName}\n`;
@@ -322,6 +298,8 @@ class UpdateScheduledTransactionTool {
     if (result.memo) {
       output += `- **Memo:** ${result.memo}\n`;
     }
+    output += `- **Approved:** ${result.approved ? "Yes" : "No"}\n`;
+    output += `- **Cleared:** ${result.cleared}\n`;
     if (result.flagColor) {
       output += `- **Flag:** ${result.flagColor}\n`;
     }
@@ -330,4 +308,4 @@ class UpdateScheduledTransactionTool {
   }
 }
 
-export default UpdateScheduledTransactionTool;
+export default UpdateTransactionTool;
