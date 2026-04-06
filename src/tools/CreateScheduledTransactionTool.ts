@@ -21,11 +21,15 @@ interface CreateScheduledTransactionInput {
 class CreateScheduledTransactionTool {
   private api: ynab.API;
   private budgetId: string;
+  private env?: Env;
+  private ynabUserId?: string;
 
   constructor(config?: ToolRuntimeConfig) {
     const runtime = createToolRuntime(config);
     this.api = runtime.api;
     this.budgetId = runtime.budgetId || "";
+    this.env = runtime.env;
+    this.ynabUserId = runtime.ynabUserId;
   }
 
   getToolDefinition(): Tool {
@@ -86,7 +90,7 @@ class CreateScheduledTransactionTool {
           categoryId: {
             type: "string",
             description:
-              "The category ID for the scheduled transaction (optional). Credit Card Payment categories are not permitted.",
+              "The category ID for the scheduled transaction. Required for on-budget accounts. Credit Card Payment categories are not permitted.",
           },
           memo: {
             type: "string",
@@ -131,6 +135,26 @@ class CreateScheduledTransactionTool {
             },
           ],
         };
+      }
+
+      // Enforce categoryId for on-budget accounts
+      if (!input.categoryId) {
+        const accountResponse = await createRetryableAPICall(
+          () => this.api.accounts.getAccountById(budgetId, input.accountId),
+          "Get account to check on-budget status"
+        );
+        const account = accountResponse.data.account;
+        if (account.on_budget) {
+          return {
+            isError: true,
+            content: [
+              {
+                type: "text",
+                text: `categoryId is required for on-budget account "${account.name}". Use ynab_budget_summary or ynab_list_categories to find the appropriate category ID.`,
+              },
+            ],
+          };
+        }
       }
 
       const milliunitAmount = amountToMilliUnits(input.amount);
