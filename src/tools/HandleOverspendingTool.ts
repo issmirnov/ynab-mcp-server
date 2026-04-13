@@ -103,8 +103,6 @@ class HandleOverspendingTool {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
       const month = normalizeMonth(input.month);
 
-      console.log(`Handling overspending for budget ${budgetId}, month ${month}`);
-
       // Get current month budget data
       const monthResponse = await createRetryableAPICall(
         () => this.api.months.getBudgetMonth(budgetId, month),
@@ -224,7 +222,6 @@ class HandleOverspendingTool {
       };
 
     } catch (error) {
-      console.error(`Error handling overspending:`, error);
       return {
         isError: true,
         content: [
@@ -343,8 +340,6 @@ class HandleOverspendingTool {
 
     for (const suggestion of suggestions) {
       try {
-        console.log(`Executing move: ${suggestion.fromCategoryName} -> ${suggestion.toCategoryName} (${formatCurrency(milliUnitsToAmount(suggestion.amount))})`);
-
         // Get current month data to get current budgeted amounts
         const monthResponse = await createRetryableAPICall(
           () => this.api.months.getBudgetMonth(budgetId, month),
@@ -396,7 +391,6 @@ class HandleOverspendingTool {
         });
 
       } catch (error) {
-        console.error(`Error executing move for ${suggestion.fromCategoryName} -> ${suggestion.toCategoryName}:`, error);
         executedMoves.push({
           fromCategory: suggestion.fromCategoryName,
           toCategory: suggestion.toCategoryName,

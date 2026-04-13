@@ -138,8 +138,6 @@ export default class AnalyzeSpendingPatternsTool {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
       const monthsToAnalyze = Math.min(input.months || 6, 12);
       const includeInsights = input.includeInsights !== false;
-      console.error(`Analyzing spending patterns for budget ${budgetId} over ${monthsToAnalyze} months`);
-      
       // Get categories
       const categoriesResponse = await createRetryableAPICall(
         () => this.api.categories.getCategories(budgetId),
@@ -298,7 +296,6 @@ export default class AnalyzeSpendingPatternsTool {
           }
 
         } catch (error) {
-          console.error(`Error analyzing category ${category.name}:`, error);
           // Continue with other categories
         }
       }

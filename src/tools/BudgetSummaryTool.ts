@@ -59,7 +59,6 @@ class BudgetSummaryTool {
   async execute(input: BudgetSummaryInput) {
     try {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
-      console.error(`Getting accounts and categories for budget ${budgetId} and month ${input.month}`);
       const accountsResponse = await createRetryableAPICall(
         () => this.api.accounts.getAccounts(budgetId),
         'Get accounts for budget summary'
@@ -124,8 +123,6 @@ class BudgetSummaryTool {
         ],
       };
     } catch (error: unknown) {
-      console.error(`Error getting budget:`);
-      console.error(JSON.stringify(error, null, 2));
       return {
         isError: true,
         content: [

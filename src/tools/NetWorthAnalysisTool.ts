@@ -73,7 +73,6 @@ class NetWorthAnalysisTool {
   async execute(input: NetWorthAnalysisInput) {
     try {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
-      console.error(`Getting current net worth for budget ${budgetId}`);
 
       // Get all accounts (both on-budget and tracking)
       const accountsResponse = await createRetryableAPICall(
@@ -191,8 +190,6 @@ class NetWorthAnalysisTool {
         ],
       };
     } catch (error: unknown) {
-      console.error(`Error analyzing net worth:`);
-      console.error(JSON.stringify(error, null, 2));
       return {
         isError: true,
         content: [

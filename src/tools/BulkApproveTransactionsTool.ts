@@ -142,8 +142,6 @@ class BulkApproveTransactionsTool {
     try {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
-      console.log(`Bulk approving transactions for budget ${budgetId}`);
-
       // Get all transactions for the budget
       const transactionsResponse = await createRetryableAPICall(
         () => this.api.transactions.getTransactions(budgetId),
@@ -244,7 +242,6 @@ class BulkApproveTransactionsTool {
       };
 
     } catch (error) {
-      console.error(`Error bulk approving transactions:`, error);
       return {
         isError: true,
         content: [
@@ -409,8 +406,6 @@ class BulkApproveTransactionsTool {
 
     for (const transaction of transactions) {
       try {
-        console.log(`Approving transaction: ${transaction.payee_name} - ${formatCurrency(milliUnitsToAmount(transaction.amount))} on ${transaction.date}`);
-
         // Update transaction to approved
         const updateData: ynab.PutTransactionWrapper = {
           transaction: {
@@ -442,7 +437,6 @@ class BulkApproveTransactionsTool {
         });
 
       } catch (error) {
-        console.error(`Error approving transaction ${transaction.id}:`, error);
         approvedTransactions.push({
           id: transaction.id,
           payeeName: transaction.payee_name,

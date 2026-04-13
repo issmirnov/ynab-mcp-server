@@ -64,8 +64,6 @@ class GetUnapprovedTransactionsTool {
     try {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
-      console.error(`Getting unapproved transactions for budget ${budgetId}`);
-
       const response = await createRetryableAPICall(
         () => this.api.transactions.getTransactions(
           budgetId,
@@ -121,10 +119,6 @@ class GetUnapprovedTransactionsTool {
         ],
       };
     } catch (error) {
-      console.error(
-        `Error getting unapproved transactions:`
-      );
-      console.error(JSON.stringify(error, null, 2));
       return {
         isError: true,
         content: [

@@ -295,7 +295,6 @@ export default class ReconcileAccountTool {
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`Error reconciling account: ${errorMessage}`);
       return {
         isError: true,
         content: [
@@ -769,7 +768,7 @@ export default class ReconcileAccountTool {
             });
           }
         } catch (error) {
-          console.warn(`Failed to parse line ${i + 1}: ${line}`);
+          // Skip unparseable line
         }
       }
     }
@@ -859,7 +858,6 @@ export default class ReconcileAccountTool {
 
       return transactionsResponse.data.transactions.filter((t: any) => !t.deleted);
     } catch (error) {
-      console.error('Error fetching YNAB transactions:', error);
       return [];
     }
   }

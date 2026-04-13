@@ -99,8 +99,6 @@ class AutoDistributeFundsTool {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
       const month = normalizeMonth(input.month);
 
-      console.log(`Auto-distributing funds for budget ${budgetId}, month ${month}`);
-
       // Get current month budget data
       const monthResponse = await createRetryableAPICall(
         () => this.api.months.getBudgetMonth(budgetId, month),
@@ -201,7 +199,6 @@ class AutoDistributeFundsTool {
       };
 
     } catch (error) {
-      console.error(`Error auto-distributing funds:`, error);
       return {
         isError: true,
         content: [
@@ -404,8 +401,6 @@ class AutoDistributeFundsTool {
 
     for (const item of plan) {
       try {
-        console.log(`Distributing ${formatCurrency(milliUnitsToAmount(item.proposedAmount))} to ${item.categoryName} (${item.reason})`);
-
         // Get current month data to get current budgeted amounts
         const monthResponse = await createRetryableAPICall(
           () => this.api.months.getBudgetMonth(budgetId, month),
@@ -442,7 +437,6 @@ class AutoDistributeFundsTool {
         });
 
       } catch (error) {
-        console.error(`Error distributing funds to ${item.categoryName}:`, error);
         executedDistributions.push({
           category: item.categoryName,
           amount: milliUnitsToAmount(item.proposedAmount),
