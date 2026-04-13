@@ -153,8 +153,6 @@ export default class CategoryPerformanceReviewTool {
       const includeInsights = input.includeInsights !== false;
       const performanceThreshold = input.performanceThreshold || 0.1;
 
-      console.error(`Reviewing category performance for budget ${budgetId} over ${monthsToAnalyze} months`);
-      
       // Get historical budget data - go back from current month
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth();
@@ -229,7 +227,7 @@ export default class CategoryPerformanceReviewTool {
             });
           }
         } catch (error) {
-          console.error(`Error getting data for month ${monthKey}:`, error);
+          // Skip month on error
         }
       }
 
@@ -415,7 +413,6 @@ export default class CategoryPerformanceReviewTool {
           }
 
         } catch (error) {
-          console.error(`Error analyzing category ${category.name}:`, error);
           // Continue with other categories
         }
       }

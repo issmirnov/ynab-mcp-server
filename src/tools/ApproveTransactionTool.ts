@@ -132,10 +132,6 @@ class ApproveTransactionTool {
         ],
       };
     } catch (error) {
-      console.error(
-        `Error updating transaction:`
-      );
-      console.error(JSON.stringify(error, null, 2));
       return {
         isError: true,
         content: [

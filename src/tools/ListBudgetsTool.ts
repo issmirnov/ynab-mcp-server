@@ -57,12 +57,10 @@ class ListBudgetsTool {
         };
       }
 
-      console.error("Listing budgets");
       const budgetsResponse = await createRetryableAPICall(
         () => this.api.budgets.getBudgets(),
         'List budgets'
       );
-      console.error(`Found ${budgetsResponse.data.budgets.length} budgets`);
 
       const budgets = budgetsResponse.data.budgets.map((budget) => ({
         id: budget.id,
@@ -89,7 +87,6 @@ class ListBudgetsTool {
         ],
       };
     } catch (error: unknown) {
-      console.error(`Error listing budgets: ${JSON.stringify(error)}`);
       return {
         isError: true,
         content: [

@@ -16,7 +16,7 @@ const app = new Hono<{ Bindings: Env & { OAUTH_PROVIDER: OAuthHelpers } }>();
 const CSRF_COOKIE = "__Host-YNAB_MCP_CSRF";
 const APP_NAME = "MCP for YNAB";
 const INSTALL_GUIDE_URL = "https://github.com/issmirnov/ynab-mcp-server#readme";
-const PRIVACY_LAST_UPDATED = "2026-03-25";
+const PRIVACY_LAST_UPDATED = "2026-04-13";
 const AFFILIATION_NOTICE = "We are not affiliated, associated, or in any way officially connected with YNAB or any of its subsidiaries or affiliates. The official YNAB website can be found at https://www.ynab.com. The names YNAB and You Need A Budget, as well as related names, tradenames, marks, trademarks, emblems, and images are registered trademarks of YNAB.";
 const UNSUPPORTED_NOTICE = "This app is not officially supported by YNAB in any way. Use it at your own risk.";
 
@@ -294,15 +294,18 @@ function renderPrivacyPage() {
         <li>other related YNAB planning data needed to fulfill MCP tool requests</li>
       </ul>
       <h2>How We Use Data</h2>
-      <p>We use YNAB user data only to authenticate your connection to the service, fulfill MCP tool requests you initiate through your connected client, refresh OAuth access when needed using your YNAB refresh token, and operate, debug, and secure the hosted MCP service.</p>
+      <p>We use YNAB user data only to authenticate your connection to the service, fulfill MCP tool requests you initiate through your connected client, refresh OAuth access when needed using your YNAB refresh token, and operate and secure the hosted MCP service.</p>
+      <p>YNAB plan and budget data is not retained in logs and is not used for debugging. Operational logs are limited to non-sensitive service metadata (such as request timing and error codes) and do not contain your YNAB plan contents.</p>
       <p>We do not sell YNAB user data.</p>
       <h2>Data Storage</h2>
       <p>This service runs on an ephemeral Cloudflare Worker. It does not maintain or operate a separate long-term application database of your YNAB plan contents, and it is not designed to retain your YNAB plan data as a stored dataset. Plan data is accessed from YNAB only as needed to fulfill the tool request you initiate through your MCP client.</p>
-      <p>The service does store the minimum OAuth-related data needed to operate, including YNAB OAuth access tokens, refresh tokens, token expiry metadata, and limited OAuth grant or session state needed to complete authentication. This data is stored in Cloudflare-hosted infrastructure used by the service, including Workers KV and related OAuth state handling.</p>
+      <p>To reduce YNAB API load and improve response time, some plan data (such as your list of budgets, categories, and monthly plan snapshots) may be cached briefly in Cloudflare Workers KV, keyed to your YNAB user. Cache entries expire automatically after short time-to-live windows (up to 5 minutes) and are not retained as a long-term dataset.</p>
+      <p>The service also stores the minimum OAuth-related data needed to operate, including YNAB OAuth access tokens, refresh tokens, token expiry metadata, and limited OAuth grant or session state needed to complete authentication. This data is stored on Cloudflare infrastructure used by the service, including Cloudflare Workers KV and related OAuth state handling. Cloudflare is the only third-party infrastructure provider used by this service.</p>
       <h2>Data Retention</h2>
-      <p>Stored OAuth credentials and related operational metadata are retained only as long as needed to keep your connector working. Plan data fetched from YNAB to answer a request is not intentionally retained as an application dataset after the request is completed. If you remove the connector connection or revoke the YNAB OAuth grant, associated stored OAuth credentials should no longer be needed and should be removed in the normal course of operation.</p>
+      <p>Stored OAuth credentials and related operational metadata are retained only as long as needed to keep your connector working. Plan data fetched from YNAB to answer a request is not retained after the request is completed, aside from short-lived cache entries described in Data Storage that expire automatically within minutes.</p>
+      <p>When you disconnect the connector or revoke the YNAB OAuth grant, your stored OAuth access token, refresh token, and associated session state will be deleted. There is no mechanism to recover deleted tokens; reconnecting requires a new OAuth authorization.</p>
       <h2>Data Sharing</h2>
-      <p>We do not share your YNAB user data with third parties except with infrastructure providers required to operate the service, when required by law, or when necessary to protect the security, integrity, or operation of the service.</p>
+      <p>We do not share your YNAB user data with third parties except with Cloudflare, which provides the hosting infrastructure (Workers, Workers KV) required to operate the service, when required by law, or when necessary to protect the security, integrity, or operation of the service. Cloudflare is the only third-party infrastructure provider used by this service.</p>
       <h2>Security</h2>
       <p>We use OAuth-based delegated access rather than asking for your YNAB password. Secrets are intended to be stored as deployment secrets, not in source control. No system can guarantee absolute security, but reasonable technical measures are used to reduce unauthorized access risk.</p>
       <h2>Your Choices</h2>

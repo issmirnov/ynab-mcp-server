@@ -129,8 +129,6 @@ class MoveFundsBetweenCategoriesTool {
         };
       }
 
-      console.log(`Moving funds between categories for budget ${budgetId}, month ${input.month || "current"}`);
-
       // Get current month budget data
       const month = normalizeMonth(input.month);
       const monthResponse = await createRetryableAPICall(
@@ -296,7 +294,6 @@ class MoveFundsBetweenCategoriesTool {
       };
 
     } catch (error) {
-      console.error(`Error moving funds between categories:`, error);
       return {
         isError: true,
         content: [
@@ -396,8 +393,6 @@ class MoveFundsBetweenCategoriesTool {
     toCategoryId: string,
     amountMilliunits: number
   ): Promise<void> {
-    console.log(`Moving ${formatCurrency(milliUnitsToAmount(amountMilliunits))} from category ${fromCategoryId} to ${toCategoryId} in month ${month}`);
-
     // Get current month data to get current budgeted amounts
     const monthResponse = await createRetryableAPICall(
       () => this.api.months.getBudgetMonth(budgetId, month),
@@ -440,8 +435,6 @@ class MoveFundsBetweenCategoriesTool {
       () => this.api.categories.updateMonthCategory(budgetId, month, fromCategoryId, fromUpdateData),
       'Update from category for move'
     );
-
-    console.log(`Successfully moved ${formatCurrency(milliUnitsToAmount(amountMilliunits))} from ${fromCategory.name} to ${toCategory.name}`);
   }
 }
 

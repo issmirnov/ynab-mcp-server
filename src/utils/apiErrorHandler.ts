@@ -126,10 +126,7 @@ export function analyzeAPIError(error: any): APIErrorInfo {
 
 export async function handleAPIError(error: any, context: string = 'API call'): Promise<never> {
   const errorInfo = analyzeAPIError(error);
-  
-  // Log the technical details for debugging
-  console.error(`[${context}] ${errorInfo.technicalMessage}`);
-  
+
   // Throw a user-friendly error message
   throw new Error(`${context} failed: ${errorInfo.userMessage}`);
 }
@@ -182,7 +179,6 @@ export function createRetryableAPICall<T>(
           delay = errorInfo.retryAfter * 1000; // Convert to milliseconds
         }
         
-        console.log(`[${context}] Attempt ${attempt} failed, retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }

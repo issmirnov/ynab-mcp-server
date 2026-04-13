@@ -150,8 +150,6 @@ class ListTransactionsTool {
     try {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
-      console.error(`Listing transactions for budget ${budgetId}`);
-
       // Get all transactions for the budget
       const transactionsResponse = await createRetryableAPICall(
         () => this.api.transactions.getTransactions(budgetId),
@@ -246,8 +244,6 @@ class ListTransactionsTool {
         ],
       };
     } catch (error) {
-      console.error(`Error listing transactions:`);
-      console.error(JSON.stringify(error, null, 2));
       return {
         isError: true,
         content: [

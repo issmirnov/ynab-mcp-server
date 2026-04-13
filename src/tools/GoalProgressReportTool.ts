@@ -147,8 +147,6 @@ export default class GoalProgressReportTool {
       const targetMonth = normalizeMonth(input.month);
       const includeCompleted = input.includeCompleted !== false;
       const includeInsights = input.includeInsights !== false;
-      console.error(`Generating goal progress report for budget ${budgetId} for month ${targetMonth}`);
-      
       // Get budget month data
       const monthBudget = await createRetryableAPICall(
         () => this.api.months.getBudgetMonth(budgetId, targetMonth),

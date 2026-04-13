@@ -141,8 +141,6 @@ export default class CashFlowForecastTool {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
       const monthsToForecast = Math.min(input.months || 6, 12);
       const includeProjections = input.includeProjections !== false;
-      console.error(`Generating cash flow forecast for budget ${budgetId} for ${monthsToForecast} months`);
-      
       // Get accounts
       const accountsResponse = await createRetryableAPICall(
         () => this.api.accounts.getAccounts(budgetId),

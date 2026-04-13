@@ -308,7 +308,7 @@ export default class BudgetFromHistoryTool {
           });
 
         } catch (error) {
-          console.error(`Error processing category ${category.name}:`, error);
+          // Skip category on error
         }
       }
 
@@ -395,7 +395,6 @@ export default class BudgetFromHistoryTool {
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`Error analyzing budget from history: ${errorMessage}`);
       return {
         isError: true,
         content: [
