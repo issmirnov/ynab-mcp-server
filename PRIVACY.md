@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: 2026-03-25
+Last updated: 2026-04-13
 
 ## Overview
 
@@ -24,7 +24,9 @@ We use YNAB user data only to:
 - authenticate your connection to the service
 - fulfill MCP tool requests you initiate through your connected client
 - refresh OAuth access when needed using your YNAB refresh token
-- operate, debug, and secure the hosted MCP service
+- operate and secure the hosted MCP service
+
+YNAB plan and budget data is not retained in logs and is not used for debugging. Operational logs are limited to non-sensitive service metadata (such as request timing and error codes) and do not contain your YNAB plan contents.
 
 We do not sell YNAB user data.
 
@@ -39,19 +41,23 @@ The service does store the minimum OAuth-related data needed to operate:
 - token expiry metadata
 - limited OAuth grant/session state needed to complete authentication
 
-This data is stored in Cloudflare-hosted infrastructure used by the service, including Workers KV and related OAuth state handling.
+This data is stored on Cloudflare infrastructure used by the service, including Cloudflare Workers KV and related OAuth state handling. Cloudflare is the only third-party infrastructure provider used by this service.
 
 ## Data Retention
 
-Stored OAuth credentials and related operational metadata are retained only as long as needed to keep your connector working. Plan data fetched from YNAB to answer a request is not intentionally retained as an application dataset after the request is completed. If you remove the connector connection or revoke the YNAB OAuth grant, associated stored OAuth credentials should no longer be needed and should be removed in the normal course of operation.
+Stored OAuth credentials and related operational metadata are retained only as long as needed to keep your connector working. Plan data fetched from YNAB to answer a request is not retained after the request is completed.
+
+When you disconnect the connector or revoke the YNAB OAuth grant, your stored OAuth access token, refresh token, and associated session state will be deleted. There is no mechanism to recover deleted tokens; reconnecting requires a new OAuth authorization.
 
 ## Data Sharing
 
 We do not share your YNAB user data with third parties except:
 
-- with infrastructure providers required to operate the service
+- with Cloudflare, which provides the hosting infrastructure (Workers, Workers KV) required to operate the service
 - when required by law
 - when necessary to protect the security, integrity, or operation of the service
+
+Cloudflare is the only third-party infrastructure provider used by this service.
 
 ## Security
 
