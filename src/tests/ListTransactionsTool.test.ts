@@ -219,7 +219,7 @@ describe('ListTransactionsTool', () => {
 
       const result = await tool.execute(input);
 
-      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith('test-budget-id');
+      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith('test-budget-id', '1900-01-01');
       expect(mockApi.accounts.getAccounts).toHaveBeenCalledWith('test-budget-id');
       expect(mockApi.categories.getCategories).toHaveBeenCalledWith('test-budget-id');
 
@@ -535,7 +535,7 @@ describe('ListTransactionsTool', () => {
 
       await tool.execute(input);
 
-      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith('custom-budget-id');
+      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith('custom-budget-id', '1900-01-01');
       expect(mockApi.accounts.getAccounts).toHaveBeenCalledWith('custom-budget-id');
       expect(mockApi.categories.getCategories).toHaveBeenCalledWith('custom-budget-id');
     });

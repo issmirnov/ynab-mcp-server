@@ -21,12 +21,17 @@ describe('GetUnapprovedTransactionsTool', () => {
       },
     };
 
-    (ynab.API as any).mockImplementation(() => mockApi);
+    (ynab.API as any).mockImplementation(function () {
+      return mockApi;
+    });
 
     process.env.YNAB_API_TOKEN = 'test-token';
     process.env.YNAB_BUDGET_ID = 'test-budget-id';
 
-    tool = new GetUnapprovedTransactionsTool();
+    tool = new GetUnapprovedTransactionsTool({
+      ynabApi: mockApi as any,
+      budgetId: 'test-budget-id',
+    });
   });
 
   describe('execute', () => {
@@ -92,7 +97,7 @@ describe('GetUnapprovedTransactionsTool', () => {
 
       expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
         'custom-budget-id',
-        undefined,
+        '1900-01-01',
         ynab.GetTransactionsTypeEnum.Unapproved
       );
 
@@ -147,7 +152,7 @@ describe('GetUnapprovedTransactionsTool', () => {
 
       expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
         'test-budget-id',
-        undefined,
+        '1900-01-01',
         ynab.GetTransactionsTypeEnum.Unapproved
       );
 
@@ -407,7 +412,7 @@ describe('GetUnapprovedTransactionsTool', () => {
       expect(toolDef.inputSchema).toHaveProperty('properties');
       expect(toolDef.inputSchema.properties).toHaveProperty('budgetId');
       expect(toolDef.inputSchema.properties.budgetId.description).toBe(
-        'The ID of the budget to fetch transactions for (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)'
+        'The ID of the budget to fetch transactions for. Optional when a default budget is set or only one budget exists.'
       );
     });
   });

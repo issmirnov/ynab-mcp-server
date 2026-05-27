@@ -1,6 +1,6 @@
 import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate } from "../utils/commonUtils.js";
+import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate, FULL_HISTORY_SINCE_DATE } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
 import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
@@ -67,7 +67,7 @@ class GetUnapprovedTransactionsTool {
       const response = await createRetryableAPICall(
         () => this.api.transactions.getTransactions(
           budgetId,
-          undefined,
+          FULL_HISTORY_SINCE_DATE,
           ynab.GetTransactionsTypeEnum.Unapproved
         ),
         'Get unapproved transactions'

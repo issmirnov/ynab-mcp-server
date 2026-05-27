@@ -203,6 +203,19 @@ describe('BulkApproveTransactionsTool', () => {
       expect(parsedResult.approvedTransactions).toHaveLength(2);
     });
 
+    it('should pass far-past since_date to preserve full transaction history', async () => {
+      await tool.execute({
+        budgetId: 'test-budget-id',
+        dryRun: true,
+        response_format: 'json',
+      });
+
+      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
+        'test-budget-id',
+        '1900-01-01'
+      );
+    });
+
     it('should filter by payee name', async () => {
       const result = await tool.execute({
         budgetId: 'test-budget-id',

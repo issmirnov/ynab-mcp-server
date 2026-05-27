@@ -1,6 +1,6 @@
 import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate } from "../utils/commonUtils.js";
+import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate, FULL_HISTORY_SINCE_DATE } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
 import {
   isActionableUncategorizedTransaction,
@@ -152,7 +152,7 @@ class ListTransactionsTool {
 
       // Get all transactions for the budget
       const transactionsResponse = await createRetryableAPICall(
-        () => this.api.transactions.getTransactions(budgetId),
+        () => this.api.transactions.getTransactions(budgetId, FULL_HISTORY_SINCE_DATE),
         'Get transactions for listing'
       );
 
