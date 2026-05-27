@@ -683,6 +683,31 @@ describe('ListTransactionsTool', () => {
         expect(result.content[0].text).toContain('must be on or before');
         expect(mockApi.transactions.getTransactions).not.toHaveBeenCalled();
       });
+
+      it('includes a date_range block in the JSON response with was_defaulted=true', async () => {
+        const result = await tool.execute({ response_format: 'json' });
+
+        const parsed = JSON.parse(result.content[0].text);
+        expect(parsed.date_range).toEqual({
+          start_date: '2026-03-28',
+          end_date: '2026-05-27',
+          was_defaulted: true,
+        });
+      });
+
+      it('reports was_defaulted=false when both dates were explicit', async () => {
+        const result = await tool.execute({
+          response_format: 'json',
+          filters: { startDate: '2026-04-01', endDate: '2026-05-15' },
+        });
+
+        const parsed = JSON.parse(result.content[0].text);
+        expect(parsed.date_range).toEqual({
+          start_date: '2026-04-01',
+          end_date: '2026-05-15',
+          was_defaulted: false,
+        });
+      });
     });
   });
 

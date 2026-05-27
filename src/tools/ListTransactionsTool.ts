@@ -292,6 +292,11 @@ class ListTransactionsTool {
 
       const result = {
         transactions: paginatedTransactions,
+        date_range: {
+          start_date: window.startDate,
+          end_date: window.endDate,
+          was_defaulted: window.wasDefaulted,
+        },
         pagination: {
           total,
           count: paginatedTransactions.length,
