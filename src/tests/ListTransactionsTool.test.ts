@@ -708,6 +708,25 @@ describe('ListTransactionsTool', () => {
           was_defaulted: false,
         });
       });
+
+      it('includes a Window summary line in markdown when window was defaulted', async () => {
+        const result = await tool.execute({});  // defaults to markdown
+
+        expect(result.content[0].text).toContain(
+          '- **Window**: 2026-03-28 → 2026-05-27 (default — pass filters.startDate/endDate to widen, up to 180-day range)',
+        );
+      });
+
+      it('includes a plain Window summary line when both dates were explicit', async () => {
+        const result = await tool.execute({
+          filters: { startDate: '2026-04-01', endDate: '2026-05-15' },
+        });
+
+        expect(result.content[0].text).toContain(
+          '- **Window**: 2026-04-01 → 2026-05-15',
+        );
+        expect(result.content[0].text).not.toContain('default — pass filters');
+      });
     });
   });
 

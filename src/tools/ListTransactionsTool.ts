@@ -461,15 +461,25 @@ class ListTransactionsTool {
     }));
   }
 
-  private formatMarkdown(result: { 
-    transactions: TransactionResult[]; 
-    transaction_count: number; 
+  private formatMarkdown(result: {
+    transactions: TransactionResult[];
+    transaction_count: number;
     pagination: any;
     filters_applied: any;
     account_filter: string;
+    date_range?: { start_date: string; end_date: string; was_defaulted: boolean };
   }): string {
     let output = "# YNAB Transactions\n\n";
-    
+
+    // Window line
+    const dr = result.date_range;
+    if (dr) {
+      const hint = dr.was_defaulted
+        ? ' (default — pass filters.startDate/endDate to widen, up to 180-day range)'
+        : '';
+      output += `- **Window**: ${dr.start_date} → ${dr.end_date}${hint}\n`;
+    }
+
     // Summary
     output += `Found ${result.pagination.total} transaction(s) total\n`;
     output += `Showing ${result.transaction_count} transactions (offset: ${result.pagination.offset}, limit: ${result.pagination.limit})\n`;
