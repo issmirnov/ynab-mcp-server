@@ -689,5 +689,26 @@ describe('ListTransactionsTool', () => {
         wasDefaulted: false,
       });
     });
+
+    it('rejects ranges that exceed 180 days', () => {
+      const result = resolveTransactionDateWindow('2025-01-01', '2026-05-27', '2026-05-27');
+      expect(result).toEqual({
+        error: expect.stringContaining('cannot exceed 180 days'),
+      });
+    });
+
+    it('rejects startDate-only when today is more than 180 days away from it', () => {
+      const result = resolveTransactionDateWindow('2024-01-01', undefined, '2026-05-27');
+      expect(result).toEqual({
+        error: expect.stringContaining('cannot exceed 180 days'),
+      });
+    });
+
+    it('rejects startDate later than endDate', () => {
+      const result = resolveTransactionDateWindow('2026-05-01', '2026-04-01', '2026-05-27');
+      expect(result).toEqual({
+        error: expect.stringContaining('must be on or before'),
+      });
+    });
   });
 });

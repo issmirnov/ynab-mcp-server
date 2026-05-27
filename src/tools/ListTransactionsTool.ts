@@ -1,6 +1,6 @@
 import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate, FULL_HISTORY_SINCE_DATE, DEFAULT_LIST_TRANSACTIONS_WINDOW_DAYS } from "../utils/commonUtils.js";
+import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate, FULL_HISTORY_SINCE_DATE, DEFAULT_LIST_TRANSACTIONS_WINDOW_DAYS, MAX_LIST_TRANSACTIONS_RANGE_DAYS } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
 import {
   isActionableUncategorizedTransaction,
@@ -28,24 +28,52 @@ export function resolveTransactionDateWindow(
   today: string,
 ): ResolvedDateWindow | DateWindowError {
   const defaultDays = DEFAULT_LIST_TRANSACTIONS_WINDOW_DAYS;
+  const maxDays = MAX_LIST_TRANSACTIONS_RANGE_DAYS;
+
+  let resolvedStart: string;
+  let resolvedEnd: string;
+  let wasDefaulted: boolean;
 
   if (!startDate && !endDate) {
+    resolvedStart = shiftDays(today, -defaultDays);
+    resolvedEnd = today;
+    wasDefaulted = true;
+  } else if (startDate && !endDate) {
+    resolvedStart = startDate;
+    resolvedEnd = today;
+    wasDefaulted = true;
+  } else if (!startDate && endDate) {
+    resolvedStart = shiftDays(endDate, -defaultDays);
+    resolvedEnd = endDate;
+    wasDefaulted = true;
+  } else {
+    resolvedStart = startDate!;
+    resolvedEnd = endDate!;
+    wasDefaulted = false;
+  }
+
+  if (resolvedStart > resolvedEnd) {
     return {
-      startDate: shiftDays(today, -defaultDays),
-      endDate: today,
-      wasDefaulted: true,
+      error: `filters.startDate (${resolvedStart}) must be on or before filters.endDate (${resolvedEnd}).`,
     };
   }
 
-  if (startDate && !endDate) {
-    return { startDate, endDate: today, wasDefaulted: true };
+  if (daysBetween(resolvedStart, resolvedEnd) > maxDays) {
+    return {
+      error:
+        `Date range cannot exceed ${maxDays} days. Make multiple calls with ` +
+        `sequential windows. For example, for a year: query 2025-12-01→2026-05-29, ` +
+        `then 2025-06-04→2025-11-30, then 2024-12-08→2025-06-03.`,
+    };
   }
 
-  if (!startDate && endDate) {
-    return { startDate: shiftDays(endDate, -defaultDays), endDate, wasDefaulted: true };
-  }
+  return { startDate: resolvedStart, endDate: resolvedEnd, wasDefaulted };
+}
 
-  return { startDate: startDate!, endDate: endDate!, wasDefaulted: false };
+function daysBetween(startIso: string, endIso: string): number {
+  const start = new Date(`${startIso}T00:00:00Z`).getTime();
+  const end = new Date(`${endIso}T00:00:00Z`).getTime();
+  return Math.round((end - start) / 86_400_000);
 }
 
 interface ListTransactionsInput {
