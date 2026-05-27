@@ -24,7 +24,7 @@ class GetUnapprovedTransactionsTool {
   getToolDefinition(): Tool {
     return {
       name: "ynab_get_unapproved_transactions",
-      description: "Gets unapproved transactions from a budget. First time pulls last 3 days, subsequent pulls use server knowledge to get only changes.",
+      description: "Gets all unapproved transactions from a budget.",
       inputSchema: {
         type: "object",
         properties: {

@@ -126,7 +126,7 @@ describe('CreateScheduledTransactionTool', () => {
       expect(parsed.success).toBe(true);
     });
 
-    it('should use budget ID from environment when not provided', async () => {
+    it('should use the default budget ID when not provided in input', async () => {
       mockApi.scheduledTransactions.createScheduledTransaction.mockResolvedValue({
         data: { scheduled_transaction: mockScheduledTransaction },
       });

@@ -151,7 +151,7 @@ describe('CreateTransactionTool', () => {
       });
     });
 
-    it('should use budget ID from environment when not provided in input', async () => {
+    it('should use the default budget ID when not provided in input', async () => {
       // Setup mock
       mockApi.transactions.createTransaction.mockResolvedValue({
         data: { transaction: mockCreatedTransaction },

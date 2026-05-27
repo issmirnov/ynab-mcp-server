@@ -168,7 +168,7 @@ describe('BudgetSummaryTool', () => {
       expect(parsedResult.accounts).toHaveLength(2); // Only non-deleted, non-closed accounts
     });
 
-    it('should successfully get budget summary with budget ID from environment', async () => {
+    it('should successfully get budget summary using the default budget ID when input omits it', async () => {
       // Setup mocks
       mockApi.accounts.getAccounts.mockResolvedValue({
         data: { accounts: mockAccounts },

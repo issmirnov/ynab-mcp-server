@@ -117,7 +117,7 @@ describe('ApproveTransactionTool', () => {
       });
     });
 
-    it('should successfully approve a transaction with budget ID from environment', async () => {
+    it('should successfully approve a transaction using the default budget ID when input omits it', async () => {
       // Setup mocks
       mockApi.transactions.getTransactionById.mockResolvedValue({
         data: { transaction: mockExistingTransaction },

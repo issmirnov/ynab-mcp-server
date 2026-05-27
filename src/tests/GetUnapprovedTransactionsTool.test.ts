@@ -139,7 +139,7 @@ describe('GetUnapprovedTransactionsTool', () => {
       expect(parsedResult).toHaveProperty('transaction_count', 2);
     });
 
-    it('should successfully get unapproved transactions with budget ID from environment', async () => {
+    it('should successfully get unapproved transactions using the default budget ID when input omits it', async () => {
       mockApi.transactions.getTransactions.mockResolvedValue({
         data: { transactions: mockTransactionData },
       });
@@ -403,7 +403,7 @@ describe('GetUnapprovedTransactionsTool', () => {
       const toolDef = tool.getToolDefinition();
       expect(toolDef.name).toBe('ynab_get_unapproved_transactions');
       expect(toolDef.description).toBe(
-        'Gets unapproved transactions from a budget. First time pulls last 3 days, subsequent pulls use server knowledge to get only changes.'
+        'Gets all unapproved transactions from a budget.'
       );
     });
 
