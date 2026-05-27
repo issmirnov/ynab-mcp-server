@@ -1,6 +1,6 @@
 import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate, FULL_HISTORY_SINCE_DATE, DEFAULT_LIST_TRANSACTIONS_WINDOW_DAYS, MAX_LIST_TRANSACTIONS_RANGE_DAYS } from "../utils/commonUtils.js";
+import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate, DEFAULT_LIST_TRANSACTIONS_WINDOW_DAYS, MAX_LIST_TRANSACTIONS_RANGE_DAYS } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
 import {
   isActionableUncategorizedTransaction,
@@ -218,9 +218,22 @@ class ListTransactionsTool {
     try {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
+      const today = new Date().toISOString().split("T")[0];
+      const window = resolveTransactionDateWindow(
+        input.filters?.startDate,
+        input.filters?.endDate,
+        today,
+      );
+      if ("error" in window) {
+        return {
+          isError: true,
+          content: [{ type: "text", text: `Error: ${window.error}` }],
+        };
+      }
+
       // Get all transactions for the budget
       const transactionsResponse = await createRetryableAPICall(
-        () => this.api.transactions.getTransactions(budgetId, FULL_HISTORY_SINCE_DATE),
+        () => this.api.transactions.getTransactions(budgetId, window.startDate),
         'Get transactions for listing'
       );
 

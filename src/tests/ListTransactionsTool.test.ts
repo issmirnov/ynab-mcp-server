@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
 import * as ynab from 'ynab';
 import ListTransactionsTool, { resolveTransactionDateWindow } from '../tools/ListTransactionsTool';
 
@@ -45,6 +45,10 @@ describe('ListTransactionsTool', () => {
       budgetId: 'test-budget-id',
     });
   });
+
+  // Frozen "today" used by date-window integration tests below.
+  // 2026-05-27 means "60 days back" resolves to 2026-03-28.
+  const FROZEN_TODAY = '2026-05-27T12:00:00Z';
 
   describe('execute', () => {
     const mockTransactionData = [
@@ -219,7 +223,10 @@ describe('ListTransactionsTool', () => {
 
       const result = await tool.execute(input);
 
-      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith('test-budget-id', '1900-01-01');
+      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
+        'test-budget-id',
+        expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      );
       expect(mockApi.accounts.getAccounts).toHaveBeenCalledWith('test-budget-id');
       expect(mockApi.categories.getCategories).toHaveBeenCalledWith('test-budget-id');
 
@@ -535,7 +542,10 @@ describe('ListTransactionsTool', () => {
 
       await tool.execute(input);
 
-      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith('custom-budget-id', '1900-01-01');
+      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
+        'custom-budget-id',
+        expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      );
       expect(mockApi.accounts.getAccounts).toHaveBeenCalledWith('custom-budget-id');
       expect(mockApi.categories.getCategories).toHaveBeenCalledWith('custom-budget-id');
     });
@@ -607,6 +617,72 @@ describe('ListTransactionsTool', () => {
       expect(responseData.transactions[0].approved).toBe(true);
       expect(responseData.transactions[0].cleared).toBe('reconciled');
       expect(responseData.transactions[0].amount).toBe(-10); // -$10.00
+    });
+
+    describe('date window resolution', () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date(FROZEN_TODAY));
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it('calls the API with the default 60-day-old since_date when no filters provided', async () => {
+        await tool.execute({ response_format: 'json' });
+
+        expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
+          'test-budget-id',
+          '2026-03-28',
+        );
+      });
+
+      it('calls the API with the resolved startDate when only endDate is provided', async () => {
+        await tool.execute({
+          response_format: 'json',
+          filters: { endDate: '2026-03-01' },
+        });
+
+        expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
+          'test-budget-id',
+          '2025-12-31',
+        );
+      });
+
+      it('calls the API with the provided startDate when explicit', async () => {
+        await tool.execute({
+          response_format: 'json',
+          filters: { startDate: '2026-04-01', endDate: '2026-05-15' },
+        });
+
+        expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
+          'test-budget-id',
+          '2026-04-01',
+        );
+      });
+
+      it('returns an error and does not call the API when range exceeds 180 days', async () => {
+        const result = await tool.execute({
+          response_format: 'json',
+          filters: { startDate: '2025-01-01', endDate: '2026-05-27' },
+        });
+
+        expect(result).toHaveProperty('isError', true);
+        expect(result.content[0].text).toContain('cannot exceed 180 days');
+        expect(mockApi.transactions.getTransactions).not.toHaveBeenCalled();
+      });
+
+      it('returns an error when startDate is after endDate', async () => {
+        const result = await tool.execute({
+          response_format: 'json',
+          filters: { startDate: '2026-05-01', endDate: '2026-04-01' },
+        });
+
+        expect(result).toHaveProperty('isError', true);
+        expect(result.content[0].text).toContain('must be on or before');
+        expect(mockApi.transactions.getTransactions).not.toHaveBeenCalled();
+      });
     });
   });
 
