@@ -62,8 +62,9 @@ export function resolveTransactionDateWindow(
     return {
       error:
         `Date range cannot exceed ${maxDays} days. Make multiple calls with ` +
-        `sequential windows. For example, for a year: query 2025-12-01→2026-05-29, ` +
-        `then 2025-06-04→2025-11-30, then 2024-12-08→2025-06-03.`,
+        `sequential windows: query the most recent ${maxDays}-day window, then ` +
+        `step the window backwards by ${maxDays} days for older history (repeat ` +
+        `as needed).`,
     };
   }
 
