@@ -10,6 +10,9 @@ describe('CreateScheduledTransactionTool', () => {
     scheduledTransactions: {
       createScheduledTransaction: Mock;
     };
+    accounts: {
+      getAccountById: Mock;
+    };
   };
 
   const mockScheduledTransaction = {
@@ -33,14 +36,22 @@ describe('CreateScheduledTransactionTool', () => {
       scheduledTransactions: {
         createScheduledTransaction: vi.fn(),
       },
+      accounts: {
+        getAccountById: vi.fn().mockResolvedValue({
+          data: { account: { name: 'Test Account', on_budget: false } },
+        }),
+      },
     };
 
-    (ynab.API as any).mockImplementation(() => mockApi);
+    (ynab.API as any).mockImplementation(function () { return mockApi; });
 
     process.env.YNAB_API_TOKEN = 'test-token';
     process.env.YNAB_BUDGET_ID = 'test-budget-id';
 
-    tool = new CreateScheduledTransactionTool();
+    tool = new CreateScheduledTransactionTool({
+      ynabApi: mockApi as any,
+      budgetId: 'test-budget-id',
+    });
   });
 
   describe('execute', () => {
@@ -216,7 +227,7 @@ describe('CreateScheduledTransactionTool', () => {
 
     it('should error when no budget ID is available', async () => {
       delete process.env.YNAB_BUDGET_ID;
-      tool = new CreateScheduledTransactionTool();
+      tool = new CreateScheduledTransactionTool({ ynabApi: mockApi as any });
 
       const result = await tool.execute({
         accountId: 'account-456',
