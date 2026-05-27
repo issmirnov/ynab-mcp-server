@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import * as ynab from 'ynab';
-import ListTransactionsTool from '../tools/ListTransactionsTool';
+import ListTransactionsTool, { resolveTransactionDateWindow } from '../tools/ListTransactionsTool';
 
 vi.mock('ynab');
 
@@ -618,7 +618,7 @@ describe('ListTransactionsTool', () => {
       expect(definition).toHaveProperty('description');
       expect(definition).toHaveProperty('inputSchema');
       expect(definition).toHaveProperty('annotations');
-      
+
       expect(definition.inputSchema.properties).toHaveProperty('budgetId');
       expect(definition.inputSchema.properties).toHaveProperty('accountId');
       expect(definition.inputSchema.properties).toHaveProperty('accountName');
@@ -626,10 +626,68 @@ describe('ListTransactionsTool', () => {
       expect(definition.inputSchema.properties).toHaveProperty('response_format');
       expect(definition.inputSchema.properties).toHaveProperty('limit');
       expect(definition.inputSchema.properties).toHaveProperty('offset');
-      
+
       expect(definition.annotations).toHaveProperty('readOnlyHint', true);
       expect(definition.annotations).toHaveProperty('destructiveHint', false);
       expect(definition.annotations).toHaveProperty('idempotentHint', true);
+    });
+  });
+
+  describe('resolveTransactionDateWindow', () => {
+    const TODAY = '2026-05-27';
+
+    it('defaults both sides to the last 60 days when neither is provided', () => {
+      const result = resolveTransactionDateWindow(undefined, undefined, TODAY);
+      expect(result).toEqual({
+        startDate: '2026-03-28',
+        endDate: '2026-05-27',
+        wasDefaulted: true,
+      });
+    });
+
+    it('keeps explicit startDate and defaults endDate to today', () => {
+      const result = resolveTransactionDateWindow('2026-04-01', undefined, TODAY);
+      expect(result).toEqual({
+        startDate: '2026-04-01',
+        endDate: '2026-05-27',
+        wasDefaulted: true,
+      });
+    });
+
+    it('keeps explicit endDate and defaults startDate to endDate minus 60 days', () => {
+      const result = resolveTransactionDateWindow(undefined, '2026-03-01', TODAY);
+      expect(result).toEqual({
+        startDate: '2025-12-31',
+        endDate: '2026-03-01',
+        wasDefaulted: true,
+      });
+    });
+
+    it('keeps both sides when both are provided within a 180-day range', () => {
+      const result = resolveTransactionDateWindow('2026-01-01', '2026-04-30', TODAY);
+      expect(result).toEqual({
+        startDate: '2026-01-01',
+        endDate: '2026-04-30',
+        wasDefaulted: false,
+      });
+    });
+
+    it('allows exactly a 180-day range', () => {
+      const result = resolveTransactionDateWindow('2025-11-28', '2026-05-27', TODAY);
+      expect(result).toEqual({
+        startDate: '2025-11-28',
+        endDate: '2026-05-27',
+        wasDefaulted: false,
+      });
+    });
+
+    it('allows a zero-day range (single-day query)', () => {
+      const result = resolveTransactionDateWindow('2026-05-15', '2026-05-15', TODAY);
+      expect(result).toEqual({
+        startDate: '2026-05-15',
+        endDate: '2026-05-15',
+        wasDefaulted: false,
+      });
     });
   });
 });

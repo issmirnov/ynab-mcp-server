@@ -1,12 +1,52 @@
 import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate, FULL_HISTORY_SINCE_DATE } from "../utils/commonUtils.js";
+import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate, FULL_HISTORY_SINCE_DATE, DEFAULT_LIST_TRANSACTIONS_WINDOW_DAYS } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
 import {
   isActionableUncategorizedTransaction,
   isUncategorizedCategoryFilter,
 } from "../utils/transactionClassification.js";
 import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
+
+export type ResolvedDateWindow = {
+  startDate: string;
+  endDate: string;
+  wasDefaulted: boolean;
+};
+
+export type DateWindowError = { error: string };
+
+function shiftDays(isoDate: string, days: number): string {
+  const d = new Date(`${isoDate}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().split("T")[0];
+}
+
+export function resolveTransactionDateWindow(
+  startDate: string | undefined,
+  endDate: string | undefined,
+  today: string,
+): ResolvedDateWindow | DateWindowError {
+  const defaultDays = DEFAULT_LIST_TRANSACTIONS_WINDOW_DAYS;
+
+  if (!startDate && !endDate) {
+    return {
+      startDate: shiftDays(today, -defaultDays),
+      endDate: today,
+      wasDefaulted: true,
+    };
+  }
+
+  if (startDate && !endDate) {
+    return { startDate, endDate: today, wasDefaulted: true };
+  }
+
+  if (!startDate && endDate) {
+    return { startDate: shiftDays(endDate, -defaultDays), endDate, wasDefaulted: true };
+  }
+
+  return { startDate: startDate!, endDate: endDate!, wasDefaulted: false };
+}
 
 interface ListTransactionsInput {
   budgetId?: string;
