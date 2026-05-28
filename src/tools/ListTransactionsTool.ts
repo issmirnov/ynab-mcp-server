@@ -1,12 +1,81 @@
 import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate } from "../utils/commonUtils.js";
+import { truncateResponse, CHARACTER_LIMIT, getBudgetId, milliUnitsToAmount, formatCurrency, formatDate, DEFAULT_LIST_TRANSACTIONS_WINDOW_DAYS, MAX_LIST_TRANSACTIONS_RANGE_DAYS } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
 import {
   isActionableUncategorizedTransaction,
   isUncategorizedCategoryFilter,
 } from "../utils/transactionClassification.js";
 import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
+
+export type ResolvedDateWindow = {
+  startDate: string;
+  endDate: string;
+  wasDefaulted: boolean;
+};
+
+export type DateWindowError = { error: string };
+
+function shiftDays(isoDate: string, days: number): string {
+  const d = new Date(`${isoDate}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().split("T")[0];
+}
+
+export function resolveTransactionDateWindow(
+  startDate: string | undefined,
+  endDate: string | undefined,
+  today: string,
+): ResolvedDateWindow | DateWindowError {
+  const defaultDays = DEFAULT_LIST_TRANSACTIONS_WINDOW_DAYS;
+  const maxDays = MAX_LIST_TRANSACTIONS_RANGE_DAYS;
+
+  let resolvedStart: string;
+  let resolvedEnd: string;
+  let wasDefaulted: boolean;
+
+  if (!startDate && !endDate) {
+    resolvedStart = shiftDays(today, -defaultDays);
+    resolvedEnd = today;
+    wasDefaulted = true;
+  } else if (startDate && !endDate) {
+    resolvedStart = startDate;
+    resolvedEnd = today;
+    wasDefaulted = true;
+  } else if (!startDate && endDate) {
+    resolvedStart = shiftDays(endDate, -defaultDays);
+    resolvedEnd = endDate;
+    wasDefaulted = true;
+  } else {
+    resolvedStart = startDate!;
+    resolvedEnd = endDate!;
+    wasDefaulted = false;
+  }
+
+  if (resolvedStart > resolvedEnd) {
+    return {
+      error: `filters.startDate (${resolvedStart}) must be on or before filters.endDate (${resolvedEnd}).`,
+    };
+  }
+
+  if (daysBetween(resolvedStart, resolvedEnd) > maxDays) {
+    return {
+      error:
+        `Date range cannot exceed ${maxDays} days. Make multiple calls with ` +
+        `sequential windows: query the most recent ${maxDays}-day window, then ` +
+        `step the window backwards by ${maxDays} days for older history (repeat ` +
+        `as needed).`,
+    };
+  }
+
+  return { startDate: resolvedStart, endDate: resolvedEnd, wasDefaulted };
+}
+
+function daysBetween(startIso: string, endIso: string): number {
+  const start = new Date(`${startIso}T00:00:00Z`).getTime();
+  const end = new Date(`${endIso}T00:00:00Z`).getTime();
+  return Math.round((end - start) / 86_400_000);
+}
 
 interface ListTransactionsInput {
   budgetId?: string;
@@ -59,7 +128,7 @@ class ListTransactionsTool {
   getToolDefinition(): Tool {
     return {
       name: "ynab_list_transactions",
-      description: "List transactions from a budget with comprehensive filtering options. Supports filtering by account, approval status, cleared status, and other criteria.",
+      description: "List transactions from a budget with comprehensive filtering options. Returns the last 60 days by default; specify filters.startDate / filters.endDate to widen, up to a 180-day range per call. For older history, make multiple calls stepping the window backwards. Supports filtering by account, approval status, cleared status, and other criteria.",
       inputSchema: {
         type: "object",
         properties: {
@@ -105,11 +174,11 @@ class ListTransactionsTool {
               },
               startDate: {
                 type: "string",
-                description: "Start date for transaction filter (YYYY-MM-DD format)",
+                description: "Start date for transaction filter (YYYY-MM-DD format). Drives the YNAB API since_date. Defaults to 60 days before endDate (or today). The (endDate − startDate) range may not exceed 180 days per call.",
               },
               endDate: {
                 type: "string",
-                description: "End date for transaction filter (YYYY-MM-DD format)",
+                description: "End date for transaction filter (YYYY-MM-DD format). Defaults to today when startDate is provided alone. The (endDate − startDate) range may not exceed 180 days per call.",
               },
               memo: {
                 type: "string",
@@ -150,9 +219,22 @@ class ListTransactionsTool {
     try {
       const budgetId = getBudgetId(input.budgetId, this.budgetId);
 
+      const today = new Date().toISOString().split("T")[0];
+      const window = resolveTransactionDateWindow(
+        input.filters?.startDate,
+        input.filters?.endDate,
+        today,
+      );
+      if ("error" in window) {
+        return {
+          isError: true,
+          content: [{ type: "text", text: `Error: ${window.error}` }],
+        };
+      }
+
       // Get all transactions for the budget
       const transactionsResponse = await createRetryableAPICall(
-        () => this.api.transactions.getTransactions(budgetId),
+        () => this.api.transactions.getTransactions(budgetId, window.startDate),
         'Get transactions for listing'
       );
 
@@ -211,6 +293,11 @@ class ListTransactionsTool {
 
       const result = {
         transactions: paginatedTransactions,
+        date_range: {
+          start_date: window.startDate,
+          end_date: window.endDate,
+          was_defaulted: window.wasDefaulted,
+        },
         pagination: {
           total,
           count: paginatedTransactions.length,
@@ -375,15 +462,25 @@ class ListTransactionsTool {
     }));
   }
 
-  private formatMarkdown(result: { 
-    transactions: TransactionResult[]; 
-    transaction_count: number; 
+  private formatMarkdown(result: {
+    transactions: TransactionResult[];
+    transaction_count: number;
     pagination: any;
     filters_applied: any;
     account_filter: string;
+    date_range?: { start_date: string; end_date: string; was_defaulted: boolean };
   }): string {
     let output = "# YNAB Transactions\n\n";
-    
+
+    // Window line
+    const dr = result.date_range;
+    if (dr) {
+      const hint = dr.was_defaulted
+        ? ' (default — pass filters.startDate/endDate to widen, up to 180-day range)'
+        : '';
+      output += `- **Window**: ${dr.start_date} → ${dr.end_date}${hint}\n`;
+    }
+
     // Summary
     output += `Found ${result.pagination.total} transaction(s) total\n`;
     output += `Showing ${result.transaction_count} transactions (offset: ${result.pagination.offset}, limit: ${result.pagination.limit})\n`;

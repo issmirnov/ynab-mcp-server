@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
 import * as ynab from 'ynab';
-import ListTransactionsTool from '../tools/ListTransactionsTool';
+import ListTransactionsTool, { resolveTransactionDateWindow } from '../tools/ListTransactionsTool';
 
 vi.mock('ynab');
 
@@ -45,6 +45,10 @@ describe('ListTransactionsTool', () => {
       budgetId: 'test-budget-id',
     });
   });
+
+  // Frozen "today" used by date-window integration tests below.
+  // 2026-05-27 means "60 days back" resolves to 2026-03-28.
+  const FROZEN_TODAY = '2026-05-27T12:00:00Z';
 
   describe('execute', () => {
     const mockTransactionData = [
@@ -219,7 +223,10 @@ describe('ListTransactionsTool', () => {
 
       const result = await tool.execute(input);
 
-      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith('test-budget-id');
+      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
+        'test-budget-id',
+        expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      );
       expect(mockApi.accounts.getAccounts).toHaveBeenCalledWith('test-budget-id');
       expect(mockApi.categories.getCategories).toHaveBeenCalledWith('test-budget-id');
 
@@ -535,7 +542,10 @@ describe('ListTransactionsTool', () => {
 
       await tool.execute(input);
 
-      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith('custom-budget-id');
+      expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
+        'custom-budget-id',
+        expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      );
       expect(mockApi.accounts.getAccounts).toHaveBeenCalledWith('custom-budget-id');
       expect(mockApi.categories.getCategories).toHaveBeenCalledWith('custom-budget-id');
     });
@@ -608,6 +618,116 @@ describe('ListTransactionsTool', () => {
       expect(responseData.transactions[0].cleared).toBe('reconciled');
       expect(responseData.transactions[0].amount).toBe(-10); // -$10.00
     });
+
+    describe('date window resolution', () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date(FROZEN_TODAY));
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it('calls the API with the default 60-day-old since_date when no filters provided', async () => {
+        await tool.execute({ response_format: 'json' });
+
+        expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
+          'test-budget-id',
+          '2026-03-28',
+        );
+      });
+
+      it('calls the API with the resolved startDate when only endDate is provided', async () => {
+        await tool.execute({
+          response_format: 'json',
+          filters: { endDate: '2026-03-01' },
+        });
+
+        expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
+          'test-budget-id',
+          '2025-12-31',
+        );
+      });
+
+      it('calls the API with the provided startDate when explicit', async () => {
+        await tool.execute({
+          response_format: 'json',
+          filters: { startDate: '2026-04-01', endDate: '2026-05-15' },
+        });
+
+        expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
+          'test-budget-id',
+          '2026-04-01',
+        );
+      });
+
+      it('returns an error and does not call the API when range exceeds 180 days', async () => {
+        const result = await tool.execute({
+          response_format: 'json',
+          filters: { startDate: '2025-01-01', endDate: '2026-05-27' },
+        });
+
+        expect(result).toHaveProperty('isError', true);
+        expect(result.content[0].text).toContain('cannot exceed 180 days');
+        expect(mockApi.transactions.getTransactions).not.toHaveBeenCalled();
+      });
+
+      it('returns an error when startDate is after endDate', async () => {
+        const result = await tool.execute({
+          response_format: 'json',
+          filters: { startDate: '2026-05-01', endDate: '2026-04-01' },
+        });
+
+        expect(result).toHaveProperty('isError', true);
+        expect(result.content[0].text).toContain('must be on or before');
+        expect(mockApi.transactions.getTransactions).not.toHaveBeenCalled();
+      });
+
+      it('includes a date_range block in the JSON response with was_defaulted=true', async () => {
+        const result = await tool.execute({ response_format: 'json' });
+
+        const parsed = JSON.parse(result.content[0].text);
+        expect(parsed.date_range).toEqual({
+          start_date: '2026-03-28',
+          end_date: '2026-05-27',
+          was_defaulted: true,
+        });
+      });
+
+      it('reports was_defaulted=false when both dates were explicit', async () => {
+        const result = await tool.execute({
+          response_format: 'json',
+          filters: { startDate: '2026-04-01', endDate: '2026-05-15' },
+        });
+
+        const parsed = JSON.parse(result.content[0].text);
+        expect(parsed.date_range).toEqual({
+          start_date: '2026-04-01',
+          end_date: '2026-05-15',
+          was_defaulted: false,
+        });
+      });
+
+      it('includes a Window summary line in markdown when window was defaulted', async () => {
+        const result = await tool.execute({});  // defaults to markdown
+
+        expect(result.content[0].text).toContain(
+          '- **Window**: 2026-03-28 → 2026-05-27 (default — pass filters.startDate/endDate to widen, up to 180-day range)',
+        );
+      });
+
+      it('includes a plain Window summary line when both dates were explicit', async () => {
+        const result = await tool.execute({
+          filters: { startDate: '2026-04-01', endDate: '2026-05-15' },
+        });
+
+        expect(result.content[0].text).toContain(
+          '- **Window**: 2026-04-01 → 2026-05-15',
+        );
+        expect(result.content[0].text).not.toContain('default — pass filters');
+      });
+    });
   });
 
   describe('getToolDefinition', () => {
@@ -618,7 +738,7 @@ describe('ListTransactionsTool', () => {
       expect(definition).toHaveProperty('description');
       expect(definition).toHaveProperty('inputSchema');
       expect(definition).toHaveProperty('annotations');
-      
+
       expect(definition.inputSchema.properties).toHaveProperty('budgetId');
       expect(definition.inputSchema.properties).toHaveProperty('accountId');
       expect(definition.inputSchema.properties).toHaveProperty('accountName');
@@ -626,10 +746,89 @@ describe('ListTransactionsTool', () => {
       expect(definition.inputSchema.properties).toHaveProperty('response_format');
       expect(definition.inputSchema.properties).toHaveProperty('limit');
       expect(definition.inputSchema.properties).toHaveProperty('offset');
-      
+
       expect(definition.annotations).toHaveProperty('readOnlyHint', true);
       expect(definition.annotations).toHaveProperty('destructiveHint', false);
       expect(definition.annotations).toHaveProperty('idempotentHint', true);
+    });
+  });
+
+  describe('resolveTransactionDateWindow', () => {
+    const TODAY = '2026-05-27';
+
+    it('defaults both sides to the last 60 days when neither is provided', () => {
+      const result = resolveTransactionDateWindow(undefined, undefined, TODAY);
+      expect(result).toEqual({
+        startDate: '2026-03-28',
+        endDate: '2026-05-27',
+        wasDefaulted: true,
+      });
+    });
+
+    it('keeps explicit startDate and defaults endDate to today', () => {
+      const result = resolveTransactionDateWindow('2026-04-01', undefined, TODAY);
+      expect(result).toEqual({
+        startDate: '2026-04-01',
+        endDate: '2026-05-27',
+        wasDefaulted: true,
+      });
+    });
+
+    it('keeps explicit endDate and defaults startDate to endDate minus 60 days', () => {
+      const result = resolveTransactionDateWindow(undefined, '2026-03-01', TODAY);
+      expect(result).toEqual({
+        startDate: '2025-12-31',
+        endDate: '2026-03-01',
+        wasDefaulted: true,
+      });
+    });
+
+    it('keeps both sides when both are provided within a 180-day range', () => {
+      const result = resolveTransactionDateWindow('2026-01-01', '2026-04-30', TODAY);
+      expect(result).toEqual({
+        startDate: '2026-01-01',
+        endDate: '2026-04-30',
+        wasDefaulted: false,
+      });
+    });
+
+    it('allows exactly a 180-day range', () => {
+      const result = resolveTransactionDateWindow('2025-11-28', '2026-05-27', TODAY);
+      expect(result).toEqual({
+        startDate: '2025-11-28',
+        endDate: '2026-05-27',
+        wasDefaulted: false,
+      });
+    });
+
+    it('allows a zero-day range (single-day query)', () => {
+      const result = resolveTransactionDateWindow('2026-05-15', '2026-05-15', TODAY);
+      expect(result).toEqual({
+        startDate: '2026-05-15',
+        endDate: '2026-05-15',
+        wasDefaulted: false,
+      });
+    });
+
+    it('rejects ranges that exceed 180 days', () => {
+      const result = resolveTransactionDateWindow('2025-01-01', '2026-05-27', '2026-05-27');
+      expect(result).toEqual({
+        error: expect.stringContaining('cannot exceed 180 days'),
+      });
+    });
+
+    it('rejects startDate-only when today is more than 180 days away from it', () => {
+      const result = resolveTransactionDateWindow('2024-01-01', undefined, '2026-05-27');
+      expect(result).toEqual({
+        error: expect.stringContaining('cannot exceed 180 days'),
+      });
+    });
+
+    it('rejects startDate later than endDate', () => {
+      const result = resolveTransactionDateWindow('2026-05-01', '2026-04-01', '2026-05-27');
+      expect(result).toEqual({
+        error: expect.stringContaining('must be on or before'),
+      });
     });
   });
 });

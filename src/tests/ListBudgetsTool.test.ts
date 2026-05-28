@@ -23,7 +23,7 @@ describe('ListBudgetsTool', () => {
       },
     };
 
-    (ynab.API as any).mockImplementation(() => mockApi);
+    (ynab.API as any).mockImplementation(function () { return mockApi; });
 
     process.env.YNAB_API_TOKEN = 'test-token';
 

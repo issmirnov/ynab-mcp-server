@@ -21,12 +21,17 @@ describe('GetUnapprovedTransactionsTool', () => {
       },
     };
 
-    (ynab.API as any).mockImplementation(() => mockApi);
+    (ynab.API as any).mockImplementation(function () {
+      return mockApi;
+    });
 
     process.env.YNAB_API_TOKEN = 'test-token';
     process.env.YNAB_BUDGET_ID = 'test-budget-id';
 
-    tool = new GetUnapprovedTransactionsTool();
+    tool = new GetUnapprovedTransactionsTool({
+      ynabApi: mockApi as any,
+      budgetId: 'test-budget-id',
+    });
   });
 
   describe('execute', () => {
@@ -92,7 +97,7 @@ describe('GetUnapprovedTransactionsTool', () => {
 
       expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
         'custom-budget-id',
-        undefined,
+        '1900-01-01',
         ynab.GetTransactionsTypeEnum.Unapproved
       );
 
@@ -134,7 +139,7 @@ describe('GetUnapprovedTransactionsTool', () => {
       expect(parsedResult).toHaveProperty('transaction_count', 2);
     });
 
-    it('should successfully get unapproved transactions with budget ID from environment', async () => {
+    it('should successfully get unapproved transactions using the default budget ID when input omits it', async () => {
       mockApi.transactions.getTransactions.mockResolvedValue({
         data: { transactions: mockTransactionData },
       });
@@ -147,7 +152,7 @@ describe('GetUnapprovedTransactionsTool', () => {
 
       expect(mockApi.transactions.getTransactions).toHaveBeenCalledWith(
         'test-budget-id',
-        undefined,
+        '1900-01-01',
         ynab.GetTransactionsTypeEnum.Unapproved
       );
 
@@ -398,7 +403,7 @@ describe('GetUnapprovedTransactionsTool', () => {
       const toolDef = tool.getToolDefinition();
       expect(toolDef.name).toBe('ynab_get_unapproved_transactions');
       expect(toolDef.description).toBe(
-        'Gets unapproved transactions from a budget. First time pulls last 3 days, subsequent pulls use server knowledge to get only changes.'
+        'Gets all unapproved transactions from a budget.'
       );
     });
 
@@ -407,7 +412,7 @@ describe('GetUnapprovedTransactionsTool', () => {
       expect(toolDef.inputSchema).toHaveProperty('properties');
       expect(toolDef.inputSchema.properties).toHaveProperty('budgetId');
       expect(toolDef.inputSchema.properties.budgetId.description).toBe(
-        'The ID of the budget to fetch transactions for (optional, defaults to the budget set in the YNAB_BUDGET_ID environment variable)'
+        'The ID of the budget to fetch transactions for. Optional when a default budget is set or only one budget exists.'
       );
     });
   });

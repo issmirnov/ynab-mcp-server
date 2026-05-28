@@ -99,3 +99,24 @@ export function truncateResponse(text: string, limit: number = 25000): {
  * Character limit constant for MCP responses
  */
 export const CHARACTER_LIMIT = 25000;
+
+/**
+ * Pass to YNAB transaction listing endpoints to preserve full-history behavior.
+ * YNAB PAPI v1.85.0 (2026-06-04) defaults `since_date` to 1 year ago when
+ * omitted; an explicit far-past date keeps the prior "all transactions" default.
+ */
+export const FULL_HISTORY_SINCE_DATE = "1900-01-01";
+
+/**
+ * Default `since_date` window for ynab_list_transactions when the LLM does
+ * not specify a date range. See
+ * docs/superpowers/specs/2026-05-27-list-transactions-window-defaults-design.md.
+ */
+export const DEFAULT_LIST_TRANSACTIONS_WINDOW_DAYS = 60;
+
+/**
+ * Maximum (endDate − startDate) range the LLM may request in a single
+ * ynab_list_transactions call. Larger ranges return an error with guidance
+ * to page by date window.
+ */
+export const MAX_LIST_TRANSACTIONS_RANGE_DAYS = 180;

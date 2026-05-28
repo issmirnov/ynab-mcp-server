@@ -30,13 +30,16 @@ describe('BudgetSummaryTool', () => {
     };
 
     // Mock the ynab.API constructor
-    (ynab.API as any).mockImplementation(() => mockApi);
+    (ynab.API as any).mockImplementation(function () { return mockApi; });
 
     // Set environment variables
     process.env.YNAB_API_TOKEN = 'test-token';
     process.env.YNAB_BUDGET_ID = 'test-budget-id';
 
-    tool = new BudgetSummaryTool();
+    tool = new BudgetSummaryTool({
+      ynabApi: mockApi as any,
+      budgetId: 'test-budget-id',
+    });
   });
 
   describe('execute', () => {
@@ -165,7 +168,7 @@ describe('BudgetSummaryTool', () => {
       expect(parsedResult.accounts).toHaveLength(2); // Only non-deleted, non-closed accounts
     });
 
-    it('should successfully get budget summary with budget ID from environment', async () => {
+    it('should successfully get budget summary using the default budget ID when input omits it', async () => {
       // Setup mocks
       mockApi.accounts.getAccounts.mockResolvedValue({
         data: { accounts: mockAccounts },
@@ -245,9 +248,9 @@ describe('BudgetSummaryTool', () => {
     });
 
     it('should return error when no budget ID is provided', async () => {
-      // Clear environment budget ID
+      // Construct without a default budgetId so the tool must rely on input
       delete process.env.YNAB_BUDGET_ID;
-      tool = new BudgetSummaryTool();
+      tool = new BudgetSummaryTool({ ynabApi: mockApi as any });
 
       const input = {
         month: 'current',

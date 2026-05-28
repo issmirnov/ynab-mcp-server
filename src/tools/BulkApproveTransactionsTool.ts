@@ -8,6 +8,7 @@ import {
   amountToMilliUnits,
   milliUnitsToAmount,
   formatCurrency,
+  FULL_HISTORY_SINCE_DATE,
 } from "../utils/commonUtils.js";
 import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
 import {
@@ -144,7 +145,7 @@ class BulkApproveTransactionsTool {
 
       // Get all transactions for the budget
       const transactionsResponse = await createRetryableAPICall(
-        () => this.api.transactions.getTransactions(budgetId),
+        () => this.api.transactions.getTransactions(budgetId, FULL_HISTORY_SINCE_DATE),
         'Get transactions for bulk approve'
       );
       const allTransactions = transactionsResponse.data.transactions.filter(t => !t.deleted);
