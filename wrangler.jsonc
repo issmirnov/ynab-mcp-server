@@ -1,6 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "ynab-mcp-server",
+	"account_id": "aecb2d537c888e18286988183870e12a",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-03-10",
 	"compatibility_flags": [
@@ -44,7 +45,7 @@
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "<ADD_STAGING_KV_NAMESPACE_ID>"
+					"id": "16d996ced22c4c93a991b11ed480e100"
 				}
 			]
 		}
