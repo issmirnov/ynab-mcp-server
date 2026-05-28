@@ -47,6 +47,22 @@
 					"binding": "OAUTH_KV",
 					"id": "16d996ced22c4c93a991b11ed480e100"
 				}
+			],
+			"durable_objects": {
+				"bindings": [
+					{
+						"class_name": "YnabMCP",
+						"name": "MCP_OBJECT"
+					}
+				]
+			},
+			"migrations": [
+				{
+					"new_sqlite_classes": [
+						"YnabMCP"
+					],
+					"tag": "v1"
+				}
 			]
 		}
 	}
