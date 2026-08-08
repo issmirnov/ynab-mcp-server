@@ -1,0 +1,16 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.smirnovlabs/ynab-mcp-server",
+  "description": "Hosted remote MCP server for YNAB on Cloudflare Workers with OAuth",
+  "repository": {
+    "url": "https://github.com/issmirnov/ynab-mcp-server",
+    "source": "github"
+  },
+  "version": "2.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcpforynab.smirnovlabs.com/mcp"
+    }
+  ]
+}
