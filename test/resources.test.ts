@@ -37,13 +37,13 @@ function createEnv(kv: KVNamespace) {
 describe("YNAB resources", () => {
   it("caches budgets resource reads", async () => {
     const { kv } = createKvStub();
-    const getBudgets = vi.fn(async () => ({
+    const getPlans = vi.fn(async () => ({
       data: {
-        budgets: [{ id: "budget-1", name: "Colorado" }],
+        plans: [{ id: "budget-1", name: "Colorado" }],
       },
     }));
     const api = {
-      budgets: { getBudgets },
+      plans: { getPlans },
     } as any;
 
     const env = createEnv(kv);
@@ -52,7 +52,7 @@ describe("YNAB resources", () => {
     const first = await readYnabResource(new URL("ynab://budgets"), env, props, api);
     const second = await readYnabResource(new URL("ynab://budgets"), env, props, api);
 
-    expect(getBudgets).toHaveBeenCalledTimes(1);
+    expect(getPlans).toHaveBeenCalledTimes(1);
     expect(first.contents[0].mimeType).toBe("application/json");
     expect(second.contents[0].text).toContain("Colorado");
   });
@@ -68,10 +68,10 @@ describe("YNAB resources", () => {
     );
 
     const api = {
-      budgets: {
-        getBudgets: vi.fn(async () => ({
+      plans: {
+        getPlans: vi.fn(async () => ({
           data: {
-            budgets: [{ id: "budget-1", name: "Colorado" }],
+            plans: [{ id: "budget-1", name: "Colorado" }],
           },
         })),
       },
@@ -96,7 +96,7 @@ describe("YNAB resources", () => {
         })),
       },
       months: {
-        getBudgetMonth: vi.fn(),
+        getPlanMonth: vi.fn(),
       },
     } as any;
 
@@ -122,13 +122,13 @@ describe("YNAB resources", () => {
     );
 
     const api = {
-      budgets: {
-        getBudgets: vi.fn(async () => ({
+      plans: {
+        getPlans: vi.fn(async () => ({
           data: {
-            budgets: [{ id: "budget-override", name: "Colorado Override" }],
+            plans: [{ id: "budget-override", name: "Colorado Override" }],
           },
         })),
-        getBudgetById: vi.fn(),
+        getPlanById: vi.fn(),
       },
       categories: {
         getCategories: vi.fn(async () => ({
@@ -151,7 +151,7 @@ describe("YNAB resources", () => {
         })),
       },
       months: {
-        getBudgetMonth: vi.fn(),
+        getPlanMonth: vi.fn(),
       },
     } as any;
 
@@ -163,24 +163,24 @@ describe("YNAB resources", () => {
     );
 
     expect(api.categories.getCategories).toHaveBeenCalledWith("budget-override");
-    expect(api.budgets.getBudgetById).not.toHaveBeenCalled();
+    expect(api.plans.getPlanById).not.toHaveBeenCalled();
   });
 
   it("reads default budget data from YNAB when no MCP override is stored", async () => {
     const { kv } = createKvStub();
     const api = {
-      budgets: {
-        getBudgets: vi.fn(async () => ({
+      plans: {
+        getPlans: vi.fn(async () => ({
           data: {
-            budgets: [
+            plans: [
               { id: "budget-1", name: "Colorado" },
               { id: "budget-2", name: "Business" },
             ],
           },
         })),
-        getBudgetById: vi.fn(async (budgetId: string) => ({
+        getPlanById: vi.fn(async (budgetId: string) => ({
           data: {
-            budget: {
+            plan: {
               id: "budget-1",
               name: "Colorado",
             },
@@ -191,7 +191,7 @@ describe("YNAB resources", () => {
         getCategories: vi.fn(),
       },
       months: {
-        getBudgetMonth: vi.fn(),
+        getPlanMonth: vi.fn(),
       },
     } as any;
 
@@ -202,7 +202,7 @@ describe("YNAB resources", () => {
       api
     );
 
-    expect(api.budgets.getBudgetById).toHaveBeenCalledWith("default");
+    expect(api.plans.getPlanById).toHaveBeenCalledWith("default");
     expect(result.contents[0].text).toContain("\"selectionSource\": \"ynab_default\"");
   });
 });

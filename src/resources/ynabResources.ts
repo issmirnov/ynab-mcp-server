@@ -51,9 +51,9 @@ async function listBudgets(env: Env, props: AuthProps, api: ynab.API) {
     getBudgetsCacheKey(props.ynabUserId),
     RESOURCE_CACHE_TTLS.budgets,
     async () => {
-      const budgetsResponse = await api.budgets.getBudgets();
+      const budgetsResponse = await api.plans.getPlans();
       return {
-        budgets: budgetsResponse.data.budgets.map((budget) => ({
+        budgets: budgetsResponse.data.plans.map((budget) => ({
           id: budget.id,
           name: budget.name,
         })),
@@ -83,8 +83,8 @@ async function resolveDefaultBudgetData(env: Env, props: AuthProps, api: ynab.AP
         }
       }
 
-      const budgetResponse = await api.budgets.getBudgetById("default");
-      const budget = budgetResponse.data.budget;
+      const budgetResponse = await api.plans.getPlanById("default");
+      const budget = budgetResponse.data.plan;
 
       return {
         budget: {
@@ -153,7 +153,7 @@ async function getCurrentMonth(env: Env, props: AuthProps, api: ynab.API) {
     getMonthCacheKey(props.ynabUserId, budgetReadTarget, normalizedMonth),
     RESOURCE_CACHE_TTLS.month,
     async () => {
-      const monthResponse = await api.months.getBudgetMonth(budgetReadTarget, normalizedMonth);
+      const monthResponse = await api.months.getPlanMonth(budgetReadTarget, normalizedMonth);
       const month = monthResponse.data.month;
 
       return {

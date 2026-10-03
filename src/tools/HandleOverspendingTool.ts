@@ -105,7 +105,7 @@ class HandleOverspendingTool {
 
       // Get current month budget data
       const monthResponse = await createRetryableAPICall(
-        () => this.api.months.getBudgetMonth(budgetId, month),
+        () => this.api.months.getPlanMonth(budgetId, month),
         'Get budget month for overspending'
       );
       const monthData = monthResponse.data.month;
@@ -342,7 +342,7 @@ class HandleOverspendingTool {
       try {
         // Get current month data to get current budgeted amounts
         const monthResponse = await createRetryableAPICall(
-          () => this.api.months.getBudgetMonth(budgetId, month),
+          () => this.api.months.getPlanMonth(budgetId, month),
           'Get budget month for move execution'
         );
         const monthData = monthResponse.data.month;

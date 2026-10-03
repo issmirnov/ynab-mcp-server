@@ -16,7 +16,7 @@ describe('SetCategoryGoalsTool', () => {
       updateCategory: Mock;
     };
     months: {
-      getBudgetMonth: Mock;
+      getPlanMonth: Mock;
     };
   };
 
@@ -29,7 +29,7 @@ describe('SetCategoryGoalsTool', () => {
         updateCategory: vi.fn(),
       },
       months: {
-        getBudgetMonth: vi.fn(),
+        getPlanMonth: vi.fn(),
       },
     };
 
@@ -86,7 +86,7 @@ describe('SetCategoryGoalsTool', () => {
 
     it('should set category goal by ID', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',
@@ -132,7 +132,7 @@ describe('SetCategoryGoalsTool', () => {
 
     it('should find category by name', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',
@@ -172,7 +172,7 @@ describe('SetCategoryGoalsTool', () => {
 
     it('should handle dry run mode', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',
@@ -248,7 +248,7 @@ describe('SetCategoryGoalsTool', () => {
 
     it('should return markdown format when requested', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',

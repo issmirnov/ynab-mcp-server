@@ -11,7 +11,7 @@ describe('CategoryPerformanceReviewTool', () => {
       getCategories: Mock;
     };
     months: {
-      getBudgetMonth: Mock;
+      getPlanMonth: Mock;
     };
   };
 
@@ -23,7 +23,7 @@ describe('CategoryPerformanceReviewTool', () => {
         getCategories: vi.fn(),
       },
       months: {
-        getBudgetMonth: vi.fn(),
+        getPlanMonth: vi.fn(),
       },
     };
 
@@ -94,7 +94,7 @@ describe('CategoryPerformanceReviewTool', () => {
 
     it('should generate performance review', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategoriesData);
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -129,7 +129,7 @@ describe('CategoryPerformanceReviewTool', () => {
 
     it('should return markdown format when requested', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategoriesData);
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',

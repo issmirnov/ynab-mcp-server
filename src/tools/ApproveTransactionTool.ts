@@ -83,7 +83,9 @@ class ApproveTransactionTool {
           date: existingTransactionData.date,
           amount: existingTransactionData.amount,
           payee_id: existingTransactionData.payee_id,
-          payee_name: existingTransactionData.payee_name,
+          // ynab@4 narrowed ExistingTransaction.payee_name to string|undefined;
+          // preserve the existing value (incl. null) unchanged at runtime.
+          payee_name: existingTransactionData.payee_name as string | undefined,
           category_id: existingTransactionData.category_id,
           memo: existingTransactionData.memo,
           cleared: existingTransactionData.cleared,

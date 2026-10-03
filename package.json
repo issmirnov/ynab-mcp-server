@@ -44,7 +44,7 @@
     "@modelcontextprotocol/sdk": "1.26.0",
     "agents": "^0.8.5",
     "hono": "^4.12.9",
-    "ynab": "^2.10.0",
+    "ynab": "^4.5.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

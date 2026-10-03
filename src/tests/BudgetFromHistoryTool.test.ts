@@ -12,8 +12,8 @@ describe('BudgetFromHistoryTool', () => {
   let tool: BudgetFromHistoryTool;
   let mockApi: {
     months: {
-      getBudgetMonths: Mock;
-      getBudgetMonth: Mock;
+      getPlanMonths: Mock;
+      getPlanMonth: Mock;
     };
     categories: {
       getCategories: Mock;
@@ -26,8 +26,8 @@ describe('BudgetFromHistoryTool', () => {
 
     mockApi = {
       months: {
-        getBudgetMonths: vi.fn(),
-        getBudgetMonth: vi.fn(),
+        getPlanMonths: vi.fn(),
+        getPlanMonth: vi.fn(),
       },
       categories: {
         getCategories: vi.fn(),
@@ -128,7 +128,7 @@ describe('BudgetFromHistoryTool', () => {
 
     it('should analyze historical spending and suggest budgets', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',
@@ -163,7 +163,7 @@ describe('BudgetFromHistoryTool', () => {
 
     it('should use different strategies', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',
@@ -200,7 +200,7 @@ describe('BudgetFromHistoryTool', () => {
 
     it('should handle dry run mode', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',
@@ -234,7 +234,7 @@ describe('BudgetFromHistoryTool', () => {
 
     it('should filter by specific categories', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',
@@ -267,7 +267,7 @@ describe('BudgetFromHistoryTool', () => {
 
     it('should exclude specified categories', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',
@@ -300,7 +300,7 @@ describe('BudgetFromHistoryTool', () => {
 
     it('should respect minSpendingThreshold', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',
@@ -334,7 +334,7 @@ describe('BudgetFromHistoryTool', () => {
 
     it('should respect maxBudgetIncrease', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',
@@ -368,7 +368,7 @@ describe('BudgetFromHistoryTool', () => {
 
     it('should handle months parameter with constraints', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',
@@ -423,7 +423,7 @@ describe('BudgetFromHistoryTool', () => {
 
     it('should return markdown format when requested', async () => {
       mockApi.categories.getCategories.mockResolvedValue(mockCategories);
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: {
           month: {
             month: '2024-01-01',

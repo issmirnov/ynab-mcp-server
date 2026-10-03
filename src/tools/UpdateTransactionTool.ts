@@ -119,7 +119,10 @@ class UpdateTransactionTool {
 
       const current = existing.data.transaction;
 
-      const transaction: ynab.ExistingTransaction = {};
+      // payee_id accepts null to clear the payee so payee_name resolves a new
+      // one (YNAB's documented behavior). ynab@4 typed ExistingTransaction.payee_id
+      // as string-only, so widen locally to keep sending null at runtime.
+      const transaction: Omit<ynab.ExistingTransaction, "payee_id"> & { payee_id?: string | null } = {};
 
       if (input.amount !== undefined) {
         transaction.amount = amountToMilliUnits(input.amount);
@@ -159,7 +162,9 @@ class UpdateTransactionTool {
           this.api.transactions.updateTransaction(
             budgetId,
             input.transactionId,
-            { transaction }
+            // Cast back: payee_id may be null at runtime (clears payee), which
+            // the YNAB API accepts even though ynab@4's type omits null.
+            { transaction: transaction as ynab.ExistingTransaction }
           ),
         "Update transaction"
       );

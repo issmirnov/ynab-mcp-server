@@ -8,7 +8,7 @@ describe('HandleOverspendingTool', () => {
   let tool: HandleOverspendingTool;
   let mockApi: {
     months: {
-      getBudgetMonth: Mock;
+      getPlanMonth: Mock;
     };
     categories: {
       updateMonthCategory: Mock;
@@ -20,7 +20,7 @@ describe('HandleOverspendingTool', () => {
 
     mockApi = {
       months: {
-        getBudgetMonth: vi.fn(),
+        getPlanMonth: vi.fn(),
       },
       categories: {
         updateMonthCategory: vi.fn(),
@@ -105,7 +105,7 @@ describe('HandleOverspendingTool', () => {
     };
 
     it('should detect overspent categories in suggest mode', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -116,7 +116,7 @@ describe('HandleOverspendingTool', () => {
         response_format: 'json',
       });
 
-      expect(mockApi.months.getBudgetMonth).toHaveBeenCalled();
+      expect(mockApi.months.getPlanMonth).toHaveBeenCalled();
       expect(result).toHaveProperty('content');
       expect(result.content[0].type).toBe('text');
 
@@ -127,7 +127,7 @@ describe('HandleOverspendingTool', () => {
     });
 
     it('should generate move suggestions', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -147,7 +147,7 @@ describe('HandleOverspendingTool', () => {
     });
 
     it('should exclude credit card payment categories from funding sources', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -164,7 +164,7 @@ describe('HandleOverspendingTool', () => {
     });
 
     it('should execute moves in auto mode without dry run', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
       mockApi.categories.updateMonthCategory.mockResolvedValue({
@@ -188,7 +188,7 @@ describe('HandleOverspendingTool', () => {
     });
 
     it('should not execute moves in dry run mode', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -213,7 +213,7 @@ describe('HandleOverspendingTool', () => {
         categories: mockMonthData.categories.filter(cat => cat.balance >= 0),
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: noOverspentData },
       });
 
@@ -237,7 +237,7 @@ describe('HandleOverspendingTool', () => {
         })),
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: noFundingData },
       });
 
@@ -253,7 +253,7 @@ describe('HandleOverspendingTool', () => {
     });
 
     it('should filter by source categories when provided', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -271,7 +271,7 @@ describe('HandleOverspendingTool', () => {
     });
 
     it('should filter by target categories when provided', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -289,7 +289,7 @@ describe('HandleOverspendingTool', () => {
     });
 
     it('should return markdown format when requested', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -320,7 +320,7 @@ describe('HandleOverspendingTool', () => {
 
     it('should handle API errors', async () => {
       const apiError = new Error('API Error: Unauthorized');
-      mockApi.months.getBudgetMonth.mockRejectedValue(apiError);
+      mockApi.months.getPlanMonth.mockRejectedValue(apiError);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -334,7 +334,7 @@ describe('HandleOverspendingTool', () => {
     });
 
     it('should handle update errors gracefully in auto mode', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
       mockApi.categories.updateMonthCategory.mockRejectedValue(
@@ -373,7 +373,7 @@ describe('HandleOverspendingTool', () => {
         ],
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: multipleOverspentData },
       });
 
@@ -390,7 +390,7 @@ describe('HandleOverspendingTool', () => {
     });
 
     it('should respect month parameter with specific date', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -400,7 +400,7 @@ describe('HandleOverspendingTool', () => {
         strategy: 'suggest',
       });
 
-      expect(mockApi.months.getBudgetMonth).toHaveBeenCalledWith(
+      expect(mockApi.months.getPlanMonth).toHaveBeenCalledWith(
         'test-budget-id',
         '2024-06-01'
       );

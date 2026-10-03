@@ -149,7 +149,7 @@ export default class GoalProgressReportTool {
       const includeInsights = input.includeInsights !== false;
       // Get budget month data
       const monthBudget = await createRetryableAPICall(
-        () => this.api.months.getBudgetMonth(budgetId, targetMonth),
+        () => this.api.months.getPlanMonth(budgetId, targetMonth),
         'Get budget month for goal progress'
       );
       const categories = monthBudget.data.month.categories.filter(

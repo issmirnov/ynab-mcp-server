@@ -8,7 +8,7 @@ describe('GoalProgressReportTool', () => {
   let tool: GoalProgressReportTool;
   let mockApi: {
     months: {
-      getBudgetMonth: Mock;
+      getPlanMonth: Mock;
     };
   };
 
@@ -17,7 +17,7 @@ describe('GoalProgressReportTool', () => {
 
     mockApi = {
       months: {
-        getBudgetMonth: vi.fn(),
+        getPlanMonth: vi.fn(),
       },
     };
 
@@ -108,7 +108,7 @@ describe('GoalProgressReportTool', () => {
     };
 
     it('should generate goal progress report for all goals', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthDataWithGoals);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthDataWithGoals);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -124,7 +124,7 @@ describe('GoalProgressReportTool', () => {
     });
 
     it('should correctly identify completed goals', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthDataWithGoals);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthDataWithGoals);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -142,7 +142,7 @@ describe('GoalProgressReportTool', () => {
     });
 
     it('should calculate progress percentage correctly', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthDataWithGoals);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthDataWithGoals);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -158,7 +158,7 @@ describe('GoalProgressReportTool', () => {
     });
 
     it('should calculate remaining amount correctly', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthDataWithGoals);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthDataWithGoals);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -174,7 +174,7 @@ describe('GoalProgressReportTool', () => {
     });
 
     it('should identify on-track goals', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthDataWithGoals);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthDataWithGoals);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -207,7 +207,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthDataBehind);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthDataBehind);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -222,7 +222,7 @@ describe('GoalProgressReportTool', () => {
     });
 
     it('should exclude completed goals when includeCompleted is false', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthDataWithGoals);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthDataWithGoals);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -239,7 +239,7 @@ describe('GoalProgressReportTool', () => {
     });
 
     it('should skip categories without goals', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthDataWithGoals);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthDataWithGoals);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -277,7 +277,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -311,7 +311,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -345,7 +345,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -378,7 +378,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -413,7 +413,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -448,7 +448,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -505,7 +505,7 @@ describe('GoalProgressReportTool', () => {
     };
 
     it('should calculate total budgeted for goals', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -518,7 +518,7 @@ describe('GoalProgressReportTool', () => {
     });
 
     it('should calculate average progress', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -532,7 +532,7 @@ describe('GoalProgressReportTool', () => {
     });
 
     it('should identify most urgent goal', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -546,7 +546,7 @@ describe('GoalProgressReportTool', () => {
     });
 
     it('should identify goal with most progress', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -560,7 +560,7 @@ describe('GoalProgressReportTool', () => {
     });
 
     it('should count goals needing attention', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockMonthData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockMonthData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -594,7 +594,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -638,7 +638,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -685,7 +685,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -738,7 +738,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -760,14 +760,14 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
         response_format: 'json',
       });
 
-      expect(mockApi.months.getBudgetMonth).toHaveBeenCalled();
+      expect(mockApi.months.getPlanMonth).toHaveBeenCalled();
       const parsedResult = JSON.parse(result.content[0].text);
       expect(parsedResult).toHaveProperty('report_month');
     });
@@ -785,7 +785,7 @@ describe('GoalProgressReportTool', () => {
     });
 
     it('should handle API errors gracefully', async () => {
-      mockApi.months.getBudgetMonth.mockRejectedValue(new Error('API Error'));
+      mockApi.months.getPlanMonth.mockRejectedValue(new Error('API Error'));
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -817,7 +817,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -850,7 +850,7 @@ describe('GoalProgressReportTool', () => {
         },
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue(mockData);
+      mockApi.months.getPlanMonth.mockResolvedValue(mockData);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',

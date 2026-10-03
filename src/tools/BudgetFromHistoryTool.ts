@@ -212,7 +212,7 @@ export default class BudgetFromHistoryTool {
 
             try {
               const monthBudget = await createRetryableAPICall(
-                () => this.api.months.getBudgetMonth(budgetId, monthKey),
+                () => this.api.months.getPlanMonth(budgetId, monthKey),
                 `Get budget month ${monthKey}`
               );
               const monthCategory = monthBudget.data.month.categories.find(
