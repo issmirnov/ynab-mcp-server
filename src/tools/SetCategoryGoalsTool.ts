@@ -142,7 +142,9 @@ export default class SetCategoryGoalsTool {
       annotations: {
         title: "Set Category Goals",
         readOnlyHint: false,
-        destructiveHint: false,
+        // removeGoal permanently clears an existing goal, so this tool is not
+        // purely additive — clients may warn/confirm on destructive actions.
+        destructiveHint: true,
         idempotentHint: false,
         openWorldHint: true,
       },
@@ -289,7 +291,15 @@ export default class SetCategoryGoalsTool {
             goalType: removingGoal || action === "created" ? null : currentType,
             goalTarget: milliForDisplay,
             goalTargetDollars: milliForDisplay !== null ? milliUnitsToAmount(milliForDisplay) : null,
-            goalTargetMonth: removingGoal ? null : cat.goal_target_month ?? null,
+            // Project the requested date (normalized to the API's month-start
+            // representation) so a dry run matches what the real update returns,
+            // instead of echoing the category's current month.
+            goalTargetMonth:
+              removingGoal
+                ? null
+                : settingDate && targetDate
+                ? `${targetDate.slice(0, 7)}-01`
+                : cat.goal_target_month ?? null,
             changes,
             dryRun: true,
             message:

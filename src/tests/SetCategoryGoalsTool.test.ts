@@ -74,6 +74,8 @@ describe('SetCategoryGoalsTool', () => {
       expect(def.name).toBe('ynab_set_category_goals');
       expect(def.description.toLowerCase()).toContain('goal');
       expect(def.annotations?.readOnlyHint).toBe(false);
+      // removeGoal can permanently clear a goal, so the tool is destructive.
+      expect(def.annotations?.destructiveHint).toBe(true);
     });
 
     it('exposes the new goal-management inputs', () => {
@@ -310,6 +312,20 @@ describe('SetCategoryGoalsTool', () => {
       expect(payload.goalTarget).toBeNull();
       expect(payload.goalTargetDollars).toBeNull();
       expect(payload.goalType).toBeNull();
+    });
+
+    it('projects the requested date (normalized to month start) in a dry-run update', async () => {
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(NEED_CAT));
+      const result = await tool.execute({
+        categoryId: 'cat-need',
+        goalTargetDate: '2026-12-31',
+        dryRun: true,
+        response_format: 'json',
+      });
+      expect(mockApi.categories.updateCategory).not.toHaveBeenCalled();
+      const payload = JSON.parse(result.content[0].text);
+      expect(payload.action).toBe('updated');
+      expect(payload.goalTargetMonth).toBe('2026-12-01');
     });
 
     it('returns markdown when requested', async () => {
