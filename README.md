@@ -2,7 +2,7 @@
 
 Connect YNAB to ChatGPT or Claude with a hosted MCP server.
 
-Use this if you want your AI assistant to read your YNAB plans, accounts, categories, payees, and transactions after you sign in with your own YNAB account.
+Use this if you want your AI assistant to read and manage your YNAB plans, categories, transactions, and goals — and review balances and net worth — after you sign in with your own YNAB account.
 
 ## What You Need
 
@@ -104,6 +104,88 @@ As of March 25, 2026, Anthropic supports remote MCP connectors in the Connectors
 3. You approve access to your YNAB account.
 4. The service stores the OAuth tokens needed to make future YNAB requests on your behalf.
 5. Your assistant can then use YNAB tools and resources in chat.
+
+## Available Tools
+
+Once connected, your assistant can use the tools below. **Read** tools only look at your data; **Write** tools change your budget (and ones marked *delete* remove data).
+
+### Budgets & setup
+
+| Tool | What it does | Access |
+|---|---|---|
+| `ynab_list_budgets` | List your YNAB budgets | Read |
+| `ynab_budget_summary` | Month summary of categories, balances, and accounts | Read |
+| `ynab_set_default_budget` | Remember a default budget so you don't name it every time | Setup |
+
+### Categories & goals
+
+| Tool | What it does | Access |
+|---|---|---|
+| `ynab_list_categories` | List category groups and categories with balances and goals | Read |
+| `ynab_create_category` | Create a category in a group | Write |
+| `ynab_update_category` | Rename a category, edit its note, or move it between groups | Write |
+| `ynab_create_category_group` | Create a category group | Write |
+| `ynab_update_category_group` | Rename a category group | Write |
+| `ynab_set_category_goals` | Create, update, or remove a category's goal | Write |
+
+### Transactions
+
+| Tool | What it does | Access |
+|---|---|---|
+| `ynab_list_transactions` | List and filter transactions by account, category, payee, or date | Read |
+| `ynab_get_unapproved_transactions` | List transactions waiting for approval | Read |
+| `ynab_create_transaction` | Add a transaction | Write |
+| `ynab_update_transaction` | Edit an existing transaction | Write |
+| `ynab_approve_transaction` | Approve one pending transaction | Write |
+| `ynab_bulk_approve_transactions` | Approve many pending transactions at once | Write |
+| `ynab_delete_transaction` | Delete a transaction | Write (delete) |
+
+### Scheduled (recurring) transactions
+
+| Tool | What it does | Access |
+|---|---|---|
+| `ynab_list_scheduled_transactions` | List scheduled/recurring transactions | Read |
+| `ynab_create_scheduled_transaction` | Schedule a future or recurring transaction | Write |
+| `ynab_update_scheduled_transaction` | Edit a scheduled transaction | Write |
+| `ynab_delete_scheduled_transaction` | Delete a scheduled transaction | Write (delete) |
+
+### Budgeting workflows
+
+| Tool | What it does | Access |
+|---|---|---|
+| `ynab_move_funds_between_categories` | Move budgeted dollars between categories | Write |
+| `ynab_auto_distribute_funds` | Allocate "Ready to Assign" money across categories by goal | Write |
+| `ynab_handle_overspending` | Cover overspent categories by moving funds | Write |
+| `ynab_budget_from_history` | Allocate based on historical spending | Write |
+| `ynab_reconcile_account` | Reconcile an account to a statement balance | Write |
+
+### Analytics & insights (read-only)
+
+| Tool | What it does |
+|---|---|
+| `ynab_analyze_spending_patterns` | Spot spending trends and anomalies |
+| `ynab_goal_progress_report` | Track progress toward category goals |
+| `ynab_cash_flow_forecast` | Project upcoming cash flow from history |
+| `ynab_category_performance_review` | Compare budgeted vs. actual by category |
+| `ynab_net_worth_analysis` | Summarize net worth across accounts |
+
+## YNAB API Coverage
+
+How these tools line up with the official [YNAB API](https://api.ynab.com) (accessed through the `ynab` JavaScript SDK). ✅ = covered, ◐ = partial, — = not yet.
+
+| YNAB API area | Covered | Tools / notes |
+|---|---|---|
+| Budgets (plans) | ✅ | `ynab_list_budgets`, `ynab_budget_summary`; plan *settings* are not exposed |
+| Accounts | ◐ | Balances read via `ynab_budget_summary`, `ynab_net_worth_analysis`, `ynab_reconcile_account`; no create-account or standalone account list |
+| Categories & groups | ✅ | List, create, and update categories and groups; goals; per-month funding |
+| Months | ✅ | Surfaced through `ynab_budget_summary` and the analytics tools |
+| Transactions | ✅ | List, create, update, delete, approve, bulk-approve (file `import` is not exposed) |
+| Scheduled transactions | ✅ | List, create, update, delete |
+| Payees | — | Referenced implicitly by name in the transaction tools; no list/update-payee tool |
+| Payee locations | — | Not exposed |
+| User | — | Identity is handled by OAuth; `getUser` is not exposed |
+
+Beyond the raw API, this server adds **composite tools** that have no single API endpoint: the budgeting workflows (move funds, auto-distribute, handle overspending, budget from history, reconcile) and the analytics tools (spending patterns, goal progress, cash flow, category performance, net worth).
 
 ## Troubleshooting
 
