@@ -99,10 +99,9 @@ class UpdateScheduledTransactionTool {
             description: "New memo/note for the scheduled transaction.",
           },
           flagColor: {
-            type: ["string", "null"],
-            enum: ["red", "orange", "yellow", "green", "blue", "purple", null],
-            description:
-              "New flag color, or null to remove the flag.",
+            type: "string",
+            enum: ["red", "orange", "yellow", "green", "blue", "purple", "none"],
+            description: "New flag color. Use 'none' to remove the flag.",
           },
           response_format: {
             type: "string",
@@ -162,9 +161,11 @@ class UpdateScheduledTransactionTool {
               : current.category_id,
           memo: input.memo !== undefined ? input.memo : current.memo,
           flag_color:
-            input.flagColor !== undefined
-              ? (input.flagColor as ynab.TransactionFlagColor | null)
-              : current.flag_color,
+            input.flagColor === undefined
+              ? current.flag_color
+              : input.flagColor === "none" || input.flagColor === null
+                ? null
+                : (input.flagColor as ynab.TransactionFlagColor),
         },
       };
 

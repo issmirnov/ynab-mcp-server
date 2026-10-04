@@ -74,9 +74,9 @@ class UpdateTransactionTool {
             description: "New memo/note for the transaction.",
           },
           flagColor: {
-            type: ["string", "null"],
-            enum: ["red", "orange", "yellow", "green", "blue", "purple", null],
-            description: "New flag color, or null to remove the flag.",
+            type: "string",
+            enum: ["red", "orange", "yellow", "green", "blue", "purple", "none"],
+            description: "New flag color. Use 'none' to remove the flag.",
           },
           approved: {
             type: "boolean",
@@ -148,7 +148,10 @@ class UpdateTransactionTool {
         transaction.memo = input.memo;
       }
       if (input.flagColor !== undefined) {
-        transaction.flag_color = input.flagColor as ynab.TransactionFlagColor | null;
+        transaction.flag_color =
+          input.flagColor === "none" || input.flagColor === null
+            ? null
+            : (input.flagColor as ynab.TransactionFlagColor);
       }
       if (input.approved !== undefined) {
         transaction.approved = input.approved;
