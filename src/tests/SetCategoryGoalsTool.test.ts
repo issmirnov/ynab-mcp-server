@@ -24,7 +24,7 @@ const NEED_CAT = {
   hidden: false,
   goal_type: 'NEED',
   goal_target: 50000,
-  goal_target_month: null,
+  goal_target_date: null,
   note: null,
   category_group_id: 'g1',
 };
@@ -36,7 +36,7 @@ const GOALLESS_CC = {
   hidden: false,
   goal_type: null,
   goal_target: null,
-  goal_target_month: null,
+  goal_target_date: null,
   note: null,
   category_group_id: 'g1',
 };
@@ -48,7 +48,7 @@ const DEBT_CAT = {
   hidden: false,
   goal_type: 'DEBT',
   goal_target: 1200000,
-  goal_target_month: null,
+  goal_target_date: null,
   note: null,
   category_group_id: 'g1',
 };
@@ -132,6 +132,37 @@ describe('SetCategoryGoalsTool', () => {
         category: { goal_target: 75000 },
       });
       expect(JSON.parse(result.content[0].text).action).toBe('updated');
+    });
+
+    it('returns no-op without calling the API when the target is unchanged', async () => {
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(NEED_CAT));
+
+      const result = await tool.execute({
+        categoryId: 'cat-need',
+        goalTarget: 50, // NEED_CAT.goal_target is 50000 milliunits = $50
+        response_format: 'json',
+      });
+
+      expect(mockApi.categories.updateCategory).not.toHaveBeenCalled();
+      expect(JSON.parse(result.content[0].text).action).toBe('noop');
+    });
+
+    it('reports goal_target_date from the API response (not the deprecated month)', async () => {
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(NEED_CAT));
+      mockApi.categories.updateCategory.mockResolvedValue({
+        data: { category: { ...NEED_CAT, goal_target_date: '2026-12-01' } },
+      });
+
+      const result = await tool.execute({
+        categoryId: 'cat-need',
+        goalTargetDate: '2026-12-31',
+        response_format: 'json',
+      });
+
+      expect(mockApi.categories.updateCategory).toHaveBeenCalledWith('test-budget-id', 'cat-need', {
+        category: { goal_target_date: '2026-12-31' },
+      });
+      expect(JSON.parse(result.content[0].text).goalTargetDate).toBe('2026-12-01');
     });
 
     it('sets needsWholeAmount on a NEED goal', async () => {
@@ -312,9 +343,10 @@ describe('SetCategoryGoalsTool', () => {
       expect(payload.goalTarget).toBeNull();
       expect(payload.goalTargetDollars).toBeNull();
       expect(payload.goalType).toBeNull();
+      expect(payload.goalTargetDate).toBeNull();
     });
 
-    it('projects the requested date (normalized to month start) in a dry-run update', async () => {
+    it('projects the requested date in a dry-run update', async () => {
       mockApi.categories.getCategories.mockResolvedValue(categoriesWith(NEED_CAT));
       const result = await tool.execute({
         categoryId: 'cat-need',
@@ -325,7 +357,7 @@ describe('SetCategoryGoalsTool', () => {
       expect(mockApi.categories.updateCategory).not.toHaveBeenCalled();
       const payload = JSON.parse(result.content[0].text);
       expect(payload.action).toBe('updated');
-      expect(payload.goalTargetMonth).toBe('2026-12-01');
+      expect(payload.goalTargetDate).toBe('2026-12-31');
     });
 
     it('returns markdown when requested', async () => {

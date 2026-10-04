@@ -38,7 +38,7 @@ interface SetCategoryGoalsResult {
   goalType: string | null;
   goalTarget: number | null; // milliunits
   goalTargetDollars: number | null;
-  goalTargetMonth: string | null;
+  goalTargetDate: string | null;
   changes: string[];
   dryRun: boolean;
   message: string;
@@ -237,7 +237,7 @@ export default class SetCategoryGoalsTool {
               goalType: null,
               goalTarget: null,
               goalTargetDollars: null,
-              goalTargetMonth: null,
+              goalTargetDate: null,
               changes: [],
               dryRun: Boolean(input.dryRun),
               message: `"${cat.name}" has no goal to remove.`,
@@ -249,35 +249,66 @@ export default class SetCategoryGoalsTool {
         changes.push(`Goal: ${currentType} → none`);
         action = "removed";
       } else {
+        // Record only fields that actually differ from the fetched category, so an
+        // idempotent call (goal already at the requested values) stays a no-op
+        // instead of sending a pointless PATCH and reporting a false change.
         if (settingTarget) {
           const milli = amountToMilliUnits(input.goalTarget!);
-          update.goal_target = milli;
-          const prev = cat.goal_target ?? null;
-          changes.push(
-            `Goal target: ${prev !== null ? formatCurrency(milliUnitsToAmount(prev)) : "(none)"} → ${formatCurrency(input.goalTarget!)}`
-          );
+          const curMilli = cat.goal_target ?? null;
+          if (milli !== curMilli) {
+            update.goal_target = milli;
+            changes.push(
+              `Goal target: ${curMilli !== null ? formatCurrency(milliUnitsToAmount(curMilli)) : "(none)"} → ${formatCurrency(input.goalTarget!)}`
+            );
+          }
         }
         if (settingDate) {
-          update.goal_target_date = targetDate;
-          changes.push(`Goal target date → ${targetDate}`);
+          // goal_target_date is stored at month granularity; compare month-starts.
+          const curMonth = cat.goal_target_date ? this.monthStart(cat.goal_target_date) : null;
+          if (this.monthStart(targetDate!) !== curMonth) {
+            update.goal_target_date = targetDate;
+            changes.push(`Goal target date → ${targetDate}`);
+          }
         }
         if (settingNeeds) {
-          update.goal_needs_whole_amount = input.needsWholeAmount;
-          changes.push(
-            `Needs whole amount → ${input.needsWholeAmount ? "set aside another" : "refill up to"}`
-          );
+          if ((cat.goal_needs_whole_amount ?? null) !== input.needsWholeAmount) {
+            update.goal_needs_whole_amount = input.needsWholeAmount;
+            changes.push(
+              `Needs whole amount → ${input.needsWholeAmount ? "set aside another" : "refill up to"}`
+            );
+          }
         }
         action = hadGoal ? "updated" : "created";
       }
 
-      if (settingNote) {
+      if (settingNote && input.note !== (cat.note ?? undefined)) {
         update.note = input.note;
         changes.push("note updated");
       }
 
+      // Nothing actually differs → skip the PATCH and report a no-op (idempotent).
+      if (!removing && changes.length === 0) {
+        return this.result(
+          {
+            success: true,
+            action: "noop",
+            categoryId: cat.id,
+            categoryName: cat.name,
+            goalType: currentType,
+            goalTarget: cat.goal_target ?? null,
+            goalTargetDollars: cat.goal_target != null ? milliUnitsToAmount(cat.goal_target) : null,
+            goalTargetDate: cat.goal_target_date ?? null,
+            changes: [],
+            dryRun: Boolean(input.dryRun),
+            message: `No changes needed — "${cat.name}" already matches the requested values.`,
+          },
+          input.response_format
+        );
+      }
+
       if (input.dryRun) {
         // Mirror the post-update response: a removal projects null goal fields,
-        // never the category's current (soon-to-be-cleared) values.
+        // and a date change projects the requested date (not the stale current one).
         const removingGoal = action === "removed";
         const milliForDisplay = removingGoal
           ? null
@@ -291,15 +322,7 @@ export default class SetCategoryGoalsTool {
             goalType: removingGoal || action === "created" ? null : currentType,
             goalTarget: milliForDisplay,
             goalTargetDollars: milliForDisplay !== null ? milliUnitsToAmount(milliForDisplay) : null,
-            // Project the requested date (normalized to the API's month-start
-            // representation) so a dry run matches what the real update returns,
-            // instead of echoing the category's current month.
-            goalTargetMonth:
-              removingGoal
-                ? null
-                : settingDate && targetDate
-                ? `${targetDate.slice(0, 7)}-01`
-                : cat.goal_target_month ?? null,
+            goalTargetDate: removingGoal ? null : update.goal_target_date ?? cat.goal_target_date ?? null,
             changes,
             dryRun: true,
             message:
@@ -327,7 +350,7 @@ export default class SetCategoryGoalsTool {
           goalType: updated.goal_type ? String(updated.goal_type) : null,
           goalTarget: updated.goal_target ?? null,
           goalTargetDollars: updated.goal_target != null ? milliUnitsToAmount(updated.goal_target) : null,
-          goalTargetMonth: updated.goal_target_month ?? null,
+          goalTargetDate: updated.goal_target_date ?? null,
           changes,
           dryRun: false,
           message:
@@ -377,8 +400,8 @@ export default class SetCategoryGoalsTool {
     if (result.goalTargetDollars !== null) {
       output += `**Goal Target:** ${formatCurrency(result.goalTargetDollars)}\n`;
     }
-    if (result.goalTargetMonth) {
-      output += `**Target Month:** ${result.goalTargetMonth}\n`;
+    if (result.goalTargetDate) {
+      output += `**Target Date:** ${result.goalTargetDate}\n`;
     }
     if (result.changes.length > 0) {
       output += `\n## Changes\n`;
@@ -400,6 +423,10 @@ export default class SetCategoryGoalsTool {
       default:
         return "change";
     }
+  }
+
+  private monthStart(date: string): string {
+    return `${date.slice(0, 7)}-01`;
   }
 
   private titleCase(s: string): string {
