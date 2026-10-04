@@ -53,6 +53,18 @@ const DEBT_CAT = {
   category_group_id: 'g1',
 };
 
+const HIDDEN_CAT = {
+  id: 'cat-hidden',
+  name: 'Old Fund',
+  deleted: false,
+  hidden: true,
+  goal_type: 'NEED',
+  goal_target: 50000,
+  goal_target_date: null,
+  note: null,
+  category_group_id: 'g1',
+};
+
 describe('SetCategoryGoalsTool', () => {
   let tool: SetCategoryGoalsTool;
   let mockApi: any;
@@ -295,6 +307,30 @@ describe('SetCategoryGoalsTool', () => {
       const result = await tool.execute({ categoryName: 'Nope', goalTarget: 10 });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('not found');
+    });
+
+    it('does not resolve a hidden category by name', async () => {
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(HIDDEN_CAT));
+      const result = await tool.execute({ categoryName: 'Old Fund', goalTarget: 100 });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('not found');
+      expect(mockApi.categories.updateCategory).not.toHaveBeenCalled();
+    });
+
+    it('still resolves a hidden category by explicit id', async () => {
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(HIDDEN_CAT));
+      mockApi.categories.updateCategory.mockResolvedValue({
+        data: { category: { ...HIDDEN_CAT, goal_target: 100000 } },
+      });
+      const result = await tool.execute({
+        categoryId: 'cat-hidden',
+        goalTarget: 100,
+        response_format: 'json',
+      });
+      expect(mockApi.categories.updateCategory).toHaveBeenCalledWith('test-budget-id', 'cat-hidden', {
+        category: { goal_target: 100000 },
+      });
+      expect(JSON.parse(result.content[0].text).action).toBe('updated');
     });
 
     it('errors when neither categoryId nor categoryName is provided', async () => {

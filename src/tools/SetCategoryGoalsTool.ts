@@ -186,7 +186,16 @@ export default class SetCategoryGoalsTool {
       );
       const groups = categoriesResponse.data.category_groups;
 
-      const resolved = findCategory(groups, { id: input.categoryId, name: input.categoryName });
+      // Exclude hidden categories from NAME resolution: they aren't shown by
+      // ynab_list_categories, so a name must not silently match one. Resolution by
+      // an explicit categoryId still reaches hidden categories.
+      const searchGroups = input.categoryId
+        ? groups
+        : groups.map((g) => ({
+            ...g,
+            categories: g.categories.filter((c) => !c.hidden),
+          }));
+      const resolved = findCategory(searchGroups, { id: input.categoryId, name: input.categoryName });
       if (!resolved) {
         const which = input.categoryId ? `id "${input.categoryId}"` : `name "${input.categoryName}"`;
         return this.error(
