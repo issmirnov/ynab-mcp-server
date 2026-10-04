@@ -263,9 +263,10 @@ export default class SetCategoryGoalsTool {
           }
         }
         if (settingDate) {
-          // goal_target_date is stored at month granularity; compare month-starts.
-          const curMonth = cat.goal_target_date ? this.monthStart(cat.goal_target_date) : null;
-          if (this.monthStart(targetDate!) !== curMonth) {
+          // Compare the full ISO date: goal_target_date is the goal's due-on date
+          // and the day is significant (it drives a monthly repeating due date), so
+          // a same-month day change (e.g. 2026-12-01 → 2026-12-31) is a real change.
+          if (targetDate !== (cat.goal_target_date ?? null)) {
             update.goal_target_date = targetDate;
             changes.push(`Goal target date → ${targetDate}`);
           }
@@ -423,10 +424,6 @@ export default class SetCategoryGoalsTool {
       default:
         return "change";
     }
-  }
-
-  private monthStart(date: string): string {
-    return `${date.slice(0, 7)}-01`;
   }
 
   private titleCase(s: string): string {

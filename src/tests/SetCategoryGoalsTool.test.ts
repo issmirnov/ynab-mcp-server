@@ -147,6 +147,39 @@ describe('SetCategoryGoalsTool', () => {
       expect(JSON.parse(result.content[0].text).action).toBe('noop');
     });
 
+    it('treats a same-month, different-day target date as a real change', async () => {
+      const dated = { ...NEED_CAT, goal_target_date: '2026-12-01' };
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(dated));
+      mockApi.categories.updateCategory.mockResolvedValue({
+        data: { category: { ...dated, goal_target_date: '2026-12-31' } },
+      });
+
+      const result = await tool.execute({
+        categoryId: 'cat-need',
+        goalTargetDate: '2026-12-31',
+        response_format: 'json',
+      });
+
+      expect(mockApi.categories.updateCategory).toHaveBeenCalledWith('test-budget-id', 'cat-need', {
+        category: { goal_target_date: '2026-12-31' },
+      });
+      expect(JSON.parse(result.content[0].text).action).toBe('updated');
+    });
+
+    it('treats an identical target date as a no-op', async () => {
+      const dated = { ...NEED_CAT, goal_target_date: '2026-12-31' };
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(dated));
+
+      const result = await tool.execute({
+        categoryId: 'cat-need',
+        goalTargetDate: '2026-12-31',
+        response_format: 'json',
+      });
+
+      expect(mockApi.categories.updateCategory).not.toHaveBeenCalled();
+      expect(JSON.parse(result.content[0].text).action).toBe('noop');
+    });
+
     it('reports goal_target_date from the API response (not the deprecated month)', async () => {
       mockApi.categories.getCategories.mockResolvedValue(categoriesWith(NEED_CAT));
       mockApi.categories.updateCategory.mockResolvedValue({
