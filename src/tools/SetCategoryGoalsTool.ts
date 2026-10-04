@@ -291,13 +291,18 @@ export default class SetCategoryGoalsTool {
         action = hadGoal ? "updated" : "created";
       }
 
-      if (settingNote && input.note !== (cat.note ?? undefined)) {
+      // A note rides along a goal change only; on its own it is not a goal action
+      // (note-only requests are rejected earlier, and a note with an otherwise
+      // unchanged goal must not turn an idempotent retry into a reported goal update).
+      const hasGoalChange = removing || changes.length > 0;
+
+      if (hasGoalChange && settingNote && input.note !== (cat.note ?? undefined)) {
         update.note = input.note;
         changes.push("note updated");
       }
 
-      // Nothing actually differs → skip the PATCH and report a no-op (idempotent).
-      if (!removing && changes.length === 0) {
+      // No goal field changed → skip the PATCH and report a no-op (idempotent).
+      if (!hasGoalChange) {
         return this.result(
           {
             success: true,
@@ -310,7 +315,9 @@ export default class SetCategoryGoalsTool {
             goalTargetDate: cat.goal_target_date ?? null,
             changes: [],
             dryRun: Boolean(input.dryRun),
-            message: `No changes needed — "${cat.name}" already matches the requested values.`,
+            message: settingNote
+              ? `No goal changes needed — "${cat.name}" already matches the requested values. (Notes are not changed here; use ynab_update_category.)`
+              : `No changes needed — "${cat.name}" already matches the requested values.`,
           },
           input.response_format
         );

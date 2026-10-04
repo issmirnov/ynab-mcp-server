@@ -192,6 +192,39 @@ describe('SetCategoryGoalsTool', () => {
       expect(JSON.parse(result.content[0].text).action).toBe('noop');
     });
 
+    it('treats a note change with an unchanged goal as a no-op (notes belong to ynab_update_category)', async () => {
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(NEED_CAT));
+
+      const result = await tool.execute({
+        categoryId: 'cat-need',
+        goalTarget: 50, // unchanged (NEED_CAT target is $50)
+        note: 'new note',
+        response_format: 'json',
+      });
+
+      expect(mockApi.categories.updateCategory).not.toHaveBeenCalled();
+      expect(JSON.parse(result.content[0].text).action).toBe('noop');
+    });
+
+    it('applies a note alongside an actual goal change', async () => {
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(NEED_CAT));
+      mockApi.categories.updateCategory.mockResolvedValue({
+        data: { category: { ...NEED_CAT, goal_target: 75000, note: 'new note' } },
+      });
+
+      const result = await tool.execute({
+        categoryId: 'cat-need',
+        goalTarget: 75, // changed
+        note: 'new note',
+        response_format: 'json',
+      });
+
+      expect(mockApi.categories.updateCategory).toHaveBeenCalledWith('test-budget-id', 'cat-need', {
+        category: { goal_target: 75000, note: 'new note' },
+      });
+      expect(JSON.parse(result.content[0].text).action).toBe('updated');
+    });
+
     it('reports goal_target_date from the API response (not the deprecated month)', async () => {
       mockApi.categories.getCategories.mockResolvedValue(categoriesWith(NEED_CAT));
       mockApi.categories.updateCategory.mockResolvedValue({
