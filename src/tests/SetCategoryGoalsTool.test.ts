@@ -277,6 +277,21 @@ describe('SetCategoryGoalsTool', () => {
       expect(payload.dryRun).toBe(true);
     });
 
+    it('uses grammatical verbs in dry-run messages (would remove, not "removed")', async () => {
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(NEED_CAT));
+      const result = await tool.execute({
+        categoryId: 'cat-need',
+        removeGoal: true,
+        dryRun: true,
+        response_format: 'json',
+      });
+      expect(mockApi.categories.updateCategory).not.toHaveBeenCalled();
+      const payload = JSON.parse(result.content[0].text);
+      expect(payload.action).toBe('removed');
+      expect(payload.message).toContain('would remove');
+      expect(payload.message).not.toContain('would removed');
+    });
+
     it('returns markdown when requested', async () => {
       mockApi.categories.getCategories.mockResolvedValue(categoriesWith(NEED_CAT));
       mockApi.categories.updateCategory.mockResolvedValue({

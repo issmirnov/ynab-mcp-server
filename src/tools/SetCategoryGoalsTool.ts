@@ -234,7 +234,7 @@ export default class SetCategoryGoalsTool {
           );
         }
         update.goal_target = null;
-        changes.push(`Removed ${currentType} goal`);
+        changes.push(`Goal: ${currentType} → none`);
         action = "removed";
       } else {
         if (settingTarget) {
@@ -280,7 +280,7 @@ export default class SetCategoryGoalsTool {
             message:
               action === "created"
                 ? "Dry run: would create a goal (YNAB infers the type — NEED, or MF/DEBT for credit-card/loan categories)."
-                : `Dry run: would ${action} — ${changes.join(", ")}.`,
+                : `Dry run: would ${this.actionVerb(action)} — ${changes.join(", ")}.`,
           },
           input.response_format
         );
@@ -342,7 +342,7 @@ export default class SetCategoryGoalsTool {
       result.action === "noop"
         ? "No Change"
         : result.dryRun
-        ? `Dry Run — Would ${this.titleCase(result.action)} Goal`
+        ? `Dry Run — Would ${this.titleCase(this.actionVerb(result.action))} Goal`
         : `Goal ${this.titleCase(result.action)}`;
     let output = `# ${title}\n\n`;
     output += `${result.dryRun ? "🔎" : "✅"} ${result.message}\n\n`;
@@ -362,6 +362,19 @@ export default class SetCategoryGoalsTool {
       }
     }
     return output;
+  }
+
+  private actionVerb(action: GoalAction): string {
+    switch (action) {
+      case "created":
+        return "create";
+      case "updated":
+        return "update";
+      case "removed":
+        return "remove";
+      default:
+        return "change";
+    }
   }
 
   private titleCase(s: string): string {
