@@ -76,7 +76,7 @@ All tools follow the `ynab_*` naming convention for compatibility with multiple 
 
 #### **Additional Tools (4 Tools)**
 - **ynab_net_worth_analysis**: Analyze current net worth across all accounts
-- **ynab_set_category_goals**: Set or update category goals (target, monthly funding, etc.)
+- **ynab_set_category_goals**: Create, update, or remove a category's goal (target, target date, NEED behavior). Creates NEED-family goals only — the YNAB API infers the type (NEED, or MF/DEBT for credit-card/loan categories); TB/TBD creation and recurring cadence are not supported via the API.
 - **ynab_budget_from_history**: Create budget allocations based on historical spending patterns
 - **ynab_reconcile_account**: Reconcile account balances with bank statements
 
