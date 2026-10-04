@@ -414,7 +414,9 @@ class BulkApproveTransactionsTool {
             date: transaction.date,
             amount: transaction.amount,
             payee_id: transaction.payee_id,
-            payee_name: transaction.payee_name,
+            // ynab@4 narrowed ExistingTransaction.payee_name to string|undefined;
+            // preserve the existing value (incl. null) unchanged at runtime.
+            payee_name: transaction.payee_name as string | undefined,
             category_id: transaction.category_id,
             memo: transaction.memo,
             cleared: transaction.cleared,

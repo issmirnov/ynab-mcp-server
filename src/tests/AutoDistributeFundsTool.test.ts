@@ -8,7 +8,7 @@ describe('AutoDistributeFundsTool', () => {
   let tool: AutoDistributeFundsTool;
   let mockApi: {
     months: {
-      getBudgetMonth: Mock;
+      getPlanMonth: Mock;
     };
     categories: {
       updateMonthCategory: Mock;
@@ -20,7 +20,7 @@ describe('AutoDistributeFundsTool', () => {
 
     mockApi = {
       months: {
-        getBudgetMonth: vi.fn(),
+        getPlanMonth: vi.fn(),
       },
       categories: {
         updateMonthCategory: vi.fn(),
@@ -108,7 +108,7 @@ describe('AutoDistributeFundsTool', () => {
     };
 
     it('should distribute funds based on goals-first strategy', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthDataWithGoals },
       });
 
@@ -126,7 +126,7 @@ describe('AutoDistributeFundsTool', () => {
     });
 
     it('should prioritize TBD over TB goals', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthDataWithGoals },
       });
 
@@ -143,7 +143,7 @@ describe('AutoDistributeFundsTool', () => {
     });
 
     it('should execute distribution when not in dry run', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthDataWithGoals },
       });
       mockApi.categories.updateMonthCategory.mockResolvedValue({
@@ -168,7 +168,7 @@ describe('AutoDistributeFundsTool', () => {
     });
 
     it('should not execute distribution in dry run mode', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthDataWithGoals },
       });
 
@@ -217,7 +217,7 @@ describe('AutoDistributeFundsTool', () => {
     };
 
     it('should distribute proportionally based on current budgeted amounts', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthDataProportional },
       });
 
@@ -262,7 +262,7 @@ describe('AutoDistributeFundsTool', () => {
         ],
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -287,7 +287,7 @@ describe('AutoDistributeFundsTool', () => {
         categories: [],
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: noFundsData },
       });
 
@@ -323,7 +323,7 @@ describe('AutoDistributeFundsTool', () => {
         ],
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -355,7 +355,7 @@ describe('AutoDistributeFundsTool', () => {
 
     it('should handle API errors', async () => {
       const apiError = new Error('API Error: Connection failed');
-      mockApi.months.getBudgetMonth.mockRejectedValue(apiError);
+      mockApi.months.getPlanMonth.mockRejectedValue(apiError);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -388,7 +388,7 @@ describe('AutoDistributeFundsTool', () => {
         ],
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
       mockApi.categories.updateMonthCategory.mockRejectedValue(new Error('Update failed'));
@@ -427,7 +427,7 @@ describe('AutoDistributeFundsTool', () => {
         ],
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -461,7 +461,7 @@ describe('AutoDistributeFundsTool', () => {
         ],
       };
 
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 

@@ -60,10 +60,10 @@ class SetDefaultBudgetTool {
       }
 
       const budgetsResponse = await createRetryableAPICall(
-        () => this.api.budgets.getBudgets(),
+        () => this.api.plans.getPlans(),
         "List budgets for default selection"
       );
-      const budgets = budgetsResponse.data.budgets;
+      const budgets = budgetsResponse.data.plans;
 
       let budget = budgets.find((candidate) => {
         if (input.budgetId) {

@@ -58,11 +58,11 @@ class ListBudgetsTool {
       }
 
       const budgetsResponse = await createRetryableAPICall(
-        () => this.api.budgets.getBudgets(),
+        () => this.api.plans.getPlans(),
         'List budgets'
       );
 
-      const budgets = budgetsResponse.data.budgets.map((budget) => ({
+      const budgets = budgetsResponse.data.plans.map((budget) => ({
         id: budget.id,
         name: budget.name,
       }));

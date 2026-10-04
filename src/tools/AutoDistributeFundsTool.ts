@@ -101,7 +101,7 @@ class AutoDistributeFundsTool {
 
       // Get current month budget data
       const monthResponse = await createRetryableAPICall(
-        () => this.api.months.getBudgetMonth(budgetId, month),
+        () => this.api.months.getPlanMonth(budgetId, month),
         'Get budget month for auto distribute'
       );
       const monthData = monthResponse.data.month;
@@ -403,7 +403,7 @@ class AutoDistributeFundsTool {
       try {
         // Get current month data to get current budgeted amounts
         const monthResponse = await createRetryableAPICall(
-          () => this.api.months.getBudgetMonth(budgetId, month),
+          () => this.api.months.getPlanMonth(budgetId, month),
           'Get budget month for distribution'
         );
         const monthData = monthResponse.data.month;

@@ -8,7 +8,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
   let tool: MoveFundsBetweenCategoriesTool;
   let mockApi: {
     months: {
-      getBudgetMonth: Mock;
+      getPlanMonth: Mock;
     };
     categories: {
       updateMonthCategory: Mock;
@@ -20,7 +20,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
 
     mockApi = {
       months: {
-        getBudgetMonth: vi.fn(),
+        getPlanMonth: vi.fn(),
       },
       categories: {
         updateMonthCategory: vi.fn(),
@@ -86,7 +86,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     };
 
     it('should execute a single move successfully', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
       mockApi.categories.updateMonthCategory.mockResolvedValue({
@@ -116,7 +116,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     });
 
     it('should handle dry run mode', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -142,7 +142,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     });
 
     it('should handle multiple moves', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
       mockApi.categories.updateMonthCategory.mockResolvedValue({
@@ -174,7 +174,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     });
 
     it('should validate insufficient funds', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -196,7 +196,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     });
 
     it('should reject move from category to itself', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -218,7 +218,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     });
 
     it('should reject zero amount move', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -240,7 +240,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     });
 
     it('should handle negative amounts for accumulated savings', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
       mockApi.categories.updateMonthCategory.mockResolvedValue({
@@ -296,7 +296,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     });
 
     it('should handle invalid source category', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -318,7 +318,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     });
 
     it('should handle invalid target category', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 
@@ -340,7 +340,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     });
 
     it('should return markdown format when requested', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
       mockApi.categories.updateMonthCategory.mockResolvedValue({
@@ -368,7 +368,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
 
     it('should handle API errors', async () => {
       const apiError = new Error('API Error: Connection timeout');
-      mockApi.months.getBudgetMonth.mockRejectedValue(apiError);
+      mockApi.months.getPlanMonth.mockRejectedValue(apiError);
 
       const result = await tool.execute({
         budgetId: 'test-budget-id',
@@ -387,7 +387,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     });
 
     it('should handle partial update failures', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
       mockApi.categories.updateMonthCategory
@@ -414,7 +414,7 @@ describe('MoveFundsBetweenCategoriesTool', () => {
     });
 
     it('should show correct before/after balances in dry run', async () => {
-      mockApi.months.getBudgetMonth.mockResolvedValue({
+      mockApi.months.getPlanMonth.mockResolvedValue({
         data: { month: mockMonthData },
       });
 

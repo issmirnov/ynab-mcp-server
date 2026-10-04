@@ -132,7 +132,7 @@ class MoveFundsBetweenCategoriesTool {
       // Get current month budget data
       const month = normalizeMonth(input.month);
       const monthResponse = await createRetryableAPICall(
-        () => this.api.months.getBudgetMonth(budgetId, month),
+        () => this.api.months.getPlanMonth(budgetId, month),
         'Get budget month for move funds'
       );
       const monthData = monthResponse.data.month;
@@ -395,7 +395,7 @@ class MoveFundsBetweenCategoriesTool {
   ): Promise<void> {
     // Get current month data to get current budgeted amounts
     const monthResponse = await createRetryableAPICall(
-      () => this.api.months.getBudgetMonth(budgetId, month),
+      () => this.api.months.getPlanMonth(budgetId, month),
       'Get budget month for execute move'
     );
     const monthData = monthResponse.data.month;

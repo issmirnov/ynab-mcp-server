@@ -9,6 +9,8 @@ import BudgetSummaryTool from "../tools/BudgetSummaryTool.js";
 import BulkApproveTransactionsTool from "../tools/BulkApproveTransactionsTool.js";
 import CashFlowForecastTool from "../tools/CashFlowForecastTool.js";
 import CategoryPerformanceReviewTool from "../tools/CategoryPerformanceReviewTool.js";
+import CreateCategoryTool from "../tools/CreateCategoryTool.js";
+import CreateCategoryGroupTool from "../tools/CreateCategoryGroupTool.js";
 import CreateScheduledTransactionTool from "../tools/CreateScheduledTransactionTool.js";
 import CreateTransactionTool from "../tools/CreateTransactionTool.js";
 import DeleteScheduledTransactionTool from "../tools/DeleteScheduledTransactionTool.js";
@@ -25,6 +27,8 @@ import NetWorthAnalysisTool from "../tools/NetWorthAnalysisTool.js";
 import ReconcileAccountTool from "../tools/ReconcileAccountTool.js";
 import SetDefaultBudgetTool from "../tools/SetDefaultBudgetTool.js";
 import SetCategoryGoalsTool from "../tools/SetCategoryGoalsTool.js";
+import UpdateCategoryTool from "../tools/UpdateCategoryTool.js";
+import UpdateCategoryGroupTool from "../tools/UpdateCategoryGroupTool.js";
 import UpdateScheduledTransactionTool from "../tools/UpdateScheduledTransactionTool.js";
 import UpdateTransactionTool from "../tools/UpdateTransactionTool.js";
 import type { ToolRuntimeConfig } from "../tools/runtime.js";
@@ -46,6 +50,10 @@ const TOOL_CLASSES: ToolClass[] = [
   ListBudgetsTool as unknown as ToolClass,
   SetDefaultBudgetTool as unknown as ToolClass,
   ListCategoriesTool as unknown as ToolClass,
+  CreateCategoryGroupTool as unknown as ToolClass,
+  CreateCategoryTool as unknown as ToolClass,
+  UpdateCategoryTool as unknown as ToolClass,
+  UpdateCategoryGroupTool as unknown as ToolClass,
   BudgetSummaryTool as unknown as ToolClass,
   CreateTransactionTool as unknown as ToolClass,
   CreateScheduledTransactionTool as unknown as ToolClass,

@@ -72,7 +72,7 @@ class BudgetSummaryTool {
       );
 
       const monthBudget = await createRetryableAPICall(
-        () => this.api.months.getBudgetMonth(budgetId, input.month),
+        () => this.api.months.getPlanMonth(budgetId, input.month),
         'Get budget month'
       );
 
