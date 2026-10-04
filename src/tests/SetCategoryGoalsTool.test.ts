@@ -208,6 +208,22 @@ describe('SetCategoryGoalsTool', () => {
       expect(mockApi.categories.updateCategory).not.toHaveBeenCalled();
     });
 
+    it('requires goalTarget to create a goal (goalTargetDate alone on a goal-less category)', async () => {
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(GOALLESS_CC));
+      const result = await tool.execute({ categoryId: 'cat-cc', goalTargetDate: '2026-12-31' });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('requires goalTarget');
+      expect(mockApi.categories.updateCategory).not.toHaveBeenCalled();
+    });
+
+    it('requires goalTarget to create a goal (needsWholeAmount alone on a goal-less category)', async () => {
+      mockApi.categories.getCategories.mockResolvedValue(categoriesWith(GOALLESS_CC));
+      const result = await tool.execute({ categoryId: 'cat-cc', needsWholeAmount: true });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('requires goalTarget');
+      expect(mockApi.categories.updateCategory).not.toHaveBeenCalled();
+    });
+
     it('errors when the category cannot be found', async () => {
       mockApi.categories.getCategories.mockResolvedValue(categoriesWith(NEED_CAT));
       const result = await tool.execute({ categoryName: 'Nope', goalTarget: 10 });
@@ -290,6 +306,10 @@ describe('SetCategoryGoalsTool', () => {
       expect(payload.action).toBe('removed');
       expect(payload.message).toContain('would remove');
       expect(payload.message).not.toContain('would removed');
+      // Dry-run removal must project null goal fields, not the stale current ones.
+      expect(payload.goalTarget).toBeNull();
+      expect(payload.goalTargetDollars).toBeNull();
+      expect(payload.goalType).toBeNull();
     });
 
     it('returns markdown when requested', async () => {

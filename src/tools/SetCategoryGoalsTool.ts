@@ -196,6 +196,16 @@ export default class SetCategoryGoalsTool {
       const hadGoal = Boolean(cat.goal_type);
       const currentType = cat.goal_type ? String(cat.goal_type) : null;
 
+      // Creating a goal requires a target. goalTargetDate and needsWholeAmount only
+      // configure a goal that already exists — on a goal-less category YNAB creates
+      // nothing without goal_target, so without this guard we'd send a no-op PATCH
+      // and falsely report "created".
+      if (!removing && !hadGoal && !settingTarget) {
+        return this.error(
+          `Creating a goal requires goalTarget. goalTargetDate and needsWholeAmount only configure an existing goal, and "${cat.name}" has no goal yet.`
+        );
+      }
+
       // Pre-flight guards for documented API-only constraints (avoid raw 400s).
       // Only enforce when the goal type is known; for a goal-less category being
       // created, let the API infer and decide.
@@ -264,17 +274,22 @@ export default class SetCategoryGoalsTool {
       }
 
       if (input.dryRun) {
-        const milliForDisplay = update.goal_target ?? cat.goal_target ?? null;
+        // Mirror the post-update response: a removal projects null goal fields,
+        // never the category's current (soon-to-be-cleared) values.
+        const removingGoal = action === "removed";
+        const milliForDisplay = removingGoal
+          ? null
+          : update.goal_target ?? cat.goal_target ?? null;
         return this.result(
           {
             success: true,
             action,
             categoryId: cat.id,
             categoryName: cat.name,
-            goalType: action === "created" ? null : currentType,
+            goalType: removingGoal || action === "created" ? null : currentType,
             goalTarget: milliForDisplay,
             goalTargetDollars: milliForDisplay !== null ? milliUnitsToAmount(milliForDisplay) : null,
-            goalTargetMonth: cat.goal_target_month ?? null,
+            goalTargetMonth: removingGoal ? null : cat.goal_target_month ?? null,
             changes,
             dryRun: true,
             message:
