@@ -25,6 +25,19 @@ describe("worker public routes", () => {
     expect(html).toContain("not officially supported by YNAB");
   });
 
+  it("links Add to Claude to a prefilled connector dialog for this host", async () => {
+    const response = await fetchWorker("https://example.com/");
+    const html = await response.text();
+
+    const href = html.match(/href="(https:\/\/claude\.ai\/customize\/connectors\?[^"]+)"/)?.[1];
+    expect(href).toBeDefined();
+    const params = new URL(href!.replaceAll("&amp;", "&")).searchParams;
+    expect(params.get("modal")).toBe("add-custom-connector");
+    expect(params.get("connectorName")).toBe("YNAB");
+    expect(params.get("connectorUrl")).toBe("https://example.com/mcp");
+    expect(html).toContain("Add to Claude");
+  });
+
   it("renders the privacy page with contact and disconnection guidance", async () => {
     const response = await fetchWorker("https://example.com/privacy");
     const html = await response.text();
