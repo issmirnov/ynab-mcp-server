@@ -1,6 +1,6 @@
 # ynab-mcp-server
 
-[![Add to Claude](https://img.shields.io/badge/Add_to_Claude-D97757?style=for-the-badge&logo=claude&logoColor=white)](https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=MCP%20for%20YNAB&connectorUrl=https%3A%2F%2Fmcpforynab.smirnovlabs.com%2Fmcp)
+[![Add to Claude](https://img.shields.io/badge/Add_to_Claude-D97757?style=for-the-badge&logo=claude&logoColor=white)](https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=YNAB&connectorUrl=https%3A%2F%2Fmcpforynab.smirnovlabs.com%2Fmcp)
 
 Connect YNAB to ChatGPT or Claude with a hosted MCP server.
 
@@ -71,16 +71,16 @@ As of October 25, 2026, Claude keeps custom connectors under `Customize > Connec
 
 1. Click **Add to Claude** at the top of this page.
 2. If prompted, sign in to Claude.
-3. Claude opens the `Add custom connector` dialog with the fields filled in, plus a notice that the values came from an external link. Check that the name is `MCP for YNAB` and the URL is `https://mcpforynab.smirnovlabs.com/mcp`.
+3. Claude opens the `Add custom connector` dialog with the fields filled in, plus a notice that the values came from an external link. Check that the name is `YNAB` and the URL is `https://mcpforynab.smirnovlabs.com/mcp`.
 4. If the dialog shows **Authentication** and **OAuth client** settings, choose `Sign in now` and `Register automatically`. This server does not support `Use Claude's published identity`.
 5. Click `Add`.
 6. Click `Connect`.
 7. When redirected, sign in with YNAB and approve access.
 8. Start a new chat.
-9. Click `+`, select `Connectors`, and turn on `MCP for YNAB`.
+9. Click `+`, select `Connectors`, and turn on `YNAB`.
 10. Send a test prompt.
 
-To add the connector by hand, go to `Customize > Connectors` and click `Add custom connector`. Enter the name `MCP for YNAB` and the hosted MCP URL, then continue from step 4.
+To add the connector by hand, go to `Customize > Connectors` and click `Add custom connector`. Enter the name `YNAB` and the hosted MCP URL, then continue from step 4.
 
 ### Step-by-step for Claude Team or Enterprise
 
@@ -88,11 +88,11 @@ An organization Owner adds the connector once. Then each member connects their o
 
 For the Owner:
 
-1. Open the [organization install link](https://claude.ai/admin-settings/connectors?modal=add-custom-connector&connectorName=MCP%20for%20YNAB&connectorUrl=https%3A%2F%2Fmcpforynab.smirnovlabs.com%2Fmcp). Claude opens the organization's `Add custom connector` dialog with the name and URL filled in.
+1. Open the [organization install link](https://claude.ai/admin-settings/connectors?modal=add-custom-connector&connectorName=YNAB&connectorUrl=https%3A%2F%2Fmcpforynab.smirnovlabs.com%2Fmcp). Claude opens the organization's `Add custom connector` dialog with the name and URL filled in.
 2. If the dialog shows **Authentication** and **OAuth client** settings, choose `Sign in now` and `Register automatically`.
 3. Click `Add`.
 
-To add it by hand, go to `Organization settings > Connectors` and select `Add`, then `Custom`. Enter the name `MCP for YNAB` and the hosted MCP URL, then continue from step 2.
+To add it by hand, go to `Organization settings > Connectors` and select `Add`, then `Custom`. Enter the name `YNAB` and the hosted MCP URL, then continue from step 2.
 
 For each member:
 
