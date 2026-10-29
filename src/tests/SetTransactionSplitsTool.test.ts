@@ -3,10 +3,14 @@ import { z } from 'zod';
 import SetTransactionSplitsTool from '../tools/SetTransactionSplitsTool';
 import { jsonSchemaObjectToZodShape } from '../utils/jsonSchemaToZod';
 
-// Run each API call once, without the retry wrapper's backoff delays.
+// Run each API call once, without the retry wrapper's backoff delays, and
+// record how the tool asked for retries.
+const { retryableCall } = vi.hoisted(() => ({
+  retryableCall: vi.fn((fn: () => Promise<unknown>, _context?: string, _maxRetries?: number) => fn()),
+}));
 vi.mock('../utils/apiErrorHandler.js', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../utils/apiErrorHandler.js')>()),
-  createRetryableAPICall: (fn: () => Promise<unknown>) => fn(),
+  createRetryableAPICall: retryableCall,
 }));
 
 const line = (overrides: Record<string, unknown>) => ({
@@ -324,8 +328,18 @@ describe('SetTransactionSplitsTool', () => {
       const result = await tool.execute({ transactionId: 't1', subtransactions: NEW_LINES });
 
       expect(result).toHaveProperty('isError', true);
-      expect(result.content[0].text).toContain('Splits are not allowed on tracking accounts');
+      const text = result.content[0].text;
+      expect(text).toContain('Splits are not allowed on tracking accounts');
+      expect(text).toContain('The original t1 was not changed');
+      expect(text).toContain('check ynab_list_transactions before you retry');
       expect(mockApi.transactions.deleteTransaction).not.toHaveBeenCalled();
+    });
+
+    it('creates the replacement in one attempt, because a retried POST could add a second copy', async () => {
+      await tool.execute({ transactionId: 't1', subtransactions: NEW_LINES });
+
+      expect(retryableCall).toHaveBeenCalledWith(expect.any(Function), 'Create replacement transaction', 1);
+      expect(mockApi.transactions.createTransaction).toHaveBeenCalledTimes(1);
     });
 
     it('describes the result in markdown by default', async () => {

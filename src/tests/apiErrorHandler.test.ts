@@ -1,5 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { describeAPIError } from '../utils/apiErrorHandler';
+import { describe, it, expect, vi } from 'vitest';
+import { createRetryableAPICall, describeAPIError } from '../utils/apiErrorHandler';
+
+describe('createRetryableAPICall', () => {
+  it('makes a single attempt when maxRetries is 1, even for a retryable network error', async () => {
+    const call = vi.fn().mockRejectedValue(new Error('connection reset'));
+
+    await expect(createRetryableAPICall(call, 'Create replacement transaction', 1)).rejects.toThrow('connection reset');
+    expect(call).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('describeAPIError', () => {
   it('uses an Error message as-is', () => {

@@ -227,7 +227,8 @@ class SetTransactionSplitsTool {
    * YNAB can't edit an existing split's lines, amount, date, or category, so
    * create a replacement and delete the original. Creating first means a
    * failure never loses the transaction. The replacement carries no import_id:
-   * the API returns 409 for a duplicate import_id while the original exists.
+   * the API returns 409 for a duplicate import_id while the original exists,
+   * and an imported transaction may be matched to the user-entered original.
    */
   private async recreate(
     budgetId: string,
@@ -248,10 +249,22 @@ class SetTransactionSplitsTool {
       subtransactions: change.lines,
     };
 
-    const created = await createRetryableAPICall(
-      () => this.api.transactions.createTransaction(budgetId, { transaction: replacement }),
-      "Create replacement transaction"
-    );
+    let created: ynab.SaveTransactionsResponse;
+    try {
+      // One attempt only: this POST has no idempotency key, so a retry after a
+      // lost response could create a second replacement.
+      created = await createRetryableAPICall(
+        () => this.api.transactions.createTransaction(budgetId, { transaction: replacement }),
+        "Create replacement transaction",
+        1
+      );
+    } catch (error) {
+      return this.errorResponse(
+        `Error setting transaction splits: creating the replacement transaction failed: ${describeAPIError(error)}. ` +
+          `The original ${current.id} was not changed. After a timeout or connection error, YNAB may still have created ` +
+          "the replacement, so check ynab_list_transactions before you retry."
+      );
+    }
     const recreated = created.data.transaction;
     if (!recreated) {
       throw new Error("Failed to create the replacement transaction - no transaction data returned");
