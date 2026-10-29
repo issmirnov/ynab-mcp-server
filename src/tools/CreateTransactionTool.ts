@@ -167,7 +167,8 @@ class CreateTransactionTool {
           amount: milliunitAmount,
           payee_id: input.payeeId,
           payee_name: input.payeeName,
-          category_id: input.categoryId,
+          // A split takes its categories from its lines.
+          category_id: subtransactions ? undefined : input.categoryId,
           memo: input.memo,
           cleared: input.cleared ? ynab.TransactionClearedStatus.Cleared : ynab.TransactionClearedStatus.Uncleared,
           approved: input.approved ?? false,

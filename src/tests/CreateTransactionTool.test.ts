@@ -539,6 +539,14 @@ describe('CreateTransactionTool', () => {
         expect(mockApi.transactions.createTransaction).not.toHaveBeenCalled();
       });
 
+      it('never sends a parent category with a split, even an empty categoryId', async () => {
+        mockApi.transactions.createTransaction.mockResolvedValue({ data: { transaction: createdSplit } });
+
+        await tool.execute({ ...splitInput, categoryId: '' });
+
+        expect(mockApi.transactions.createTransaction.mock.calls[0][1].transaction.category_id).toBeUndefined();
+      });
+
       it('rejects lines that do not add up to the amount before calling the API', async () => {
         const result = await tool.execute({ ...splitInput, amount: -130 });
 
