@@ -730,6 +730,95 @@ describe('ListTransactionsTool', () => {
     });
   });
 
+  describe('split transactions', () => {
+    const subLine = (overrides: Record<string, unknown>) => ({
+      transaction_id: 'split-1',
+      memo: null,
+      payee_id: null,
+      payee_name: null,
+      transfer_account_id: null,
+      transfer_transaction_id: null,
+      deleted: false,
+      ...overrides,
+    });
+
+    const splitTransaction = {
+      id: 'split-1',
+      date: '2026-05-20',
+      amount: -120500,
+      memo: null,
+      approved: true,
+      cleared: ynab.TransactionClearedStatus.Cleared,
+      account_id: 'account-1',
+      account_name: 'Chase Bank',
+      payee_name: 'Costco',
+      category_id: 'cat-split',
+      category_name: 'Split (Multiple Categories)...',
+      deleted: false,
+      transfer_account_id: null,
+      transfer_transaction_id: null,
+      matched_transaction_id: null,
+      import_id: null,
+      flag_color: null,
+      flag_name: null,
+      subtransactions: [
+        subLine({ id: 's1', amount: -80000, category_id: 'cat-groceries', category_name: 'Groceries' }),
+        subLine({ id: 's2', amount: -40500, category_id: 'cat-household', category_name: 'Household', memo: 'paper towels' }),
+        subLine({ id: 's3', amount: -5000, category_id: 'cat-old', category_name: 'Old Line', deleted: true }),
+      ],
+    };
+
+    const regularTransaction = {
+      ...splitTransaction,
+      id: 'regular-1',
+      amount: -5000,
+      payee_name: 'Cafe',
+      category_id: 'cat-dining',
+      category_name: 'Dining Out',
+      subtransactions: [],
+    };
+
+    beforeEach(() => {
+      mockApi.transactions.getTransactions.mockResolvedValue({
+        data: { transactions: [splitTransaction, regularTransaction] },
+      });
+      mockApi.accounts.getAccounts.mockResolvedValue({ data: { accounts: [] } });
+      mockApi.categories.getCategories.mockResolvedValue({ data: { category_groups: [] } });
+    });
+
+    it('includes active split lines and leaves subtransactions off regular transactions', async () => {
+      const result = await tool.execute({ response_format: 'json' });
+
+      const { transactions } = JSON.parse(result.content[0].text);
+      expect(transactions.find((t: any) => t.id === 'split-1').subtransactions).toEqual([
+        { id: 's1', amount: -80, category_id: 'cat-groceries', category_name: 'Groceries' },
+        { id: 's2', amount: -40.5, category_id: 'cat-household', category_name: 'Household', memo: 'paper towels' },
+      ]);
+      expect(transactions.find((t: any) => t.id === 'regular-1')).not.toHaveProperty('subtransactions');
+    });
+
+    it('matches a split when one of its lines is in the filtered category', async () => {
+      const result = await tool.execute({ filters: { category: 'household' }, response_format: 'json' });
+
+      const { transactions } = JSON.parse(result.content[0].text);
+      expect(transactions.map((t: any) => t.id)).toEqual(['split-1']);
+    });
+
+    it('ignores deleted lines when filtering by category', async () => {
+      const result = await tool.execute({ filters: { category: 'old line' }, response_format: 'json' });
+
+      expect(JSON.parse(result.content[0].text).transactions).toHaveLength(0);
+    });
+
+    it('lists split lines under the transaction in markdown', async () => {
+      const result = await tool.execute({});
+
+      const text = result.content[0].text;
+      expect(text).toContain('- **Split into 2 lines:**');
+      expect(text).toContain('  - Household: $-40.50 (paper towels)');
+    });
+  });
+
   describe('getToolDefinition', () => {
     it('should return correct tool definition', () => {
       const definition = tool.getToolDefinition();

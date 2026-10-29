@@ -6,6 +6,12 @@ import {
   isActionableUncategorizedTransaction,
   isUncategorizedCategoryFilter,
 } from "../utils/transactionClassification.js";
+import {
+  activeSubtransactions,
+  formatSplitLinesMarkdown,
+  summarizeSubtransactions,
+  type SubtransactionSummary,
+} from "../utils/splitTransactions.js";
 import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 export type ResolvedDateWindow = {
@@ -113,6 +119,7 @@ interface TransactionResult {
   import_id?: string;
   flag_color?: string;
   flag_name?: string;
+  subtransactions?: SubtransactionSummary[];
 }
 
 class ListTransactionsTool {
@@ -162,7 +169,7 @@ class ListTransactionsTool {
               },
               category: {
                 type: "string",
-                description: "Filter by category name (supports partial matching). Use 'uncategorized' to find actionable spending transactions that still need a category; transfers, starting balances, reconciliation adjustments, inflows, and off-budget activity are excluded.",
+                description: "Filter by category name (supports partial matching). A split transaction matches when any of its lines matches; each line's amount is in `subtransactions`. Use 'uncategorized' to find actionable spending transactions that still need a category; transfers, starting balances, reconciliation adjustments, inflows, and off-budget activity are excluded.",
               },
               minAmount: {
                 type: "number",
@@ -399,7 +406,7 @@ class ListTransactionsTool {
           if (!isActionableUncategorizedTransaction(transaction, accounts)) {
             return false;
           }
-        } else if (!transaction.category_name || !transaction.category_name.toLowerCase().includes(categoryFilter)) {
+        } else if (!this.matchesCategory(transaction, categoryFilter)) {
           return false;
         }
       }
@@ -432,6 +439,15 @@ class ListTransactionsTool {
     });
   }
 
+  /** Matches the transaction's category or, for a split, any line's category. */
+  private matchesCategory(transaction: ynab.TransactionDetail, categoryFilter: string): boolean {
+    const names = [
+      transaction.category_name,
+      ...activeSubtransactions(transaction).map(sub => sub.category_name),
+    ];
+    return names.some(name => name?.toLowerCase().includes(categoryFilter));
+  }
+
   private getClearedStatus(transaction: ynab.TransactionDetail): string {
     if (transaction.cleared === ynab.TransactionClearedStatus.Reconciled) {
       return "reconciled";
@@ -443,23 +459,27 @@ class ListTransactionsTool {
   }
 
   private transformTransactions(transactions: ynab.TransactionDetail[]): TransactionResult[] {
-    return transactions.map(transaction => ({
-      id: transaction.id,
-      date: transaction.date,
-      amount: milliUnitsToAmount(transaction.amount),
-      memo: transaction.memo || undefined,
-      approved: transaction.approved,
-      cleared: this.getClearedStatus(transaction),
-      account_name: transaction.account_name,
-      payee_name: transaction.payee_name || undefined,
-      category_name: transaction.category_name || undefined,
-      transfer_account_id: transaction.transfer_account_id || undefined,
-      transfer_transaction_id: transaction.transfer_transaction_id || undefined,
-      matched_transaction_id: transaction.matched_transaction_id || undefined,
-      import_id: transaction.import_id || undefined,
-      flag_color: transaction.flag_color || undefined,
-      flag_name: transaction.flag_name || undefined,
-    }));
+    return transactions.map(transaction => {
+      const subtransactions = summarizeSubtransactions(transaction);
+      return {
+        id: transaction.id,
+        date: transaction.date,
+        amount: milliUnitsToAmount(transaction.amount),
+        memo: transaction.memo || undefined,
+        approved: transaction.approved,
+        cleared: this.getClearedStatus(transaction),
+        account_name: transaction.account_name,
+        payee_name: transaction.payee_name || undefined,
+        category_name: transaction.category_name || undefined,
+        transfer_account_id: transaction.transfer_account_id || undefined,
+        transfer_transaction_id: transaction.transfer_transaction_id || undefined,
+        matched_transaction_id: transaction.matched_transaction_id || undefined,
+        import_id: transaction.import_id || undefined,
+        flag_color: transaction.flag_color || undefined,
+        flag_name: transaction.flag_name || undefined,
+        subtransactions: subtransactions.length > 0 ? subtransactions : undefined,
+      };
+    });
   }
 
   private formatMarkdown(result: {
@@ -512,6 +532,10 @@ class ListTransactionsTool {
       output += `- **Cleared:** ${txn.cleared}\n`;
       if (txn.category_name) {
         output += `- **Category:** ${txn.category_name}\n`;
+      }
+      if (txn.subtransactions) {
+        output += `- **Split into ${txn.subtransactions.length} lines:**\n`;
+        output += formatSplitLinesMarkdown(txn.subtransactions, "  ");
       }
       if (txn.memo) {
         output += `- **Memo:** ${txn.memo}\n`;
