@@ -27,6 +27,7 @@ import NetWorthAnalysisTool from "../tools/NetWorthAnalysisTool.js";
 import ReconcileAccountTool from "../tools/ReconcileAccountTool.js";
 import SetDefaultBudgetTool from "../tools/SetDefaultBudgetTool.js";
 import SetCategoryGoalsTool from "../tools/SetCategoryGoalsTool.js";
+import SetTransactionSplitsTool from "../tools/SetTransactionSplitsTool.js";
 import UpdateCategoryTool from "../tools/UpdateCategoryTool.js";
 import UpdateCategoryGroupTool from "../tools/UpdateCategoryGroupTool.js";
 import UpdateScheduledTransactionTool from "../tools/UpdateScheduledTransactionTool.js";
@@ -76,6 +77,7 @@ const TOOL_CLASSES: ToolClass[] = [
   UpdateScheduledTransactionTool as unknown as ToolClass,
   DeleteScheduledTransactionTool as unknown as ToolClass,
   UpdateTransactionTool as unknown as ToolClass,
+  SetTransactionSplitsTool as unknown as ToolClass,
   DeleteTransactionTool as unknown as ToolClass,
 ];
 

@@ -59,7 +59,7 @@ All tools follow the `ynab_*` naming convention for compatibility with multiple 
 - **ynab_list_budgets**: Lists available YNAB budgets
 - **ynab_budget_summary**: Provides budget month summaries with categories and accounts
 - **ynab_get_unapproved_transactions**: Retrieves pending transactions
-- **ynab_create_transaction**: Creates new transactions
+- **ynab_create_transaction**: Creates new transactions, optionally split across categories (`subtransactions`)
 - **ynab_approve_transaction**: Approves existing transactions
 
 #### **Workflow Automation (4 Tools)**
@@ -79,6 +79,7 @@ All tools follow the `ynab_*` naming convention for compatibility with multiple 
 - **ynab_set_category_goals**: Create, update, or remove a category's goal (target, target date, NEED behavior). Creates NEED-family goals only — the YNAB API infers the type (NEED, or MF/DEBT for credit-card/loan categories); TB/TBD creation and recurring cadence are not supported via the API.
 - **ynab_budget_from_history**: Create budget allocations based on historical spending patterns
 - **ynab_reconcile_account**: Reconcile account balances with bank statements
+- **ynab_set_transaction_splits**: Split a transaction across categories, replace a split's lines, or merge a split back into one category. A regular transaction is split in place. The YNAB API can't edit an existing split, so changing one recreates it (new ID) and deletes the original.
 
 ### Environment Variables
 - `YNAB_API_TOKEN` (required) - Personal Access Token from YNAB API. Server validates this at startup.

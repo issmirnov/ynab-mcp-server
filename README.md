@@ -148,8 +148,9 @@ Once connected, your assistant can use the tools below. **Read** tools only look
 |---|---|---|
 | `ynab_list_transactions` | List and filter transactions by account, category, payee, or date | Read |
 | `ynab_get_unapproved_transactions` | List transactions waiting for approval | Read |
-| `ynab_create_transaction` | Add a transaction | Write |
+| `ynab_create_transaction` | Add a transaction, optionally split across categories | Write |
 | `ynab_update_transaction` | Edit an existing transaction | Write |
+| `ynab_set_transaction_splits` | Split a transaction across categories, change a split's lines, or merge it back into one category | Write |
 | `ynab_approve_transaction` | Approve one pending transaction | Write |
 | `ynab_bulk_approve_transactions` | Approve many pending transactions at once | Write |
 | `ynab_delete_transaction` | Delete a transaction | Write (delete) |
@@ -193,7 +194,7 @@ How these tools line up with the official [YNAB API](https://api.ynab.com) (acce
 | Accounts | ◐ | Balances read via `ynab_budget_summary`, `ynab_net_worth_analysis`, `ynab_reconcile_account`; no create-account or standalone account list |
 | Categories & groups | ✅ | List, create, and update categories and groups; goals; per-month funding |
 | Months | ✅ | Surfaced through `ynab_budget_summary` and the analytics tools |
-| Transactions | ✅ | List, create, update, delete, approve, bulk-approve (file `import` is not exposed) |
+| Transactions | ✅ | List, create, update, delete, approve, bulk-approve, and split across categories (file `import` is not exposed) |
 | Scheduled transactions | ✅ | List, create, update, delete |
 | Payees | — | Referenced implicitly by name in the transaction tools; no list/update-payee tool |
 | Payee locations | — | Not exposed |

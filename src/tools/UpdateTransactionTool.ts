@@ -1,7 +1,8 @@
 import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { truncateResponse, CHARACTER_LIMIT, getBudgetId, amountToMilliUnits, milliUnitsToAmount, formatCurrency } from "../utils/commonUtils.js";
-import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createRetryableAPICall, describeAPIError } from "../utils/apiErrorHandler.js";
+import { isSplitTransaction } from "../utils/splitTransactions.js";
 import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface UpdateTransactionInput {
@@ -33,7 +34,7 @@ class UpdateTransactionTool {
     return {
       name: "ynab_update_transaction",
       description:
-        "Updates an existing transaction in your YNAB budget. Only the fields you provide will be changed; all other fields remain as-is. Use ynab_list_transactions to find the transaction ID.",
+        "Updates an existing transaction in your YNAB budget. Only the fields you provide will be changed; all other fields remain as-is. Use ynab_list_transactions to find the transaction ID. For a split transaction, change its lines, amount, date, or category with ynab_set_transaction_splits.",
       inputSchema: {
         type: "object",
         properties: {
@@ -118,6 +119,23 @@ class UpdateTransactionTool {
       );
 
       const current = existing.data.transaction;
+
+      // YNAB ignores or rejects these changes on a split, which would otherwise
+      // look like a successful update that changed nothing.
+      const lockedFields = isSplitTransaction(current) ? this.splitLockedFields(current, input) : [];
+      if (lockedFields.length > 0) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text:
+                `Error updating transaction: ${input.transactionId} is a split transaction, and YNAB can't change a split's ${lockedFields.join(", ")} in place. ` +
+                "Use ynab_set_transaction_splits: pass the new amount or date with the full list of split lines, or pass categoryId to merge the split into one category.",
+            },
+          ],
+        };
+      }
 
       // payee_id accepts null to clear the payee so payee_name resolves a new
       // one (YNAB's documented behavior). ynab@4 typed ExistingTransaction.payee_id
@@ -215,13 +233,26 @@ class UpdateTransactionTool {
         content: [
           {
             type: "text",
-            text: `Error updating transaction: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
+            text: `Error updating transaction: ${describeAPIError(error)}`,
           },
         ],
       };
     }
+  }
+
+  /** Requested changes that YNAB can't make to an existing split. */
+  private splitLockedFields(current: ynab.TransactionDetail, input: UpdateTransactionInput): string[] {
+    const fields: string[] = [];
+    if (input.amount !== undefined && amountToMilliUnits(input.amount) !== current.amount) {
+      fields.push("amount");
+    }
+    if (input.date !== undefined && input.date !== current.date) {
+      fields.push("date");
+    }
+    if (input.categoryId !== undefined && input.categoryId !== current.category_id) {
+      fields.push("category");
+    }
+    return fields;
   }
 
   private describeChanges(

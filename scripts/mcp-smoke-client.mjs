@@ -183,12 +183,14 @@ async function connectClient(serverUrl) {
 }
 
 async function main() {
-  const [, , command, arg, providedServerUrl] = process.argv;
-  const serverUrl = providedServerUrl || process.env.MCP_SERVER_URL || DEFAULT_SERVER_URL;
+  const [, , command, ...args] = process.argv;
+  // Position of the optional trailing serverUrl argument for each command.
+  const serverUrlIndex = { "list-resources": 0, "list-tools": 0, "read-resource": 1, "call-tool": 2 }[command];
+  const serverUrl = args[serverUrlIndex] || process.env.MCP_SERVER_URL || DEFAULT_SERVER_URL;
 
-  if (!command || ["list-resources", "read-resource", "clear-auth"].includes(command) === false) {
+  if (!command || ["list-resources", "read-resource", "list-tools", "call-tool", "clear-auth"].includes(command) === false) {
     console.error(
-      "Usage:\n  node scripts/mcp-smoke-client.mjs list-resources [serverUrl]\n  node scripts/mcp-smoke-client.mjs read-resource <uri> [serverUrl]\n  node scripts/mcp-smoke-client.mjs clear-auth"
+      "Usage:\n  node scripts/mcp-smoke-client.mjs list-resources [serverUrl]\n  node scripts/mcp-smoke-client.mjs read-resource <uri> [serverUrl]\n  node scripts/mcp-smoke-client.mjs list-tools [serverUrl]\n  node scripts/mcp-smoke-client.mjs call-tool <name> [jsonArgs] [serverUrl]\n  node scripts/mcp-smoke-client.mjs clear-auth"
     );
     process.exit(1);
   }
@@ -208,11 +210,29 @@ async function main() {
       return;
     }
 
-    if (!arg) {
+    if (command === "list-tools") {
+      const result = await client.listTools();
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+
+    if (command === "call-tool") {
+      const [name, jsonArgs] = args;
+      if (!name) {
+        throw new Error("call-tool requires a tool name");
+      }
+
+      const result = await client.callTool({ name, arguments: jsonArgs ? JSON.parse(jsonArgs) : {} });
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+
+    const [uri] = args;
+    if (!uri) {
       throw new Error("read-resource requires a resource URI");
     }
 
-    const result = await client.readResource({ uri: arg });
+    const result = await client.readResource({ uri });
     console.log(JSON.stringify(result, null, 2));
   } finally {
     await transport.close();

@@ -1,7 +1,15 @@
 import * as ynab from "ynab";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { getBudgetId, amountToMilliUnits, truncateResponse, CHARACTER_LIMIT } from "../utils/commonUtils.js";
-import { createRetryableAPICall } from "../utils/apiErrorHandler.js";
+import { createRetryableAPICall, describeAPIError } from "../utils/apiErrorHandler.js";
+import {
+  formatSplitLinesMarkdown,
+  subtransactionsSchema,
+  summarizeSubtransactions,
+  toSaveSubTransactions,
+  type SplitLineInput,
+  type SubtransactionSummary,
+} from "../utils/splitTransactions.js";
 import { createToolRuntime, type ToolRuntimeConfig } from "./runtime.js";
 
 interface CreateTransactionInput {
@@ -16,7 +24,15 @@ interface CreateTransactionInput {
   cleared?: boolean;
   approved?: boolean;
   flagColor?: string;
+  subtransactions?: SplitLineInput[];
   response_format?: "json" | "markdown";
+}
+
+interface CreateTransactionResult {
+  success: boolean;
+  transactionId: string;
+  message: string;
+  subtransactions?: SubtransactionSummary[];
 }
 
 class CreateTransactionTool {
@@ -32,7 +48,7 @@ class CreateTransactionTool {
   getToolDefinition(): Tool {
     return {
       name: "ynab_create_transaction",
-      description: "Creates a new transaction in your YNAB budget. Either payee_id or payee_name must be provided in addition to the other required fields.",
+      description: "Creates a new transaction in your YNAB budget. Either payee_id or payee_name must be provided in addition to the other required fields. To split it across categories, pass subtransactions instead of categoryId.",
       inputSchema: {
         type: "object",
         properties: {
@@ -62,7 +78,7 @@ class CreateTransactionTool {
           },
           categoryId: {
             type: "string",
-            description: "The category id for the transaction (optional)",
+            description: "The category id for the transaction (optional). Leave it out when you pass subtransactions.",
           },
           memo: {
             type: "string",
@@ -80,6 +96,9 @@ class CreateTransactionTool {
             type: "string",
             description: "The transaction flag color (red, orange, yellow, green, blue, purple) (optional)",
           },
+          subtransactions: subtransactionsSchema(
+            "Split the transaction across categories (optional). List at least 2 lines; their amounts must add up exactly to `amount`. Leave categoryId out when you split."
+          ),
           response_format: {
             type: "string",
             enum: ["json", "markdown"],
@@ -117,6 +136,30 @@ class CreateTransactionTool {
 
       const milliunitAmount = amountToMilliUnits(input.amount);
 
+      let subtransactions: ynab.SaveSubTransaction[] | undefined;
+      if (input.subtransactions !== undefined) {
+        if (input.categoryId) {
+          return {
+            isError: true,
+            content: [
+              {
+                type: "text",
+                text: "Pass either categoryId or subtransactions, not both. A split transaction takes its categories from its lines.",
+              },
+            ],
+          };
+        }
+
+        const split = toSaveSubTransactions(input.subtransactions, milliunitAmount);
+        if ("error" in split) {
+          return {
+            isError: true,
+            content: [{ type: "text", text: split.error }],
+          };
+        }
+        subtransactions = split.subtransactions;
+      }
+
       const transaction: ynab.PostTransactionsWrapper = {
         transaction: {
           account_id: input.accountId,
@@ -124,11 +167,13 @@ class CreateTransactionTool {
           amount: milliunitAmount,
           payee_id: input.payeeId,
           payee_name: input.payeeName,
-          category_id: input.categoryId,
+          // A split takes its categories from its lines.
+          category_id: subtransactions ? undefined : input.categoryId,
           memo: input.memo,
           cleared: input.cleared ? ynab.TransactionClearedStatus.Cleared : ynab.TransactionClearedStatus.Uncleared,
           approved: input.approved ?? false,
           flag_color: input.flagColor as ynab.TransactionFlagColor,
+          subtransactions,
         }
       };
 
@@ -141,10 +186,15 @@ class CreateTransactionTool {
         throw new Error("Failed to create transaction - no transaction data returned");
       }
 
-      const result = {
+      const splitLines = summarizeSubtransactions(response.data.transaction);
+      const result: CreateTransactionResult = {
         success: true,
         transactionId: response.data.transaction.id,
-        message: "Transaction created successfully",
+        message:
+          splitLines.length > 0
+            ? `Split transaction created with ${splitLines.length} lines`
+            : "Transaction created successfully",
+        ...(splitLines.length > 0 ? { subtransactions: splitLines } : {}),
       };
 
       const format = input.response_format || "markdown";
@@ -172,19 +222,21 @@ class CreateTransactionTool {
         content: [
           {
             type: "text",
-            text: `Error creating transaction: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
+            text: `Error creating transaction: ${describeAPIError(error)}`,
           },
         ],
       };
     }
   }
 
-  private formatMarkdown(result: { success: boolean; transactionId: string; message: string }): string {
+  private formatMarkdown(result: CreateTransactionResult): string {
     let output = "# Transaction Created Successfully\n\n";
     output += `✅ ${result.message}\n\n`;
     output += `**Transaction ID:** \`${result.transactionId}\`\n`;
+    if (result.subtransactions) {
+      output += "\n## Split lines\n";
+      output += formatSplitLinesMarkdown(result.subtransactions);
+    }
     return output;
   }
 }

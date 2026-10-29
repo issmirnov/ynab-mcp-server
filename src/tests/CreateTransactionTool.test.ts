@@ -478,13 +478,109 @@ describe('CreateTransactionTool', () => {
       const parsedResult = JSON.parse(result.content[0].text);
       expect(parsedResult.success).toBe(true);
     });
+
+    describe('split transactions', () => {
+      const splitInput = {
+        accountId: 'account-456',
+        date: '2023-12-01',
+        amount: -120.5,
+        payeeName: 'Costco',
+        subtransactions: [
+          { amount: -80, categoryId: 'cat-groceries' },
+          { amount: -40.5, categoryId: 'cat-household', memo: 'paper towels' },
+        ],
+        response_format: 'json' as const,
+      };
+
+      const createdSplit = {
+        ...mockCreatedTransaction,
+        id: 'split-1',
+        amount: -120500,
+        category_id: 'cat-split',
+        category_name: 'Split (Multiple Categories)...',
+        subtransactions: [
+          { id: 's1', transaction_id: 'split-1', amount: -80000, category_id: 'cat-groceries', category_name: 'Groceries', deleted: false },
+          { id: 's2', transaction_id: 'split-1', amount: -40500, category_id: 'cat-household', category_name: 'Household', memo: 'paper towels', deleted: false },
+        ],
+      };
+
+      it('sends the lines in milliunits with no parent category and returns them', async () => {
+        mockApi.transactions.createTransaction.mockResolvedValue({ data: { transaction: createdSplit } });
+
+        const result = await tool.execute(splitInput);
+
+        const sent = mockApi.transactions.createTransaction.mock.calls[0][1].transaction;
+        expect(sent.amount).toBe(-120500);
+        expect(sent.category_id).toBeUndefined();
+        expect(sent.subtransactions).toEqual([
+          { amount: -80000, category_id: 'cat-groceries' },
+          { amount: -40500, category_id: 'cat-household', memo: 'paper towels' },
+        ]);
+        const parsed = JSON.parse(result.content[0].text);
+        expect(parsed.transactionId).toBe('split-1');
+        expect(parsed.subtransactions).toHaveLength(2);
+        expect(parsed.subtransactions[1]).toMatchObject({ amount: -40.5, category_name: 'Household', memo: 'paper towels' });
+      });
+
+      it('lists the split lines in markdown', async () => {
+        mockApi.transactions.createTransaction.mockResolvedValue({ data: { transaction: createdSplit } });
+
+        const result = await tool.execute({ ...splitInput, response_format: 'markdown' as const });
+
+        expect(result.content[0].text).toContain('## Split lines');
+        expect(result.content[0].text).toContain('- Household: $-40.50 (paper towels)');
+      });
+
+      it('rejects categoryId together with subtransactions before calling the API', async () => {
+        const result = await tool.execute({ ...splitInput, categoryId: 'cat-groceries' });
+
+        expect(result).toHaveProperty('isError', true);
+        expect(result.content[0].text).toContain('not both');
+        expect(mockApi.transactions.createTransaction).not.toHaveBeenCalled();
+      });
+
+      it('never sends a parent category with a split, even an empty categoryId', async () => {
+        mockApi.transactions.createTransaction.mockResolvedValue({ data: { transaction: createdSplit } });
+
+        await tool.execute({ ...splitInput, categoryId: '' });
+
+        expect(mockApi.transactions.createTransaction.mock.calls[0][1].transaction.category_id).toBeUndefined();
+      });
+
+      it('rejects lines that do not add up to the amount before calling the API', async () => {
+        const result = await tool.execute({ ...splitInput, amount: -130 });
+
+        expect(result).toHaveProperty('isError', true);
+        expect(result.content[0].text).toContain('off by $9.50');
+        expect(mockApi.transactions.createTransaction).not.toHaveBeenCalled();
+      });
+
+      it('rejects a single-line split', async () => {
+        const result = await tool.execute({
+          ...splitInput,
+          amount: -80,
+          subtransactions: [{ amount: -80, categoryId: 'cat-groceries' }],
+        });
+
+        expect(result).toHaveProperty('isError', true);
+        expect(result.content[0].text).toContain('at least 2 lines');
+        expect(mockApi.transactions.createTransaction).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('tool configuration', () => {
     it('should have correct name and description', () => {
       const toolDef = tool.getToolDefinition();
       expect(toolDef.name).toBe('ynab_create_transaction');
-      expect(toolDef.description).toBe('Creates a new transaction in your YNAB budget. Either payee_id or payee_name must be provided in addition to the other required fields.');
+      expect(toolDef.description).toBe('Creates a new transaction in your YNAB budget. Either payee_id or payee_name must be provided in addition to the other required fields. To split it across categories, pass subtransactions instead of categoryId.');
+    });
+
+    it('exposes an optional subtransactions array of split lines', () => {
+      const props = tool.getToolDefinition().inputSchema.properties as any;
+      expect(props.subtransactions.type).toBe('array');
+      expect(props.subtransactions.items.required).toEqual(['amount']);
+      expect(tool.getToolDefinition().inputSchema.required).not.toContain('subtransactions');
     });
 
     it('should have correct schema definition', () => {

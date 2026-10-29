@@ -10,6 +10,28 @@ export interface APIErrorInfo {
   technicalMessage: string;
 }
 
+/**
+ * Readable message for an error from a YNAB API call. The ynab SDK throws the
+ * parsed error body ({ error: { id, name, detail } }) rather than an Error,
+ * which String() would render as "[object Object]".
+ */
+export function describeAPIError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  const body = (error as { error?: { id?: string; detail?: string } } | null)?.error;
+  if (body?.detail) {
+    return body.id ? `${body.detail} (YNAB error ${body.id})` : body.detail;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    return JSON.stringify(error);
+  }
+
+  return String(error);
+}
+
 export function analyzeAPIError(error: any): APIErrorInfo {
   const errorMessage = error instanceof Error ? error.message : String(error);
   const errorString = errorMessage.toLowerCase();
