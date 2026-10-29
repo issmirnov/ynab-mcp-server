@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { z } from 'zod';
-import SetTransactionSplitsTool from '../tools/SetTransactionSplitsTool';
+import SetTransactionSplitsTool, { runExclusive } from '../tools/SetTransactionSplitsTool';
 import { jsonSchemaObjectToZodShape } from '../utils/jsonSchemaToZod';
 
 // Run each API call once, without the retry wrapper's backoff delays, and
@@ -98,6 +98,40 @@ describe('SetTransactionSplitsTool', () => {
     mockApi.transactions.getTransactionById.mockResolvedValue({ data: { transaction } });
 
   const parse = (result: any) => JSON.parse(result.content[0].text);
+
+  describe('runExclusive', () => {
+    it('runs tasks with the same key one at a time, in order', async () => {
+      const events: string[] = [];
+      const task = (name: string) => async () => {
+        events.push(`${name} start`);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        events.push(`${name} end`);
+      };
+
+      await Promise.all([runExclusive('b1:t1', task('a')), runExclusive('b1:t1', task('b'))]);
+
+      expect(events).toEqual(['a start', 'a end', 'b start', 'b end']);
+    });
+
+    it('releases the key when a task fails', async () => {
+      const failing = runExclusive('b1:t9', async () => {
+        throw new Error('boom');
+      });
+      const next = runExclusive('b1:t9', async () => 'ran');
+
+      await expect(failing).rejects.toThrow('boom');
+      await expect(next).resolves.toBe('ran');
+    });
+
+    it('does not make different keys wait for each other', async () => {
+      let release!: () => void;
+      const blocked = runExclusive('b1:slow', () => new Promise<void>((resolve) => (release = resolve)));
+
+      await expect(runExclusive('b1:other', async () => 'free')).resolves.toBe('free');
+      release();
+      await blocked;
+    });
+  });
 
   describe('tool definition', () => {
     const def = () => tool.getToolDefinition();
@@ -340,6 +374,33 @@ describe('SetTransactionSplitsTool', () => {
 
       expect(retryableCall).toHaveBeenCalledWith(expect.any(Function), 'Create replacement transaction', 1);
       expect(mockApi.transactions.createTransaction).toHaveBeenCalledTimes(1);
+    });
+
+    it('lets only one of two concurrent calls replace the same split', async () => {
+      let originalDeleted = false;
+      mockApi.transactions.getTransactionById.mockImplementation(async () => ({
+        data: { transaction: { ...SPLIT, deleted: originalDeleted } },
+      }));
+      const create = mockApi.transactions.createTransaction.getMockImplementation();
+      mockApi.transactions.createTransaction.mockImplementation(async (...args: unknown[]) => {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        return create(...args);
+      });
+      mockApi.transactions.deleteTransaction.mockImplementation(async () => {
+        originalDeleted = true;
+        return { data: { transaction: { ...SPLIT, deleted: true } } };
+      });
+      // registerYnabTools builds a new tool instance for every call.
+      const otherTool = new SetTransactionSplitsTool({ ynabApi: mockApi, budgetId: 'b1' });
+
+      const results = await Promise.all([
+        tool.execute({ transactionId: 't1', subtransactions: NEW_LINES }),
+        otherTool.execute({ transactionId: 't1', subtransactions: NEW_LINES }),
+      ]);
+
+      expect(mockApi.transactions.createTransaction).toHaveBeenCalledTimes(1);
+      expect(results.filter((r: any) => r.isError)).toHaveLength(1);
+      expect(results.find((r: any) => r.isError)!.content[0].text).toContain('has been deleted');
     });
 
     it('describes the result in markdown by default', async () => {

@@ -49,6 +49,34 @@ const HEADINGS: Record<SplitAction, string> = {
   unchanged: "Split Unchanged",
 };
 
+const locks = new Map<string, Promise<void>>();
+
+/**
+ * Run tasks with the same key one at a time. Calls on the same transaction
+ * must not interleave: two concurrent calls could both read a split before
+ * either deletes it, and each create a replacement. Serialized, the second
+ * call sees the original as deleted and stops. The lock covers calls in the
+ * same Worker isolate, which includes every call of one MCP session; YNAB has
+ * no atomic operation to serialize calls across sessions.
+ */
+export async function runExclusive<T>(key: string, task: () => Promise<T>): Promise<T> {
+  const previous = locks.get(key) ?? Promise.resolve();
+  let release!: () => void;
+  const current = new Promise<void>((resolve) => (release = resolve));
+  const queued = previous.then(() => current);
+  locks.set(key, queued);
+
+  await previous;
+  try {
+    return await task();
+  } finally {
+    release();
+    if (locks.get(key) === queued) {
+      locks.delete(key);
+    }
+  }
+}
+
 /** True when the requested lines match the split's current lines, in order. */
 function sameLines(current: ynab.SubTransaction[], next: ynab.SaveSubTransaction[]): boolean {
   return (
@@ -144,55 +172,60 @@ class SetTransactionSplitsTool {
         );
       }
 
-      const existing = await createRetryableAPICall(
-        () => this.api.transactions.getTransactionById(budgetId, input.transactionId),
-        "Get transaction for split"
-      );
-      const current = existing.data.transaction;
-
-      // A retry with the ID of a transaction that an earlier call replaced must
-      // not recreate it a second time.
-      if (current.deleted) {
-        return this.errorResponse(
-          `Transaction ${input.transactionId} has been deleted. If an earlier split change recreated it, use the new transaction ID.`
-        );
-      }
-
-      const wasSplit = isSplitTransaction(current);
-      const total = input.amount !== undefined ? amountToMilliUnits(input.amount) : current.amount;
-      const date = input.date ?? current.date;
-
-      if (input.categoryId !== undefined) {
-        if (!wasSplit) {
-          return this.errorResponse(
-            `Transaction ${input.transactionId} is not a split. Use ynab_update_transaction to change its category.`
-          );
-        }
-        return await this.recreate(budgetId, input, current, { total, date, categoryId: input.categoryId });
-      }
-
-      // The check at the top guarantees subtransactions is set when categoryId is not.
-      const split = toSaveSubTransactions(input.subtransactions!, total);
-      if ("error" in split) {
-        return this.errorResponse(split.error);
-      }
-      const lines = split.subtransactions;
-
-      if (!wasSplit) {
-        return this.respond(input, await this.splitInPlace(budgetId, input, lines));
-      }
-
-      if (total === current.amount && date === current.date && sameLines(activeSubtransactions(current), lines)) {
-        return this.respond(
-          input,
-          this.buildResult(current, "unchanged", "none", ["The split already has these lines, so nothing was changed."])
-        );
-      }
-
-      return await this.recreate(budgetId, input, current, { total, date, lines });
+      return await runExclusive(`${budgetId}:${input.transactionId}`, () => this.setSplits(budgetId, input));
     } catch (error) {
       return this.errorResponse(`Error setting transaction splits: ${describeAPIError(error)}`);
     }
+  }
+
+  /** Reads the transaction and applies the change; runs under runExclusive. */
+  private async setSplits(budgetId: string, input: SetTransactionSplitsInput) {
+    const existing = await createRetryableAPICall(
+      () => this.api.transactions.getTransactionById(budgetId, input.transactionId),
+      "Get transaction for split"
+    );
+    const current = existing.data.transaction;
+
+    // A retry, or a call that waited on runExclusive, may target a transaction
+    // that an earlier call already replaced. It must not be recreated twice.
+    if (current.deleted) {
+      return this.errorResponse(
+        `Transaction ${input.transactionId} has been deleted. If an earlier split change recreated it, use the new transaction ID.`
+      );
+    }
+
+    const wasSplit = isSplitTransaction(current);
+    const total = input.amount !== undefined ? amountToMilliUnits(input.amount) : current.amount;
+    const date = input.date ?? current.date;
+
+    if (input.categoryId !== undefined) {
+      if (!wasSplit) {
+        return this.errorResponse(
+          `Transaction ${input.transactionId} is not a split. Use ynab_update_transaction to change its category.`
+        );
+      }
+      return await this.recreate(budgetId, input, current, { total, date, categoryId: input.categoryId });
+    }
+
+    // execute() guarantees subtransactions is set when categoryId is not.
+    const split = toSaveSubTransactions(input.subtransactions!, total);
+    if ("error" in split) {
+      return this.errorResponse(split.error);
+    }
+    const lines = split.subtransactions;
+
+    if (!wasSplit) {
+      return this.respond(input, await this.splitInPlace(budgetId, input, lines));
+    }
+
+    if (total === current.amount && date === current.date && sameLines(activeSubtransactions(current), lines)) {
+      return this.respond(
+        input,
+        this.buildResult(current, "unchanged", "none", ["The split already has these lines, so nothing was changed."])
+      );
+    }
+
+    return await this.recreate(budgetId, input, current, { total, date, lines });
   }
 
   /** A regular transaction becomes a split with one PUT and keeps its ID. */
